@@ -1,0 +1,3 @@
+rootProject.name='DuckinatorApp'
+include ':app'
+include ':javaApplication'

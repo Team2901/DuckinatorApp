@@ -5,15 +5,8 @@
  */
 
 import javafx.application.Application;
-import static javafx.application.Application.launch;
-import javafx.event.ActionEvent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
@@ -23,11 +16,7 @@ import javafx.stage.Stage;
  */
 public class Code6183 extends Application{
 
-    Label welcomeLabel;
     public ProjectPane clickerPane;
-    private Stage primaryStage;
-    Scene scene;
-
 
     /**
      * @param args the command line arguments
@@ -54,6 +43,4 @@ public class Code6183 extends Application{
     public static void main(String[] args) {
         launch(args);
     }
-
-
 }

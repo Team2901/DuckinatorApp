@@ -309,20 +309,21 @@ public class ProjectPane extends Pane{
                 actualPathLength.add((lineLength.get(lineTicker-1)*conversionFactorPixelInch));
                 encoderPathLength.add(convertInchesToEncoderTicks(actualPathLength.get(lineTicker-1)));
                 getChildren().add(line);
-                if (lineTicker == 1){
-                    movements.add("            goForward(" + (int)Math.round(encoderPathLength.get(0)) + ");\n");
-                }else if (lineTicker > 1){
-                    movementTemp = ("            goForward(" + (int)Math.round(encoderPathLength.get(lineTicker-1)) + ");\n");
-                }
-            } if (lineTicker > 1){
-                angleChanges.add(getAngle2((double)xPixel.get(lineTicker-2), (double)xPixel.get(lineTicker-1), (double)xPixel.get(lineTicker), (double)yPixel.get(lineTicker-2), (double)yPixel.get(lineTicker-1), (double)yPixel.get(lineTicker), lineLength.get(lineTicker-2), lineLength.get(lineTicker-1)));
-                orientation(xPixel.get(lineTicker-2), xPixel.get(lineTicker-1), xPixel.get(lineTicker),yPixel.get(lineTicker-2), yPixel.get(lineTicker-1), yPixel.get(lineTicker));
-                if (leftOrRight.get(lineTicker-2).equals("Right")){
-                    angleChanges.set(lineTicker-2, -angleChanges.get(lineTicker-2));
-                }
-                movements.add("            rotate(" + (int)Math.round(angleChanges.get(lineTicker-2)) + ");\n");
-                movements.add(movementTemp);
+                //if (lineTicker == 1){
+                //    movements.add("            goForward(" + (int)Math.round(encoderPathLength.get(0)) + ");\n");
+                //}else if (lineTicker > 1){
+                //    movementTemp = ("            goForward(" + (int)Math.round(encoderPathLength.get(lineTicker-1)) + ");\n");
+                //}
             }
+            // if (lineTicker > 1){
+            //    angleChanges.add(getAngle2((double)xPixel.get(lineTicker-2), (double)xPixel.get(lineTicker-1), (double)xPixel.get(lineTicker), (double)yPixel.get(lineTicker-2), (double)yPixel.get(lineTicker-1), (double)yPixel.get(lineTicker), lineLength.get(lineTicker-2), lineLength.get(lineTicker-1)));
+            //    orientation(xPixel.get(lineTicker-2), xPixel.get(lineTicker-1), xPixel.get(lineTicker),yPixel.get(lineTicker-2), yPixel.get(lineTicker-1), yPixel.get(lineTicker));
+            //    if (leftOrRight.get(lineTicker-2).equals("Right")){
+            //        angleChanges.set(lineTicker-2, -angleChanges.get(lineTicker-2));
+            //    }
+            //    movements.add("            rotate(" + (int)Math.round(angleChanges.get(lineTicker-2)) + ");\n");
+            //    movements.add(movementTemp);
+            //}
         }
     }
 
@@ -471,7 +472,6 @@ public class ProjectPane extends Pane{
     public void generation(ActionEvent DIO){
         if (DIO.getSource()==generate){
             if (encoderPathLength.size()>0){
-                setMoveHere2();
                 code.setText(
                         "package org.firstinspires.ftc.teamcode;\n" +
                                 "import com.qualcomm.hardware.bosch.BNO055IMU;\n" +
@@ -514,7 +514,7 @@ public class ProjectPane extends Pane{
                                 driveInit+
                                 "        waitForStart();\n" +
                                 "        if (opModeIsActive()){\n" +
-                                moveHere +
+                                moveHere() +
                                 "\n" +
                                 "        }\n" +
                                 "    }\n" +
@@ -556,10 +556,27 @@ public class ProjectPane extends Pane{
         return joinedString;
     }
 
-    private void setMoveHere2(){
-        if (encoderPathLength.size()>0){
-            moveHere = convertArrayList(movements);
+    private String moveHere(){
+        ArrayList<String> movements = new ArrayList<String>();
+        if (encoderPathLength.size() == 0){
+            return "";
         }
+        for(int i = 0; i < points.size(); i++)
+        {
+            if (i == 0){
+                movements.add("            goForward(" + (int)Math.round(encoderPathLength.get(0)) + ");\n");
+            }else{
+                movementTemp = ("            goForward(" + (int)Math.round(encoderPathLength.get(i-1)) + ");\n");
+                angleChanges.add(getAngle2((double)xPixel.get(lineTicker-2), (double)xPixel.get(lineTicker-1), (double)xPixel.get(lineTicker), (double)yPixel.get(lineTicker-2), (double)yPixel.get(lineTicker-1), (double)yPixel.get(lineTicker), lineLength.get(lineTicker-2), lineLength.get(lineTicker-1)));
+                orientation(xPixel.get(lineTicker-2), xPixel.get(lineTicker-1), xPixel.get(lineTicker),yPixel.get(lineTicker-2), yPixel.get(lineTicker-1), yPixel.get(lineTicker));
+                if (leftOrRight.get(lineTicker-2).equals("Right")){
+                    angleChanges.set(lineTicker-2, -angleChanges.get(lineTicker-2));
+                }
+                movements.add("            rotate(" + (int)Math.round(angleChanges.get(lineTicker-2)) + ");\n");
+                movements.add(movementTemp);
+            }
+        }
+        return convertArrayList(movements);
     }
 
 }

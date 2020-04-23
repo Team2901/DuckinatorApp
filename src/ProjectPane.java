@@ -44,6 +44,7 @@ public class ProjectPane extends Pane{
     ArrayList<Double> angleChanges = new ArrayList<Double>();
     ArrayList<String> leftOrRight = new ArrayList<String>();
     ArrayList<String> movements = new ArrayList<String>();
+    ArrayList<Point> points = new ArrayList<Point>();
     private Line line;
     private Circle startCircle, nextCircles;
     private int circleTicker, lineTicker = 0;
@@ -288,8 +289,12 @@ public class ProjectPane extends Pane{
         if (e.getSource() == fieldHolder){
             xPoint = (int) e.getSceneX();
             yPoint = (int) e.getSceneY();
+            Point point = new Point();
+            point.x = (int) e.getSceneX();
+            point.y = (int) e.getSceneY();
             xPixel.add(xPoint);
             yPixel.add(yPoint);
+            points.add(point);
             robotSpecs();
             if (circleTicker == 0){
                 circleTicker = 1;

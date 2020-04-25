@@ -66,6 +66,7 @@ public class ProjectPane extends Pane{
     private TextField wheelDia, ticksPerr;
     private Label careful;
     private Hyperlink github;
+    private Circle selectedPoint;
 
     public ProjectPane (){
         rect = new Rectangle(1200, 600, Color.BLANCHEDALMOND);
@@ -299,9 +300,11 @@ public class ProjectPane extends Pane{
             if (circleTicker == 0){
                 circleTicker = 1;
                 Circle startCircle = new Circle(xPoint, yPoint, 3, Color.RED);
+                startCircle.setOnMousePressed(this::selectPoint);
                 getChildren().add(startCircle);
             }else if (circleTicker == 1){
                 Circle nextCircles = new Circle(xPoint, yPoint, 4);
+                nextCircles.setOnMousePressed(this::selectPoint);
                 getChildren().add(nextCircles);
                 lineTicker++;
                 Line line = new Line(xPixel.get(lineTicker-1),yPixel.get(lineTicker-1),xPixel.get(lineTicker),yPixel.get(lineTicker));
@@ -325,6 +328,15 @@ public class ProjectPane extends Pane{
             //    movements.add(movementTemp);
             //}
         }
+    }
+
+    private void selectPoint(MouseEvent mouseEvent){
+        if(selectedPoint != null) {
+            selectedPoint.setFill(Color.BLACK);
+        }
+        Circle circle = (Circle) mouseEvent.getTarget();
+        circle.setFill(Color.GREEN);
+        selectedPoint = circle;
     }
 
     public void processButtonPress(ActionEvent ev){

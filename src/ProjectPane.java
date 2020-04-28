@@ -126,7 +126,7 @@ public class ProjectPane extends Pane{
         generate.setLayoutY(20);
         getChildren().add(generate);
 
-        code = new TextArea("Click on the field to make points on a path for your robot to follow. \n\nThen, hit the \"Generate Code\" button to generate copy and pastable code!");
+        code = new TextArea("Click on the field to makes on a path for your robot to follow. \n\nThen, hit the \"Generate Code\" button to generate copy and pastable code!");
         code.setLayoutX(540);
         code.setLayoutY(70);
         getChildren().add(code);

@@ -5,16 +5,17 @@
  */
 
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseEvent;
+import javafx.scene.input.*;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
@@ -55,6 +56,7 @@ public class ProjectPane extends Pane{
                 this.lastWaypoint = lastWaypoint;
                 lastLine = new Line(lastWaypoint.getCenterX(), lastWaypoint.getCenterY(), xPoint, yPoint);
             }
+
         }
 
         public void updateCenter( int xPoint, int yPoint) {
@@ -106,6 +108,8 @@ public class ProjectPane extends Pane{
     private WayPoint selectedWayPoint;
 
     private WayPoint finalWayPoint;
+
+    ContextMenu contextMenu;
 
     public ProjectPane (){
         rect = new Rectangle(1200, 600, Color.BLANCHEDALMOND);
@@ -201,6 +205,17 @@ public class ProjectPane extends Pane{
         fieldHolder.setOnMouseClicked(this::processMousePress);
         code.setOnKeyPressed(this::processKeyPress);
         github.setOnAction(this::hyperlinky);
+
+        contextMenu = new ContextMenu();
+        // create menuitems
+        MenuItem menuItem1 = new MenuItem("menu item 1");
+        MenuItem menuItem2 = new MenuItem("menu item 2");
+        MenuItem menuItem3 = new MenuItem("menu item 3");
+
+        contextMenu.getItems().add(menuItem1);
+        contextMenu.getItems().add(menuItem2);
+        contextMenu.getItems().add(menuItem3);
+
     }
 
     public void hyperlinky(ActionEvent eeeee){
@@ -219,63 +234,75 @@ public class ProjectPane extends Pane{
 
     public void handleWayPointDrag(MouseEvent t) {
 
-        System.out.println("dragging");
-        WayPoint wayPoint = (WayPoint) t.getTarget();
+        if (t.getButton().equals(MouseButton.PRIMARY)) {
 
-        double offsetX = t.getSceneX() - wayPoint.orgSceneX;
-        double offsetY = t.getSceneY() - wayPoint.orgSceneY;
+            System.out.println("dragging");
+            WayPoint wayPoint = (WayPoint) t.getTarget();
 
-        System.out.println(String.format("orgSceneX %f ", wayPoint.orgSceneX));
-        System.out.println(String.format("offsetX %f ", offsetX));
-        System.out.println(String.format("t.getSceneX() %f ", t.getSceneX()));
-        System.out.println(String.format("wayPoint.xPoint + offsetX %f ",  wayPoint.xPoint + offsetX));
+            double offsetX = t.getSceneX() - wayPoint.orgSceneX;
+            double offsetY = t.getSceneY() - wayPoint.orgSceneY;
 
-        wayPoint.orgSceneX = t.getSceneX();
-        wayPoint.orgSceneY = t.getSceneY();
 
-        wayPoint.updateCenter((int) (wayPoint.xPoint + offsetX), (int) (wayPoint.yPoint + offsetY));
+            wayPoint.orgSceneX = t.getSceneX();
+            wayPoint.orgSceneY = t.getSceneY();
+
+            wayPoint.updateCenter((int) (wayPoint.xPoint + offsetX), (int) (wayPoint.yPoint + offsetY));
+        }
     }
 
     public void handleWayPointClick(MouseEvent t) {
 
-        System.out.println("click");
-        WayPoint wayPoint = (WayPoint) t.getTarget();
+        if (t.getButton().equals(MouseButton.PRIMARY)) {
+            System.out.println("click");
+            WayPoint wayPoint = (WayPoint) t.getTarget();
 
-        wayPoint.orgSceneX = t.getSceneX();
-        wayPoint.orgSceneY = t.getSceneY();
+            wayPoint.orgSceneX = t.getSceneX();
+            wayPoint.orgSceneY = t.getSceneY();
 
-        if(selectedWayPoint != null) {
-            selectedWayPoint.setFill(Color.BLACK);
+            if (selectedWayPoint != null) {
+                selectedWayPoint.setFill(Color.BLACK);
+            }
+
+            wayPoint.setFill(Color.GREEN);
+            selectedWayPoint = wayPoint;
         }
+    }
 
-        wayPoint.setFill(Color.GREEN);
-        selectedWayPoint = wayPoint;
+    public void handleContactMenuRequest(ContextMenuEvent event) {
+        contextMenu.show((Node) event.getTarget(), event.getScreenX(), event.getScreenY());
     }
 
     public void processMousePress(MouseEvent e){
-        if (e.getSource() == fieldHolder){
-            Point point = new Point();
-            point.x = (int) e.getSceneX();
-            point.y = (int) e.getSceneY();
 
-            points.add(point);
+        if (e.getButton().equals(MouseButton.PRIMARY)) {
 
-            WayPoint wayPoint = new WayPoint(finalWayPoint, (int) e.getSceneX(), (int) e.getSceneY());
-            wayPoint.setOnMousePressed(this::handleWayPointClick);
-            wayPoint.setOnMouseDragged(this::handleWayPointDrag);
+            if (e.getSource() == fieldHolder) {
+                Point point = new Point();
+                point.x = (int) e.getSceneX();
+                point.y = (int) e.getSceneY();
 
-            getChildren().add(wayPoint);
+                points.add(point);
 
-            if (finalWayPoint == null) {
-                wayPoint.setFill(Color.RED);
+                WayPoint wayPoint = new WayPoint(finalWayPoint, (int) e.getSceneX(), (int) e.getSceneY());
+               wayPoint.setOnMousePressed(this::handleWayPointClick);
+               wayPoint.setOnMouseDragged(this::handleWayPointDrag);
+
+                wayPoint.setOnContextMenuRequested(this::handleContactMenuRequest);
+
+
+                getChildren().add(wayPoint);
+
+                if (finalWayPoint == null) {
+                    wayPoint.setFill(Color.RED);
+                }
+
+                if (wayPoint.lastLine != null) {
+                    getChildren().add(wayPoint.lastLine);
+                }
+
+                finalWayPoint = wayPoint;
+
             }
-
-            if (wayPoint.lastLine != null) {
-                getChildren().add(wayPoint.lastLine);
-            }
-
-            finalWayPoint = wayPoint;
-
         }
     }
 

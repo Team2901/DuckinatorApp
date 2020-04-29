@@ -5,8 +5,6 @@
  */
 
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
-import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
@@ -36,7 +34,7 @@ public class ProjectPane extends Pane{
 
     private static class WayPoint extends Circle {
 
-        WayPoint lastWaypoint;
+        WayPoint lastWayPoint;
         WayPoint nextWayPoint;
         Line lastLine;
 
@@ -45,16 +43,16 @@ public class ProjectPane extends Pane{
 
         double orgSceneX, orgSceneY;
 
-        public WayPoint(WayPoint lastWaypoint, int xPoint, int yPoint) {
+        public WayPoint(WayPoint lastWayPoint, int xPoint, int yPoint) {
             super(xPoint, yPoint, 4);
 
             this.xPoint = xPoint;
             this.yPoint = yPoint;
 
-            if (lastWaypoint != null) {
-                lastWaypoint.nextWayPoint = this;
-                this.lastWaypoint = lastWaypoint;
-                lastLine = new Line(lastWaypoint.getCenterX(), lastWaypoint.getCenterY(), xPoint, yPoint);
+            if (lastWayPoint != null) {
+                lastWayPoint.nextWayPoint = this;
+                this.lastWayPoint = lastWayPoint;
+                lastLine = new Line(lastWayPoint.getCenterX(), lastWayPoint.getCenterY(), xPoint, yPoint);
             }
 
         }
@@ -79,43 +77,43 @@ public class ProjectPane extends Pane{
         }
     }
 
-    private Image field, duck;
-    private ImageView fieldHolder, duckHolder;
-    ArrayList<Integer> xPixel = new ArrayList<Integer>();
-    ArrayList<Integer> yPixel = new ArrayList<Integer>();
-    ArrayList<Double> lineLength = new ArrayList<Double>();
-    ArrayList<Double> actualPathLength = new ArrayList<Double>();
-    ArrayList<Double> encoderPathLength = new ArrayList<Double>();
-    ArrayList<Double> angleChanges = new ArrayList<Double>();
-    ArrayList<String> leftOrRight = new ArrayList<String>();
-    ArrayList<String> movements = new ArrayList<String>();
-    ArrayList<Point> points = new ArrayList<Point>();
-    private Button clear, generate;
-    private Rectangle rect;
-    private int fieldMeasurementPixels = 510;
-    private int fieldMeasurementInches = 144;
-    private double conversionFactorPixelInch = ((double) fieldMeasurementInches/ (double) fieldMeasurementPixels);
+    private final ImageView fieldHolder;
+    private final ImageView duckHolder;
+    final ArrayList<Integer> xPixel = new ArrayList<>();
+    final ArrayList<Integer> yPixel = new ArrayList<>();
+    final ArrayList<Double> lineLength = new ArrayList<>();
+    final ArrayList<Double> actualPathLength = new ArrayList<>();
+    final ArrayList<Double> encoderPathLength = new ArrayList<>();
+    final ArrayList<Double> angleChanges = new ArrayList<>();
+    final ArrayList<String> leftOrRight = new ArrayList<>();
+    final ArrayList<String> movements = new ArrayList<>();
+    ArrayList<WayPoint> wayPoints = new ArrayList<>();
+    private final Button clear;
+    private final Button generate;
+    private final Rectangle rect;
+    private final int fieldMeasurementPixels = 510;
     private double wheelDiameter = 4;
     private double ticksPerRotation = 1120;
-    private TextArea code;
-    private RadioButton tankDrive, holonomicDrive, mecanumDrive;
-    private ToggleGroup drives;
+    private final TextArea code;
+    private final RadioButton tankDrive;
+    private final RadioButton holonomicDrive;
+    private final RadioButton mecanumDrive;
+    private final ToggleGroup drives;
     private int togglingKeep = 1;
-    private Label wheelDi, ticksPer;
-    private TextField wheelDia, ticksPerr;
-    private Label careful;
-    private Hyperlink github;
-    private WayPoint selectedWayPoint;
+    private final Label wheelDi;
+    private final Label ticksPer;
+    private final TextField wheelDia;
+    private final TextField ticksPerRev;
+    private final Label careful;
+    private final Hyperlink github;
 
-    private WayPoint finalWayPoint;
-
-    ContextMenu contextMenu;
+    private WayPoint movingWayPoint;
 
     public ProjectPane (){
         rect = new Rectangle(1200, 600, Color.BLANCHEDALMOND);
         getChildren().add(rect);
 
-        field = new Image(this.getClass().getResourceAsStream("/field.png"));
+        Image field = new Image(this.getClass().getResourceAsStream("/field.png"));
         fieldHolder = new ImageView(field);
         fieldHolder.setFitHeight(fieldMeasurementPixels);
         fieldHolder.setFitWidth(fieldMeasurementPixels);
@@ -123,7 +121,7 @@ public class ProjectPane extends Pane{
         fieldHolder.setLayoutY(0);
         getChildren().add(fieldHolder);
 
-        duck = new Image(this.getClass().getResourceAsStream("/duck.png"));
+        Image duck = new Image(this.getClass().getResourceAsStream("/duck.png"));
         duckHolder = new ImageView(duck);
         duckHolder.setFitHeight(150);
         duckHolder.setFitWidth(163);
@@ -161,17 +159,17 @@ public class ProjectPane extends Pane{
         ticksPer.setLayoutY(360);
         getChildren().add(ticksPer);
 
-        ticksPerr = new TextField("1120");
-        ticksPerr.setLayoutX(680);
-        ticksPerr.setLayoutY(357);
-        getChildren().add(ticksPerr);
+        ticksPerRev = new TextField("1120");
+        ticksPerRev.setLayoutX(680);
+        ticksPerRev.setLayoutY(357);
+        getChildren().add(ticksPerRev);
 
         generate = new Button("Generate Code");
         generate.setLayoutX(600);
         generate.setLayoutY(20);
         getChildren().add(generate);
 
-        code = new TextArea("Click on the field to make points on a path for your robot to follow. \n\nThen, hit the \"Generate Code\" button to generate copy and pastable code!");
+        code = new TextArea("Click on the field to make points on a path for your robot to follow. \n\nThen, hit the \"Generate Code\" button to generate copy and paste-able code!");
         code.setLayoutX(540);
         code.setLayoutY(70);
         getChildren().add(code);
@@ -204,28 +202,15 @@ public class ProjectPane extends Pane{
         generate.setOnAction(this::generation);
         fieldHolder.setOnMouseClicked(this::processMousePress);
         code.setOnKeyPressed(this::processKeyPress);
-        github.setOnAction(this::hyperlinky);
-
-        contextMenu = new ContextMenu();
-        // create menuitems
-        MenuItem menuItem1 = new MenuItem("menu item 1");
-        MenuItem menuItem2 = new MenuItem("menu item 2");
-        MenuItem menuItem3 = new MenuItem("menu item 3");
-
-        contextMenu.getItems().add(menuItem1);
-        contextMenu.getItems().add(menuItem2);
-        contextMenu.getItems().add(menuItem3);
-
+        github.setOnAction(this::hyperlink);
     }
 
-    public void hyperlinky(ActionEvent eeeee){
-        if (eeeee.getSource() == github){
+    public void hyperlink(ActionEvent e){
+        if (e.getSource() == github){
             if (Desktop.isDesktopSupported()){
                 try {
                     Desktop.getDesktop().browse(new URI("https://www.github.com/yup-its-rowan"));
-                } catch (IOException e1) {
-                    e1.printStackTrace();
-                } catch (URISyntaxException e1) {
+                } catch (IOException | URISyntaxException e1) {
                     e1.printStackTrace();
                 }
             }
@@ -239,14 +224,15 @@ public class ProjectPane extends Pane{
             System.out.println("dragging");
             WayPoint wayPoint = (WayPoint) t.getTarget();
 
-            double offsetX = t.getSceneX() - wayPoint.orgSceneX;
-            double offsetY = t.getSceneY() - wayPoint.orgSceneY;
+            if (movingWayPoint == wayPoint) {
+                double offsetX = t.getSceneX() - wayPoint.orgSceneX;
+                double offsetY = t.getSceneY() - wayPoint.orgSceneY;
 
+                wayPoint.orgSceneX = t.getSceneX();
+                wayPoint.orgSceneY = t.getSceneY();
 
-            wayPoint.orgSceneX = t.getSceneX();
-            wayPoint.orgSceneY = t.getSceneY();
-
-            wayPoint.updateCenter((int) (wayPoint.xPoint + offsetX), (int) (wayPoint.yPoint + offsetY));
+                wayPoint.updateCenter((int) (wayPoint.xPoint + offsetX), (int) (wayPoint.yPoint + offsetY));
+            }
         }
     }
 
@@ -258,18 +244,60 @@ public class ProjectPane extends Pane{
 
             wayPoint.orgSceneX = t.getSceneX();
             wayPoint.orgSceneY = t.getSceneY();
-
-            if (selectedWayPoint != null) {
-                selectedWayPoint.setFill(Color.BLACK);
-            }
-
-            wayPoint.setFill(Color.GREEN);
-            selectedWayPoint = wayPoint;
         }
     }
 
     public void handleContactMenuRequest(ContextMenuEvent event) {
-        contextMenu.show((Node) event.getTarget(), event.getScreenX(), event.getScreenY());
+        WayPoint wayPoint = (WayPoint) event.getTarget();
+
+        ContextMenu contextMenu = new ContextMenu();
+
+        MenuItem moveMenuItem = new MenuItem("Move");
+        MenuItem freezeMenuItem = new MenuItem("Freeze");
+        MenuItem deleteMenuItem = new MenuItem("Delete");
+        // MenuItem menuItem3 = new MenuItem("menu item 3");
+
+        moveMenuItem.setOnAction(e -> {
+            movingWayPoint = wayPoint;
+            wayPoint.setFill(Color.GREEN);
+
+        });
+
+        freezeMenuItem.setOnAction(e -> {
+            movingWayPoint = null;
+            wayPoint.setFill(Color.BLACK);
+        });
+
+        deleteMenuItem.setOnAction(e -> {
+
+            if (wayPoint.lastWayPoint != null) {
+                wayPoint.lastWayPoint.nextWayPoint = null;
+            }
+
+            wayPoints.remove(wayPoint);
+
+            getChildren().remove(wayPoint.lastLine);
+            getChildren().remove(wayPoint);
+
+        });
+
+        boolean showMenu = false;
+        if (movingWayPoint == null) {
+            contextMenu.getItems().add(moveMenuItem);
+            showMenu = true;
+
+            if (wayPoint.nextWayPoint == null) {
+                contextMenu.getItems().add(deleteMenuItem);
+            }
+
+        } else if (movingWayPoint == wayPoint) {
+            contextMenu.getItems().add(freezeMenuItem);
+            showMenu = true;
+        }
+
+        if (showMenu) {
+            contextMenu.show(wayPoint, event.getScreenX(), event.getScreenY());
+        }
     }
 
     public void processMousePress(MouseEvent e){
@@ -277,22 +305,27 @@ public class ProjectPane extends Pane{
         if (e.getButton().equals(MouseButton.PRIMARY)) {
 
             if (e.getSource() == fieldHolder) {
+
+                if (movingWayPoint != null) {
+                    return;
+                }
+
                 Point point = new Point();
                 point.x = (int) e.getSceneX();
                 point.y = (int) e.getSceneY();
 
-                points.add(point);
+                WayPoint lastWayPoint = wayPoints.size() > 0 ? wayPoints.get(wayPoints.size() -1) : null;
 
-                WayPoint wayPoint = new WayPoint(finalWayPoint, (int) e.getSceneX(), (int) e.getSceneY());
-               wayPoint.setOnMousePressed(this::handleWayPointClick);
-               wayPoint.setOnMouseDragged(this::handleWayPointDrag);
+                WayPoint wayPoint = new WayPoint(lastWayPoint, (int) e.getSceneX(), (int) e.getSceneY());
+                wayPoint.setOnMousePressed(this::handleWayPointClick);
+                wayPoint.setOnMouseDragged(this::handleWayPointDrag);
 
                 wayPoint.setOnContextMenuRequested(this::handleContactMenuRequest);
 
 
                 getChildren().add(wayPoint);
 
-                if (finalWayPoint == null) {
+                if (wayPoint.lastWayPoint == null) {
                     wayPoint.setFill(Color.RED);
                 }
 
@@ -300,8 +333,7 @@ public class ProjectPane extends Pane{
                     getChildren().add(wayPoint.lastLine);
                 }
 
-                finalWayPoint = wayPoint;
-
+                wayPoints.add(wayPoint);
             }
         }
     }
@@ -320,7 +352,7 @@ public class ProjectPane extends Pane{
             getChildren().add(mecanumDrive);
             getChildren().add(holonomicDrive);
             getChildren().add(ticksPer);
-            getChildren().add(ticksPerr);
+            getChildren().add(ticksPerRev);
             getChildren().add(wheelDi);
             getChildren().add(wheelDia);
             getChildren().add(careful);
@@ -341,8 +373,7 @@ public class ProjectPane extends Pane{
             angleChanges.clear();
             code.clear();
             movements.clear();
-            finalWayPoint = null;
-            points = new ArrayList<>();
+            wayPoints = new ArrayList<>();
         }
     }
 
@@ -350,20 +381,19 @@ public class ProjectPane extends Pane{
         return ((c/(Math.PI*wheelDiameter))*ticksPerRotation);
     }
 
-    public double getTargetAngle(double x1, double x2, double y1, double y2){
-        double dx = x2-x1;
-        double dy = y2-y1;
+    public double getTargetAngle(WayPoint wayPoint1, WayPoint wayPoint2){
+        double dx = wayPoint2.xPoint-wayPoint1.xPoint;
+        double dy = wayPoint2.yPoint-wayPoint1.yPoint;
         double targetAnglePi = Math.atan2(dy, dx);
         double targetAngle = ((targetAnglePi*180)/Math.PI);
         return normalizeAngle(targetAngle);
     }
 
-    public double getLineLength(double x1, double x2, double y1, double y2){
-        double dx = x2-x1;
-        double dy = y2-y1;
+    public double getLineLength(WayPoint wayPoint1, WayPoint wayPoint2){
+        double dx = wayPoint2.xPoint-wayPoint1.xPoint;
+        double dy = wayPoint2.yPoint-wayPoint1.yPoint;
         return Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
     }
-
     public void processKeyPress(KeyEvent event){
         if (event.getCode()== KeyCode.ENTER){
             if ((code.getText().equals("6183"))||(code.getText().equals("duck"))){
@@ -385,15 +415,20 @@ public class ProjectPane extends Pane{
     }
 
     public void robotSpecs(){
-        wheelDiameter = new Double(wheelDia.getText());
-        ticksPerRotation = new Double(ticksPerr.getText());
+        try {
+            wheelDiameter = Double.parseDouble(wheelDia.getText());
+            ticksPerRotation = Double.parseDouble(ticksPerRev.getText());
+        } catch (NumberFormatException e) {
+            wheelDiameter = 4;
+            ticksPerRotation = 1120;
+        }
     }
 
     public void generation(ActionEvent DIO){
         robotSpecs();
 
         if (DIO.getSource()==generate){
-            if (points.size()>0){
+            if (wayPoints.size()>0){
                 code.setText(
                         "package org.firstinspires.ftc.teamcode;\n" +
                                 "import com.qualcomm.hardware.bosch.BNO055IMU;\n" +
@@ -429,8 +464,7 @@ public class ProjectPane extends Pane{
     }
 
     private String convertArrayList(ArrayList<String> stringList) {
-        String joinedString = String.join("", stringList);
-        return joinedString;
+        return String.join("", stringList);
     }
 
     private double normalizeAngle(double angle) {
@@ -438,21 +472,21 @@ public class ProjectPane extends Pane{
     }
 
     private String moveHere() {
-        ArrayList<String> movements = new ArrayList<String>();
+        ArrayList<String> movements = new ArrayList<>();
 
-        if (points.size() > 2) {
+        if (wayPoints.size() > 2) {
 
             double currentAngle = 0;
 
-            for (int i = 1; i < points.size(); i++) {
+            for (int i = 1; i < wayPoints.size(); i++) {
 
                 // turn to face point
                 // go forward
 
-                Point lastPoint = points.get(i - 1);
-                Point targetPoint = points.get(i);
+                WayPoint lastPoint = wayPoints.get(i - 1);
+                WayPoint targetPoint = wayPoints.get(i);
 
-                double targetAngle = getTargetAngle(lastPoint.x, targetPoint.x, lastPoint.y, targetPoint.y);
+                double targetAngle = getTargetAngle(lastPoint, targetPoint);
 
                 double diffAngle = normalizeAngle(targetAngle - currentAngle);
                 int diffAngleInt = (int) Math.round(diffAngle);
@@ -464,7 +498,9 @@ public class ProjectPane extends Pane{
                     movements.add("            rotate(" + diffAngleInt + ");\n");
                 }
 
-                double pathLength = getLineLength(lastPoint.x, targetPoint.x, lastPoint.y, targetPoint.y);
+                double pathLength = getLineLength(lastPoint, targetPoint);
+                int fieldMeasurementInches = 144;
+                double conversionFactorPixelInch = ((double) fieldMeasurementInches / (double) fieldMeasurementPixels);
                 double actualPathLength = pathLength * conversionFactorPixelInch;
                 double encoderPathLength = convertInchesToEncoderTicks(actualPathLength);
 

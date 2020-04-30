@@ -5,6 +5,7 @@
  */
 
 import javafx.event.ActionEvent;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
@@ -30,9 +31,11 @@ import java.util.ArrayList;
  * @author akkir
  */
 
-public class ProjectPane extends Pane{
+public class ProjectPane extends Pane {
 
     private static class WayPoint extends Circle {
+
+        Color defaultColor;
 
         WayPoint lastWayPoint;
         WayPoint nextWayPoint;
@@ -43,8 +46,10 @@ public class ProjectPane extends Pane{
 
         double orgSceneX, orgSceneY;
 
-        public WayPoint(WayPoint lastWayPoint, int xPoint, int yPoint) {
-            super(xPoint, yPoint, 4);
+        public WayPoint(WayPoint lastWayPoint, int xPoint, int yPoint, Color defaultColor) {
+            super(xPoint, yPoint, 4, defaultColor);
+
+            this.defaultColor = defaultColor;
 
             this.xPoint = xPoint;
             this.yPoint = yPoint;
@@ -54,7 +59,6 @@ public class ProjectPane extends Pane{
                 this.lastWayPoint = lastWayPoint;
                 lastLine = new Line(lastWayPoint.getCenterX(), lastWayPoint.getCenterY(), xPoint, yPoint);
             }
-
         }
 
         public void updateCenter( int xPoint, int yPoint) {
@@ -108,6 +112,8 @@ public class ProjectPane extends Pane{
     private final Hyperlink github;
 
     private WayPoint movingWayPoint;
+
+    private boolean editMode = false;
 
     public ProjectPane (){
         rect = new Rectangle(1200, 600, Color.BLANCHEDALMOND);
@@ -203,6 +209,9 @@ public class ProjectPane extends Pane{
         fieldHolder.setOnMouseClicked(this::processMousePress);
         code.setOnKeyPressed(this::processKeyPress);
         github.setOnAction(this::hyperlink);
+
+        this.setOnContextMenuRequested(this::handleModeMenuRequest);
+
     }
 
     public void hyperlink(ActionEvent e){
@@ -239,65 +248,54 @@ public class ProjectPane extends Pane{
     public void handleWayPointClick(MouseEvent t) {
 
         if (t.getButton().equals(MouseButton.PRIMARY)) {
+
+            if (!editMode) {
+                return;
+            }
+
             System.out.println("click");
             WayPoint wayPoint = (WayPoint) t.getTarget();
 
             wayPoint.orgSceneX = t.getSceneX();
             wayPoint.orgSceneY = t.getSceneY();
+
+            if (movingWayPoint != null) {
+                movingWayPoint.setFill(movingWayPoint.defaultColor);
+            }
+
+            movingWayPoint = wayPoint;
+            movingWayPoint.setFill(Color.GREEN);
         }
     }
 
-    public void handleContactMenuRequest(ContextMenuEvent event) {
-        WayPoint wayPoint = (WayPoint) event.getTarget();
+
+    public void handleModeMenuRequest(ContextMenuEvent event) {
 
         ContextMenu contextMenu = new ContextMenu();
 
-        MenuItem moveMenuItem = new MenuItem("Move");
-        MenuItem freezeMenuItem = new MenuItem("Freeze");
-        MenuItem deleteMenuItem = new MenuItem("Delete");
-        // MenuItem menuItem3 = new MenuItem("menu item 3");
+        MenuItem editModeItem = new MenuItem("Edit");
+        MenuItem placeModeItem = new MenuItem("Append");
 
-        moveMenuItem.setOnAction(e -> {
-            movingWayPoint = wayPoint;
-            wayPoint.setFill(Color.GREEN);
+        editModeItem.setOnAction(e -> editMode = true);
 
-        });
+        placeModeItem.setOnAction(e -> {
+            editMode = false;
 
-        freezeMenuItem.setOnAction(e -> {
+            if (movingWayPoint != null) {
+                movingWayPoint.setFill(movingWayPoint.defaultColor);
+            }
+
             movingWayPoint = null;
-            wayPoint.setFill(Color.BLACK);
         });
 
-        deleteMenuItem.setOnAction(e -> {
 
-            if (wayPoint.lastWayPoint != null) {
-                wayPoint.lastWayPoint.nextWayPoint = null;
-            }
-
-            wayPoints.remove(wayPoint);
-
-            getChildren().remove(wayPoint.lastLine);
-            getChildren().remove(wayPoint);
-
-        });
-
-        boolean showMenu = false;
-        if (movingWayPoint == null) {
-            contextMenu.getItems().add(moveMenuItem);
-            showMenu = true;
-
-            if (wayPoint.nextWayPoint == null) {
-                contextMenu.getItems().add(deleteMenuItem);
-            }
-
-        } else if (movingWayPoint == wayPoint) {
-            contextMenu.getItems().add(freezeMenuItem);
-            showMenu = true;
+        if (editMode) {
+            contextMenu.getItems().add(placeModeItem);
+        } else {
+            contextMenu.getItems().add(editModeItem);
         }
 
-        if (showMenu) {
-            contextMenu.show(wayPoint, event.getScreenX(), event.getScreenY());
-        }
+        contextMenu.show((Node) event.getTarget(), event.getScreenX(), event.getScreenY());
     }
 
     public void processMousePress(MouseEvent e){
@@ -306,7 +304,7 @@ public class ProjectPane extends Pane{
 
             if (e.getSource() == fieldHolder) {
 
-                if (movingWayPoint != null) {
+                if (editMode) {
                     return;
                 }
 
@@ -314,22 +312,18 @@ public class ProjectPane extends Pane{
                 point.x = (int) e.getSceneX();
                 point.y = (int) e.getSceneY();
 
-                WayPoint lastWayPoint = wayPoints.size() > 0 ? wayPoints.get(wayPoints.size() -1) : null;
+                boolean firstPoint = wayPoints.size() == 0;
 
-                WayPoint wayPoint = new WayPoint(lastWayPoint, (int) e.getSceneX(), (int) e.getSceneY());
+                WayPoint lastWayPoint = firstPoint ? null : wayPoints.get(wayPoints.size() -1);
+                Color defaultColor = firstPoint ? Color.RED : Color.BLACK;
+
+                WayPoint wayPoint = new WayPoint(lastWayPoint, (int) e.getSceneX(), (int) e.getSceneY(), defaultColor);
                 wayPoint.setOnMousePressed(this::handleWayPointClick);
                 wayPoint.setOnMouseDragged(this::handleWayPointDrag);
 
-                wayPoint.setOnContextMenuRequested(this::handleContactMenuRequest);
-
-
                 getChildren().add(wayPoint);
 
-                if (wayPoint.lastWayPoint == null) {
-                    wayPoint.setFill(Color.RED);
-                }
-
-                if (wayPoint.lastLine != null) {
+                if (!firstPoint) {
                     getChildren().add(wayPoint.lastLine);
                 }
 
@@ -374,6 +368,7 @@ public class ProjectPane extends Pane{
             code.clear();
             movements.clear();
             wayPoints = new ArrayList<>();
+            movingWayPoint = null;
         }
     }
 
@@ -474,7 +469,7 @@ public class ProjectPane extends Pane{
     private String moveHere() {
         ArrayList<String> movements = new ArrayList<>();
 
-        if (wayPoints.size() > 2) {
+        if (wayPoints.size() >= 2) {
 
             double currentAngle = 0;
 

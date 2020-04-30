@@ -69,6 +69,8 @@ public class ProjectPane extends Pane{
     private WayPoint selectedPoint;
 
     public ProjectPane (){
+
+        this.setOnKeyPressed(this::gameAreaKeyPress);
         rect = new Rectangle(1200, 600, Color.BLANCHEDALMOND);
         getChildren().add(rect);
 
@@ -392,9 +394,17 @@ public class ProjectPane extends Pane{
         return ((angleTemp*180)/Math.PI);
     }
 
+    public void gameAreaKeyPress(KeyEvent event){
+        if (event.getCode()== KeyCode.DELETE){
+            if (selectedPoint != null){
+                selectedPoint.setFill(Color.PURPLE);
+            }
+        }
+    }
+
     public void processKeyPress(KeyEvent event){
         if (event.getCode()== KeyCode.ENTER){
-            if ((code.getText().equals("6183"))||(code.getText().equals("duck"))){
+            if ((code.getText().contains("6183"))||(code.getText().contains("duck"))){
                 code.setText("quack quack losers");
             }
         }

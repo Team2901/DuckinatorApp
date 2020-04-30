@@ -41,8 +41,8 @@ public class ProjectPane extends Pane {
         WayPoint nextWayPoint;
         Line lastLine;
 
-        double xPoint;
-        double yPoint;
+        int xPoint;
+        int yPoint;
 
         double orgSceneX, orgSceneY;
 
@@ -109,7 +109,7 @@ public class ProjectPane extends Pane {
         }
 
         public void setLastWayPoint(WayPoint lastWayPoint) {
-            // set the value
+
             this.lastWayPoint = lastWayPoint;
 
             if (lastWayPoint != null) {
@@ -127,7 +127,7 @@ public class ProjectPane extends Pane {
                 this.defaultColor = Color.RED;
             }
 
-            resetColor();
+            this.resetColor();
         }
     }
 
@@ -286,7 +286,6 @@ public class ProjectPane extends Pane {
 
         if (t.getButton().equals(MouseButton.PRIMARY)) {
 
-            System.out.println("dragging");
             WayPoint wayPoint = (WayPoint) t.getTarget();
 
             if (movingWayPoint == wayPoint) {
@@ -309,15 +308,16 @@ public class ProjectPane extends Pane {
                 return;
             }
 
+            if (movingWayPoint != null) {
+                movingWayPoint.resetColor();
+            }
+
             WayPoint wayPoint = (WayPoint) t.getTarget();
 
             wayPoint.orgSceneX = t.getSceneX();
             wayPoint.orgSceneY = t.getSceneY();
             wayPoint.setFill(Color.GREEN);
 
-            if (movingWayPoint != null) {
-                movingWayPoint.resetColor();
-            }
 
             movingWayPoint = wayPoint;
         }
@@ -357,11 +357,15 @@ public class ProjectPane extends Pane {
 
     public void processWayPointKeyPress(final KeyEvent keyEvent) {
 
-        if (keyEvent.getCode().equals( KeyCode.DELETE) ) {
-            if (editMode && movingWayPoint != null) {
-                wayPoints.remove(movingWayPoint);
-                movingWayPoint.delete(this);
-            }
+
+        if (!editMode || movingWayPoint == null) {
+            return;
+        }
+
+        if (keyEvent.getCode().equals( KeyCode.DELETE)) {
+            wayPoints.remove(movingWayPoint);
+            movingWayPoint.delete(this);
+
         }
     }
 

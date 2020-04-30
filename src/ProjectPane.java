@@ -10,7 +10,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -68,7 +67,6 @@ public class ProjectPane extends Pane {
         }
 
         public void delete(Pane parent) {
-
             final Line deleteLine;
             if (lastWayPoint != null) {
                 deleteLine = this.lastLine;
@@ -146,19 +144,16 @@ public class ProjectPane extends Pane {
     private final Button generate;
     private final Rectangle rect;
     private final int fieldMeasurementPixels = 510;
-    private double wheelDiameter = 4;
-    private double ticksPerRotation = 1120;
     private final TextArea code;
     private final RadioButton tankDrive;
     private final RadioButton holonomicDrive;
     private final RadioButton mecanumDrive;
     private final ToggleGroup drives;
     private int togglingKeep = 1;
-    private final Label wheelDi;
-    private final Label ticksPer;
-    private final TextField wheelDia;
-    private final TextField ticksPerRev;
-    private final Label careful;
+
+    private final Label mouseLocationReporter;
+    private final Label wayPointLocationReporter;
+
     private final Hyperlink github;
 
     private WayPoint movingWayPoint;
@@ -196,31 +191,6 @@ public class ProjectPane extends Pane {
         github.setLayoutX(850);
         github.setLayoutY(22);
         getChildren().add(github);
-
-        careful = new Label("Careful: \nAdjusting wheel dia or TPR mid-path affects the resulting code");
-        careful.setLayoutX(540);
-        careful.setLayoutY(450);
-        getChildren().add(careful);
-
-        wheelDi = new Label("Wheel Diameter (Inches): ");
-        wheelDi.setLayoutX(540);
-        wheelDi.setLayoutY(320);
-        getChildren().add(wheelDi);
-
-        wheelDia = new TextField("4");
-        wheelDia.setLayoutX(680);
-        wheelDia.setLayoutY(317);
-        getChildren().add(wheelDia);
-
-        ticksPer = new Label("Ticks Per Rotation: ");
-        ticksPer.setLayoutX(540);
-        ticksPer.setLayoutY(360);
-        getChildren().add(ticksPer);
-
-        ticksPerRev = new TextField("1120");
-        ticksPerRev.setLayoutX(680);
-        ticksPerRev.setLayoutY(357);
-        getChildren().add(ticksPerRev);
 
         generate = new Button("Generate Code");
         generate.setLayoutX(600);
@@ -265,10 +235,49 @@ public class ProjectPane extends Pane {
 
         this.setOnKeyPressed(this::processWayPointKeyPress);
 
+        Rectangle rect = new Rectangle(0, 0, 100, 100);
+        Tooltip t = new Tooltip("A Square");
+        Tooltip.install(rect, t);
+
         modeContextMenu = new ContextMenu();
 
+        mouseLocationReporter = new Label();
+        mouseLocationReporter.setLayoutX(0);
+        mouseLocationReporter.setLayoutY(0);
+        getChildren().add(mouseLocationReporter);
 
+
+        wayPointLocationReporter = new Label();
+        wayPointLocationReporter.setLayoutX(0);
+        wayPointLocationReporter.setLayoutY(20);
+        getChildren().add(wayPointLocationReporter);
+
+        this.setOnMouseMoved(this::handleMouseTracking);
+        this.setOnMouseDragged(this::handleMouseTracking);
     }
+
+    public void handleMouseTracking(MouseEvent event) {
+        double xInches = (int) Math.round(convertToInches(event.getSceneX()));
+        double yInches = (int) Math.round(convertToInches(event.getSceneY()));
+        String msg = String.format("Mouse: (%.1f, %.1f)", xInches, yInches);
+        mouseLocationReporter.setText(msg);
+    }
+
+
+    public void handleWayPointTracking(MouseEvent event) {
+
+        // TODO use this
+        String msg;
+        if (movingWayPoint != null) {
+            double xInches = (int) Math.round(convertToInches(event.getSceneX()));
+            double yInches = (int) Math.round(convertToInches(event.getSceneY()));
+            msg = String.format("Mouse: (%.1f, %.1f)", xInches, yInches);
+        } else {
+            msg = "";
+        }
+        mouseLocationReporter.setText(msg);
+    }
+
 
     public void hyperlink(ActionEvent e){
         if (e.getSource() == github){
@@ -314,6 +323,8 @@ public class ProjectPane extends Pane {
 
             WayPoint wayPoint = (WayPoint) t.getTarget();
 
+            wayPoint.getParent().requestFocus();
+
             wayPoint.orgSceneX = t.getSceneX();
             wayPoint.orgSceneY = t.getSceneY();
             wayPoint.setFill(Color.GREEN);
@@ -357,6 +368,8 @@ public class ProjectPane extends Pane {
 
     public void processWayPointKeyPress(final KeyEvent keyEvent) {
 
+        System.out.println(keyEvent.getCode());
+        System.out.println(keyEvent.getText());
 
         if (!editMode || movingWayPoint == null) {
             return;
@@ -366,12 +379,35 @@ public class ProjectPane extends Pane {
             wayPoints.remove(movingWayPoint);
             movingWayPoint.delete(this);
 
+        } else if (keyEvent.getCode().isArrowKey()) {
+
+            int stepSize = 1;
+            int dx = 0;
+            int dy = 0;
+
+            switch (keyEvent.getCode()) {
+
+                case UP:
+                    dy = -stepSize;
+                    break;
+                case DOWN:
+                    dy = stepSize;
+                    break;
+                case LEFT:
+                    dx = -stepSize;
+                    break;
+                case RIGHT:
+                    dx = stepSize;
+                    break;
+            }
+            movingWayPoint.updateCenter(movingWayPoint.xPoint + dx, movingWayPoint.yPoint + dy);
         }
     }
 
     public void processMousePress(MouseEvent e){
 
         if (e.getButton().equals(MouseButton.PRIMARY)) {
+
 
             if (e.getSource() == fieldHolder) {
 
@@ -399,7 +435,6 @@ public class ProjectPane extends Pane {
         }
     }
 
-
     public void processButtonPress(ActionEvent ev){
         if (ev.getSource() == clear){
             drives.selectToggle(null);
@@ -413,11 +448,6 @@ public class ProjectPane extends Pane {
             getChildren().add(tankDrive);
             getChildren().add(mecanumDrive);
             getChildren().add(holonomicDrive);
-            getChildren().add(ticksPer);
-            getChildren().add(ticksPerRev);
-            getChildren().add(wheelDi);
-            getChildren().add(wheelDia);
-            getChildren().add(careful);
             getChildren().add(github);
             if (togglingKeep ==1){
                 tankDrive.setSelected(true);
@@ -439,10 +469,6 @@ public class ProjectPane extends Pane {
             movingWayPoint = null;
             editMode = false;
         }
-    }
-
-    public double convertInchesToEncoderTicks(double c){
-        return ((c/(Math.PI*wheelDiameter))*ticksPerRotation);
     }
 
     public double getTargetAngle(WayPoint wayPoint1, WayPoint wayPoint2){
@@ -471,18 +497,7 @@ public class ProjectPane extends Pane {
         }
     }
 
-    public void robotSpecs(){
-        try {
-            wheelDiameter = Double.parseDouble(wheelDia.getText());
-            ticksPerRotation = Double.parseDouble(ticksPerRev.getText());
-        } catch (NumberFormatException e) {
-            wheelDiameter = 4;
-            ticksPerRotation = 1120;
-        }
-    }
-
     public void generation(ActionEvent DIO){
-        robotSpecs();
 
         if (DIO.getSource()==generate){
             if (wayPoints.size()>0){
@@ -556,17 +571,18 @@ public class ProjectPane extends Pane {
                 }
 
                 double pathLength = getLineLength(lastPoint, targetPoint);
-                int fieldMeasurementInches = 144;
-                double conversionFactorPixelInch = ((double) fieldMeasurementInches / (double) fieldMeasurementPixels);
-                double actualPathLength = pathLength * conversionFactorPixelInch;
-                double encoderPathLength = convertInchesToEncoderTicks(actualPathLength);
-
-                int encoderPathLengthInt = (int) Math.round(encoderPathLength);
+                int encoderPathLengthInt = (int) Math.round(convertToInches(pathLength));
 
                 movements.add("            goForward(" + encoderPathLengthInt + ");\n");
             }
         }
 
         return convertArrayList(movements);
+    }
+
+    private double convertToInches(double pixelValue) {
+        int fieldMeasurementInches = 144;
+        double conversionFactorPixelInch = ((double) fieldMeasurementInches / (double) fieldMeasurementPixels);
+        return pixelValue * conversionFactorPixelInch;
     }
 }

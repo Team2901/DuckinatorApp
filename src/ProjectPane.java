@@ -261,23 +261,19 @@ public class ProjectPane extends Pane {
         double yInches = (int) Math.round(convertToInches(event.getSceneY()));
         String msg = String.format("Mouse: (%.1f, %.1f)", xInches, yInches);
         mouseLocationReporter.setText(msg);
-    }
 
-
-    public void handleWayPointTracking(MouseEvent event) {
-
-        // TODO use this
-        String msg;
+        String msg2;
         if (movingWayPoint != null) {
-            double xInches = (int) Math.round(convertToInches(event.getSceneX()));
-            double yInches = (int) Math.round(convertToInches(event.getSceneY()));
-            msg = String.format("Mouse: (%.1f, %.1f)", xInches, yInches);
+            double xInches2 = (int) Math.round(convertToInches(movingWayPoint.getCenterX()));
+            double yInches2 = (int) Math.round(convertToInches(movingWayPoint.getCenterY()));
+            msg2  = String.format("Waypoint: (%.1f, %.1f)", xInches2, yInches2);
         } else {
-            msg = "";
+            msg2 = "";
         }
-        mouseLocationReporter.setText(msg);
-    }
 
+        wayPointLocationReporter.setText(msg2);
+
+    }
 
     public void hyperlink(ActionEvent e){
         if (e.getSource() == github){
@@ -453,7 +449,7 @@ public class ProjectPane extends Pane {
                 tankDrive.setSelected(true);
             }else if (togglingKeep ==2){
                 holonomicDrive.setSelected(true);
-            } else if (togglingKeep == 3){
+            } else if (togglingKeep == 3) {
                 mecanumDrive.setSelected(true);
             }
             xPixel.clear();
@@ -502,27 +498,18 @@ public class ProjectPane extends Pane {
         if (DIO.getSource()==generate){
             if (wayPoints.size()>0){
                 code.setText(
-                        "package org.firstinspires.ftc.teamcode;\n" +
-                                "import com.qualcomm.hardware.bosch.BNO055IMU;\n" +
+                        "package org.firstinspires.ftc.teamcode.Autonomous;\n" +
                                 "import com.qualcomm.robotcore.eventloop.opmode.Autonomous;\n" +
-                                "import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;\n" +
-                                "import com.qualcomm.robotcore.hardware.DcMotor;\n" +
-                                "\n" +
-                                "import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;\n" +
-                                "import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;\n" +
-                                "import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;\n" +
-                                "import org.firstinspires.ftc.robotcore.external.navigation.Orientation;\n" +
-                                "import org.firstinspires.ftc.robotcore.external.navigation.Position;\n" +
-                                "import org.firstinspires.ftc.robotcore.external.navigation.Velocity;\n" +
                                 "\n" +
                                 "/**\n" +
                                 " * Created with Team 6183's Duckinator 3000\n" +
                                 " */\n" +
                                 "\n" +
                                 "@Autonomous(name = \"DuckinatorAuto\", group = \"DuckSquad\")\n" +
-                                "public class DuckinatorAuto extends LinearOpMode {\n" +
+                                "public class DuckinatorAuto extends " + getBaseClass() + " {\n" +
                                 "    @Override\n" +
                                 "    public void runOpMode() throws InterruptedException {\n" +
+                                "        initRobot();\n" +
                                 "        waitForStart();\n" +
                                 "        if (opModeIsActive()){\n" +
                                 moveHere() +
@@ -532,6 +519,19 @@ public class ProjectPane extends Pane {
                                 "}"
                 );
             }
+        }
+    }
+
+    private String getBaseClass() {
+
+        switch (togglingKeep) {
+            case 1:
+                return "BaseDominatorTankDrive";
+            case 2:
+                return "BaseDominatorXDrive";
+            case 3:
+            default:
+                return "BaseDominatorMechanum";
         }
     }
 
@@ -551,9 +551,6 @@ public class ProjectPane extends Pane {
             double currentAngle = 0;
 
             for (int i = 1; i < wayPoints.size(); i++) {
-
-                // turn to face point
-                // go forward
 
                 WayPoint lastPoint = wayPoints.get(i - 1);
                 WayPoint targetPoint = wayPoints.get(i);

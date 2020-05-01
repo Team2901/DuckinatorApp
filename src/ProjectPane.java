@@ -11,6 +11,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.*;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
@@ -32,6 +33,7 @@ import java.util.ArrayList;
 
 public class ProjectPane extends Pane {
 
+    private final static String DEFAULT_CLASS_NAME = "DuckinatorAuto";
     private static class WayPoint extends Circle {
 
         Color defaultColor;
@@ -143,8 +145,10 @@ public class ProjectPane extends Pane {
     private final Button clear;
     private final Button generate;
     private final Rectangle rect;
-    private final int fieldMeasurementPixels = 510;
+    private final static int FIELD_MEASUREMENT_PIXELS = 510;
     private final TextArea code;
+    private final Label classNameLabel;
+    private final TextField classNameTextArea;
     private final RadioButton tankDrive;
     private final RadioButton holonomicDrive;
     private final RadioButton mecanumDrive;
@@ -159,6 +163,8 @@ public class ProjectPane extends Pane {
     private WayPoint movingWayPoint;
 
     private boolean editMode = false;
+
+    private final String className = DEFAULT_CLASS_NAME;
 
     ContextMenu modeContextMenu;
 
@@ -197,29 +203,39 @@ public class ProjectPane extends Pane {
         generate.setLayoutY(20);
         getChildren().add(generate);
 
+        classNameLabel = new Label("Class Name: ");
+        classNameLabel.setLayoutX(540);
+        classNameLabel.setLayoutY(70);
+        getChildren().add(classNameLabel);
+
+        classNameTextArea = new TextField(DEFAULT_CLASS_NAME);
+        classNameTextArea.setLayoutX(630);
+        classNameTextArea.setLayoutY(67);
+        getChildren().add(classNameTextArea);
+
         code = new TextArea("Click on the field to make points on a path for your robot to follow. \n\nThen, hit the \"Generate Code\" button to generate copy and paste-able code!");
         code.setLayoutX(540);
-        code.setLayoutY(70);
+        code.setLayoutY(100);
         getChildren().add(code);
 
         drives = new ToggleGroup();
 
         tankDrive = new RadioButton("Tank Drive");
         tankDrive.setLayoutX(545);
-        tankDrive.setLayoutY(270);
+        tankDrive.setLayoutY(300);
         tankDrive.setToggleGroup(drives);
         tankDrive.setSelected(true);
         getChildren().add(tankDrive);
 
         holonomicDrive = new RadioButton("X-Drive");
         holonomicDrive.setLayoutX(670);
-        holonomicDrive.setLayoutY(270);
+        holonomicDrive.setLayoutY(300);
         holonomicDrive.setToggleGroup(drives);
         getChildren().add(holonomicDrive);
 
         mecanumDrive = new RadioButton("Mecanum");
         mecanumDrive.setLayoutX(795);
-        mecanumDrive.setLayoutY(270);
+        mecanumDrive.setLayoutY(300);
         mecanumDrive.setToggleGroup(drives);
         getChildren().add(mecanumDrive);
 
@@ -497,6 +513,15 @@ public class ProjectPane extends Pane {
 
         if (DIO.getSource()==generate){
             if (wayPoints.size()>0){
+
+                String className = classNameTextArea.getText();
+
+                if (className == null || className.isBlank()) {
+                    className = DEFAULT_CLASS_NAME;
+                }
+
+                className = className.trim();
+
                 code.setText(
                         "package org.firstinspires.ftc.teamcode.Autonomous;\n" +
                                 "import com.qualcomm.robotcore.eventloop.opmode.Autonomous;\n" +
@@ -505,8 +530,8 @@ public class ProjectPane extends Pane {
                                 " * Created with Team 6183's Duckinator 3000\n" +
                                 " */\n" +
                                 "\n" +
-                                "@Autonomous(name = \"DuckinatorAuto\", group = \"DuckSquad\")\n" +
-                                "public class DuckinatorAuto extends " + getBaseClass() + " {\n" +
+                                "@Autonomous(name = \""+className+"\", group = \"DuckSquad\")\n" +
+                                "public class "+ className + " extends " + getBaseClass() + " {\n" +
                                 "    @Override\n" +
                                 "    public void runOpMode() throws InterruptedException {\n" +
                                 "        initRobot();\n" +

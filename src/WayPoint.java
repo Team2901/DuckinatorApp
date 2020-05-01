@@ -10,31 +10,40 @@ public class WayPoint extends Circle {
     WayPoint lastWayPoint;
     WayPoint nextWayPoint;
     Line lastLine;
+    Circle subCircle;
 
-    int xPoint;
-    int yPoint;
+    double xPoint;
+    double yPoint;
 
-    double orgSceneX, orgSceneY;
+    double pressOffsetX;
+    double pressOffsetY;
 
-    public WayPoint(WayPoint lastWayPoint, int xPoint, int yPoint, Color defaultColor, Pane parent) {
-        super(xPoint, yPoint, 4, defaultColor);
-
-        this.defaultColor = defaultColor;
+    public WayPoint(WayPoint lastWayPoint, double xPoint, double yPoint, Color defaultColor, Pane parent) {
+        super(xPoint, yPoint, 10, Color.TRANSPARENT);
 
         this.xPoint = xPoint;
         this.yPoint = yPoint;
+        this.defaultColor = defaultColor;
+
+        this.subCircle = new Circle(xPoint, yPoint, 4, defaultColor);
 
         setLastWayPoint(lastWayPoint);
-
-        parent.getChildren().add(this);
 
         if (lastLine != null) {
             parent.getChildren().add(lastLine);
         }
+
+        parent.getChildren().add(subCircle);
+
+        parent.getChildren().add(this);
     }
 
-    public void resetColor() {
-        this.setFill(defaultColor);
+    public void setSelected(boolean selected) {
+        if (selected) {
+            subCircle.setFill(Color.GREEN);
+        } else {
+            subCircle.setFill(defaultColor);
+        }
     }
 
     public void delete(Pane parent) {
@@ -55,10 +64,11 @@ public class WayPoint extends Circle {
             parent.getChildren().remove(deleteLine);
         }
 
+        parent.getChildren().remove(subCircle);
         parent.getChildren().remove(this);
     }
 
-    public void updateCenter( int xPoint, int yPoint) {
+    public void updateCenter(double xPoint, double yPoint) {
 
         this.xPoint = Math.max(Math.min(xPoint, ProjectPane.FIELD_MEASUREMENT_PIXELS), 0);
         this.yPoint = Math.max(Math.min(yPoint, ProjectPane.FIELD_MEASUREMENT_PIXELS), 0);
@@ -66,14 +76,17 @@ public class WayPoint extends Circle {
         setCenterX(this.xPoint);
         setCenterY(this.yPoint);
 
+        subCircle.setCenterX(this.xPoint);
+        subCircle.setCenterY(this.yPoint);
+
         if (lastLine != null) {
             lastLine.setEndX(this.xPoint);
             lastLine.setEndY(this.yPoint);
         }
 
         if (nextWayPoint != null && nextWayPoint.lastLine != null) {
-            nextWayPoint.lastLine.setStartX(getCenterX());
-            nextWayPoint.lastLine.setStartY(getCenterY());
+            nextWayPoint.lastLine.setStartX(this.xPoint);
+            nextWayPoint.lastLine.setStartY(this.yPoint);
         }
     }
 
@@ -87,15 +100,15 @@ public class WayPoint extends Circle {
             lastWayPoint.nextWayPoint = this;
 
             if (this.lastLine == null) {
-                this.lastLine = new Line(lastWayPoint.getCenterX(), lastWayPoint.getCenterY(), xPoint, yPoint);
+                this.lastLine = new Line(lastWayPoint.xPoint, lastWayPoint.yPoint, xPoint, yPoint);
             } else {
-                this.lastLine.setStartX(lastWayPoint.getCenterX());
-                this.lastLine.setStartY(lastWayPoint.getCenterY());
+                this.lastLine.setStartX(lastWayPoint.xPoint);
+                this.lastLine.setStartY(lastWayPoint.yPoint);
             }
         } else {
             this.defaultColor = Color.RED;
         }
 
-        this.resetColor();
+        this.setSelected(false);
     }
 }

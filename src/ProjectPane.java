@@ -34,6 +34,7 @@ public class ProjectPane extends Pane {
 
     private final static String DEFAULT_CLASS_NAME = "DuckinatorAuto";
     protected final static int FIELD_MEASUREMENT_PIXELS = 510;
+    protected final static int FIELD_MEASUREMENT_INCHES = 144;
 
     private final TextArea code;
     private final TextField classNameTextArea;
@@ -161,7 +162,7 @@ public class ProjectPane extends Pane {
 
         final String msg;
         if (wayPoint != null) {
-            msg = String.format("WayPoint: %s", formatLocation(wayPoint.getCenterX(), wayPoint.getCenterY()));
+            msg = String.format("WayPoint: %s", formatLocation(wayPoint.xPoint, wayPoint.yPoint));
         } else {
             msg = null;
         }
@@ -216,13 +217,11 @@ public class ProjectPane extends Pane {
             WayPoint wayPoint = (WayPoint) e.getTarget();
 
             if (movingWayPoint == wayPoint) {
-                double offsetX = e.getSceneX() - wayPoint.orgSceneX;
-                double offsetY = e.getSceneY() - wayPoint.orgSceneY;
 
-                wayPoint.orgSceneX = e.getSceneX();
-                wayPoint.orgSceneY = e.getSceneY();
+                double newX = wayPoint.pressOffsetX + e.getSceneX();
+                double newY = wayPoint.pressOffsetY + e.getSceneY();
 
-                wayPoint.updateCenter((int) (wayPoint.xPoint + offsetX), (int) (wayPoint.yPoint + offsetY));
+                wayPoint.updateCenter(newX, newY);
                 reportMovingWayPointLocation(movingWayPoint);
             }
         }
@@ -236,19 +235,14 @@ public class ProjectPane extends Pane {
                 return;
             }
 
-            if (movingWayPoint != null) {
-                movingWayPoint.resetColor();
-            }
-
             WayPoint wayPoint = (WayPoint) e.getTarget();
 
-            wayPoint.getParent().requestFocus();
-
-            wayPoint.orgSceneX = e.getSceneX();
-            wayPoint.orgSceneY = e.getSceneY();
-            wayPoint.setFill(Color.GREEN);
+            wayPoint.pressOffsetX = wayPoint.xPoint - e.getSceneX();
+            wayPoint.pressOffsetY = wayPoint.yPoint - e.getSceneY();
 
             setMovingWayPoint(wayPoint);
+
+            wayPoint.getParent().requestFocus();
         }
     }
 
@@ -298,16 +292,12 @@ public class ProjectPane extends Pane {
                 return;
             }
 
-            Point point = new Point();
-            point.x = (int) e.getSceneX();
-            point.y = (int) e.getSceneY();
-
             boolean firstPoint = wayPoints.size() == 0;
 
             WayPoint lastWayPoint = firstPoint ? null : wayPoints.get(wayPoints.size() -1);
             Color defaultColor = firstPoint ? Color.RED : Color.BLACK;
 
-            WayPoint wayPoint = new WayPoint(lastWayPoint, (int) e.getSceneX(), (int) e.getSceneY(), defaultColor, this);
+            WayPoint wayPoint = new WayPoint(lastWayPoint, e.getSceneX(), e.getSceneY(), defaultColor, this);
             wayPoint.setOnMousePressed(this::processWayPointOnMousePressed);
             wayPoint.setOnMouseDragged(this::processWayPointOnMouseDragged);
             wayPoints.add(wayPoint);
@@ -317,11 +307,11 @@ public class ProjectPane extends Pane {
     private void setMovingWayPoint(WayPoint wayPoint) {
 
         if (movingWayPoint != null) {
-            movingWayPoint.resetColor();
+            movingWayPoint.setSelected(false);
         }
 
         if (wayPoint != null) {
-            wayPoint.setFill(Color.GREEN);
+            wayPoint.setSelected(true);
         }
 
         movingWayPoint = wayPoint;
@@ -392,19 +382,18 @@ public class ProjectPane extends Pane {
                 double targetAngle = getTargetAngle(lastPoint, targetPoint);
 
                 double diffAngle = normalizeAngle(targetAngle - currentAngle);
-                int diffAngleInt = (int) Math.round(diffAngle);
 
                 currentAngle = targetAngle;
 
                 // Only add if different and not the first point
-                if (diffAngleInt != 0 && i != 1) {
-                    movements.add("            rotate(" + diffAngleInt + ");\n");
+                if (diffAngle != 0 && i != 1) {
+                    movements.add(String.format("\t\t\trotate(%.1f);\n", diffAngle));
                 }
 
                 double pathLength = getLineLength(lastPoint, targetPoint);
-                int encoderPathLengthInt = (int) Math.round(convertToInches(pathLength));
+                double pathLengthInches = convertToInches(pathLength);
 
-                movements.add("            goForward(" + encoderPathLengthInt + ");\n");
+                movements.add(String.format("\t\t\tgoForward(%.1f);\n", pathLengthInches));
             }
         }
 
@@ -434,8 +423,7 @@ public class ProjectPane extends Pane {
     }
 
     private static double convertToInches(double pixelValue) {
-        int fieldMeasurementInches = 144;
-        double conversionFactorPixelInch = ((double) fieldMeasurementInches / (double) FIELD_MEASUREMENT_PIXELS);
+        double conversionFactorPixelInch = ((double) FIELD_MEASUREMENT_INCHES / (double) FIELD_MEASUREMENT_PIXELS);
         return pixelValue * conversionFactorPixelInch;
     }
 

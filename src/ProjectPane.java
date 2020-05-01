@@ -5,6 +5,7 @@
  */
 
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -34,48 +35,24 @@ public class ProjectPane extends Pane {
     private final static String DEFAULT_CLASS_NAME = "DuckinatorAuto";
     protected final static int FIELD_MEASUREMENT_PIXELS = 510;
 
-    private final ImageView fieldHolder;
-    private final ImageView duckHolder;
-    final ArrayList<Integer> xPixel = new ArrayList<>();
-    final ArrayList<Integer> yPixel = new ArrayList<>();
-    final ArrayList<Double> lineLength = new ArrayList<>();
-    final ArrayList<Double> actualPathLength = new ArrayList<>();
-    final ArrayList<Double> encoderPathLength = new ArrayList<>();
-    final ArrayList<Double> angleChanges = new ArrayList<>();
-    final ArrayList<String> leftOrRight = new ArrayList<>();
-    final ArrayList<String> movements = new ArrayList<>();
-    ArrayList<WayPoint> wayPoints = new ArrayList<>();
-    private final Button clear;
-    private final Button generate;
-    private final Rectangle rect;
     private final TextArea code;
-    private final Label classNameLabel;
     private final TextField classNameTextArea;
-    private final RadioButton tankDrive;
-    private final RadioButton holonomicDrive;
-    private final RadioButton mecanumDrive;
-    private final ToggleGroup drives;
     private int togglingKeep = 1;
 
-    private final Label mouseLocationReporter;
     private final Label wayPointLocationReporter;
-
-    private final Hyperlink github;
-
-    private WayPoint movingWayPoint;
-
-    private boolean editMode = false;
-
-    private final String className = DEFAULT_CLASS_NAME;
 
     ContextMenu modeContextMenu;
 
-    public ProjectPane (){
-        rect = new Rectangle(1200, 600, Color.BLANCHEDALMOND);
-        getChildren().add(rect);
+    private final ArrayList<WayPoint> wayPoints = new ArrayList<>();
+    private WayPoint movingWayPoint;
+    private boolean editMode = false;
+
+    public ProjectPane () {
+        Rectangle rect1 = new Rectangle(1200, 600, Color.BLANCHEDALMOND);
+        getChildren().add(rect1);
 
         Image field = new Image(this.getClass().getResourceAsStream("/field.png"));
-        fieldHolder = new ImageView(field);
+        ImageView fieldHolder = new ImageView(field);
         fieldHolder.setFitHeight(FIELD_MEASUREMENT_PIXELS);
         fieldHolder.setFitWidth(FIELD_MEASUREMENT_PIXELS);
         fieldHolder.setLayoutX(0);
@@ -83,28 +60,29 @@ public class ProjectPane extends Pane {
         getChildren().add(fieldHolder);
 
         Image duck = new Image(this.getClass().getResourceAsStream("/duck.png"));
-        duckHolder = new ImageView(duck);
+        ImageView duckHolder = new ImageView(duck);
         duckHolder.setFitHeight(150);
         duckHolder.setFitWidth(163);
         duckHolder.setLayoutX(870);
         duckHolder.setLayoutY(350);
         getChildren().add(duckHolder);
 
-        clear = new Button("Clear");
+        Button clear = new Button("Clear");
         clear.setLayoutX(540);
         clear.setLayoutY(20);
         getChildren().add(clear);
 
-        github = new Hyperlink("github.com/yup-its-rowan");
+        Hyperlink github = new Hyperlink("github.com/yup-its-rowan");
         github.setLayoutX(850);
         github.setLayoutY(22);
         getChildren().add(github);
 
-        generate = new Button("Generate Code");
+        Button generate = new Button("Generate Code");
         generate.setLayoutX(600);
         generate.setLayoutY(20);
         getChildren().add(generate);
 
+        final Label classNameLabel;
         classNameLabel = new Label("Class Name: ");
         classNameLabel.setLayoutX(540);
         classNameLabel.setLayoutY(70);
@@ -120,135 +98,91 @@ public class ProjectPane extends Pane {
         code.setLayoutY(100);
         getChildren().add(code);
 
-        drives = new ToggleGroup();
+        ToggleGroup drives = new ToggleGroup();
 
-        tankDrive = new RadioButton("Tank Drive");
+        RadioButton tankDrive = new RadioButton("Tank Drive");
         tankDrive.setLayoutX(545);
         tankDrive.setLayoutY(300);
+        tankDrive.setOnAction((e) -> togglingKeep = 1);
         tankDrive.setToggleGroup(drives);
         tankDrive.setSelected(true);
         getChildren().add(tankDrive);
 
-        holonomicDrive = new RadioButton("X-Drive");
+        RadioButton holonomicDrive = new RadioButton("X-Drive");
         holonomicDrive.setLayoutX(670);
         holonomicDrive.setLayoutY(300);
+        holonomicDrive.setOnAction((e) -> togglingKeep = 2);
         holonomicDrive.setToggleGroup(drives);
         getChildren().add(holonomicDrive);
 
-        mecanumDrive = new RadioButton("Mecanum");
+        RadioButton mecanumDrive = new RadioButton("Mecanum");
         mecanumDrive.setLayoutX(795);
         mecanumDrive.setLayoutY(300);
+        mecanumDrive.setOnAction((e) -> togglingKeep = 3);
         mecanumDrive.setToggleGroup(drives);
         getChildren().add(mecanumDrive);
 
-        tankDrive.setOnAction(this::processRadioButtons);
-        holonomicDrive.setOnAction(this::processRadioButtons);
-        mecanumDrive.setOnAction(this::processRadioButtons);
-        clear.setOnAction(this::processButtonPress);
+        clear.setOnAction(this::processCleanButtonOnPressed);
         generate.setOnAction(this::generation);
-        fieldHolder.setOnMouseClicked(this::processMousePress);
-        github.setOnAction(this::hyperlink);
+        fieldHolder.setOnMouseClicked(this::processFieldHolderOnMousePressed);
+        github.setOnAction((e) -> {
+            if (Desktop.isDesktopSupported()){
+            try {
+                Desktop.getDesktop().browse(new URI("https://www.github.com/yup-its-rowan"));
+            } catch (IOException | URISyntaxException e1) {
+                e1.printStackTrace();
+            }
+        }});
 
-        this.setOnContextMenuRequested(this::handleModeMenuRequest);
+        this.setOnContextMenuRequested(this::processModeMenuRequest);
 
-        this.setOnKeyPressed(this::processWayPointKeyPress);
+        this.setOnKeyPressed(this::processFieldHolderOnKeyPressed);
 
-        Rectangle rect = new Rectangle(0, 0, 100, 100);
-        Tooltip t = new Tooltip("A Square");
-        Tooltip.install(rect, t);
-
-        modeContextMenu = new ContextMenu();
-
-        mouseLocationReporter = new Label();
+        final Label mouseLocationReporter = new Label();
         mouseLocationReporter.setLayoutX(0);
         mouseLocationReporter.setLayoutY(0);
         getChildren().add(mouseLocationReporter);
-
 
         wayPointLocationReporter = new Label();
         wayPointLocationReporter.setLayoutX(0);
         wayPointLocationReporter.setLayoutY(20);
         getChildren().add(wayPointLocationReporter);
 
-        this.setOnMouseMoved(this::handleMouseTracking);
-        this.setOnMouseDragged(this::handleMouseTracking);
+        EventHandler<MouseEvent> processMouseMovement = event -> {
+            final String msg = String.format("Mouse: %s", formatLocation(event.getSceneX(), event.getSceneY()));
+            mouseLocationReporter.setText(msg);
+        };
+
+        this.setOnMouseMoved(processMouseMovement);
+        this.setOnMouseDragged(processMouseMovement);
     }
 
-    public void handleMouseTracking(MouseEvent event) {
-        double xInches = (int) Math.round(convertToInches(event.getSceneX()));
-        double yInches = (int) Math.round(convertToInches(event.getSceneY()));
-        String msg = String.format("Mouse: (%.1f, %.1f)", xInches, yInches);
-        mouseLocationReporter.setText(msg);
+    public void reportMovingWayPointLocation(WayPoint wayPoint) {
 
-        String msg2;
-        if (movingWayPoint != null) {
-            double xInches2 = (int) Math.round(convertToInches(movingWayPoint.getCenterX()));
-            double yInches2 = (int) Math.round(convertToInches(movingWayPoint.getCenterY()));
-            msg2  = String.format("Waypoint: (%.1f, %.1f)", xInches2, yInches2);
+        final String msg;
+        if (wayPoint != null) {
+            msg = String.format("WayPoint: %s", formatLocation(wayPoint.getCenterX(), wayPoint.getCenterY()));
         } else {
-            msg2 = "";
+            msg = null;
         }
 
-        wayPointLocationReporter.setText(msg2);
-
+        wayPointLocationReporter.setText(msg);
     }
 
-    public void hyperlink(ActionEvent e){
-        if (e.getSource() == github){
-            if (Desktop.isDesktopSupported()){
-                try {
-                    Desktop.getDesktop().browse(new URI("https://www.github.com/yup-its-rowan"));
-                } catch (IOException | URISyntaxException e1) {
-                    e1.printStackTrace();
-                }
-            }
+    public void processCleanButtonOnPressed(ActionEvent e) {
+
+        setMovingWayPoint(null);
+
+        for (WayPoint wayPoint : wayPoints) {
+            wayPoint.delete(this);
         }
+
+        wayPoints.clear();
+        code.clear();
+        editMode = false;
     }
 
-    public void handleWayPointDrag(MouseEvent t) {
-
-        if (t.getButton().equals(MouseButton.PRIMARY)) {
-
-            WayPoint wayPoint = (WayPoint) t.getTarget();
-
-            if (movingWayPoint == wayPoint) {
-                double offsetX = t.getSceneX() - wayPoint.orgSceneX;
-                double offsetY = t.getSceneY() - wayPoint.orgSceneY;
-
-                wayPoint.orgSceneX = t.getSceneX();
-                wayPoint.orgSceneY = t.getSceneY();
-
-                wayPoint.updateCenter((int) (wayPoint.xPoint + offsetX), (int) (wayPoint.yPoint + offsetY));
-            }
-        }
-    }
-
-    public void handleWayPointClick(MouseEvent t) {
-
-        if (t.getButton().equals(MouseButton.PRIMARY)) {
-
-            if (!editMode) {
-                return;
-            }
-
-            if (movingWayPoint != null) {
-                movingWayPoint.resetColor();
-            }
-
-            WayPoint wayPoint = (WayPoint) t.getTarget();
-
-            wayPoint.getParent().requestFocus();
-
-            wayPoint.orgSceneX = t.getSceneX();
-            wayPoint.orgSceneY = t.getSceneY();
-            wayPoint.setFill(Color.GREEN);
-
-
-            movingWayPoint = wayPoint;
-        }
-    }
-
-    public void handleModeMenuRequest(ContextMenuEvent event) {
+    public void processModeMenuRequest(ContextMenuEvent me) {
 
         if (modeContextMenu != null) {
             modeContextMenu.hide();
@@ -263,12 +197,7 @@ public class ProjectPane extends Pane {
 
         placeModeItem.setOnAction(e -> {
             editMode = false;
-
-            if (movingWayPoint != null) {
-                movingWayPoint.resetColor();
-            }
-
-            movingWayPoint = null;
+            setMovingWayPoint(null);
         });
 
         if (editMode) {
@@ -277,29 +206,70 @@ public class ProjectPane extends Pane {
             modeContextMenu.getItems().add(editModeItem);
         }
 
-        modeContextMenu.show((Node) event.getTarget(), event.getScreenX(), event.getScreenY());
+        modeContextMenu.show((Node) me.getTarget(), me.getScreenX(), me.getScreenY());
     }
 
-    public void processWayPointKeyPress(final KeyEvent keyEvent) {
+    public void processWayPointOnMouseDragged(MouseEvent e) {
 
-        System.out.println(keyEvent.getCode());
-        System.out.println(keyEvent.getText());
+        if (e.getButton().equals(MouseButton.PRIMARY)) {
+
+            WayPoint wayPoint = (WayPoint) e.getTarget();
+
+            if (movingWayPoint == wayPoint) {
+                double offsetX = e.getSceneX() - wayPoint.orgSceneX;
+                double offsetY = e.getSceneY() - wayPoint.orgSceneY;
+
+                wayPoint.orgSceneX = e.getSceneX();
+                wayPoint.orgSceneY = e.getSceneY();
+
+                wayPoint.updateCenter((int) (wayPoint.xPoint + offsetX), (int) (wayPoint.yPoint + offsetY));
+                reportMovingWayPointLocation(movingWayPoint);
+            }
+        }
+    }
+
+    public void processWayPointOnMousePressed(MouseEvent e) {
+
+        if (e.getButton().equals(MouseButton.PRIMARY)) {
+
+            if (!editMode) {
+                return;
+            }
+
+            if (movingWayPoint != null) {
+                movingWayPoint.resetColor();
+            }
+
+            WayPoint wayPoint = (WayPoint) e.getTarget();
+
+            wayPoint.getParent().requestFocus();
+
+            wayPoint.orgSceneX = e.getSceneX();
+            wayPoint.orgSceneY = e.getSceneY();
+            wayPoint.setFill(Color.GREEN);
+
+            setMovingWayPoint(wayPoint);
+        }
+    }
+
+    public void processFieldHolderOnKeyPressed(final KeyEvent e) {
 
         if (!editMode || movingWayPoint == null) {
             return;
         }
 
-        if (keyEvent.getCode().equals( KeyCode.DELETE)) {
+        if (e.getCode().equals( KeyCode.DELETE)) {
             wayPoints.remove(movingWayPoint);
             movingWayPoint.delete(this);
-
-        } else if (keyEvent.getCode().isArrowKey()) {
+            setMovingWayPoint(null);
+            reportMovingWayPointLocation(null);
+        } else if (e.getCode().isArrowKey()) {
 
             int stepSize = 1;
             int dx = 0;
             int dy = 0;
 
-            switch (keyEvent.getCode()) {
+            switch (e.getCode()) {
 
                 case UP:
                     dy = -stepSize;
@@ -314,138 +284,83 @@ public class ProjectPane extends Pane {
                     dx = stepSize;
                     break;
             }
+
             movingWayPoint.updateCenter(movingWayPoint.xPoint + dx, movingWayPoint.yPoint + dy);
+            reportMovingWayPointLocation(movingWayPoint);
         }
     }
 
-    public void processMousePress(MouseEvent e){
+    public void processFieldHolderOnMousePressed(MouseEvent e){
 
         if (e.getButton().equals(MouseButton.PRIMARY)) {
 
-
-            if (e.getSource() == fieldHolder) {
-
-                if (editMode) {
-                    return;
-                }
-
-                Point point = new Point();
-                point.x = (int) e.getSceneX();
-                point.y = (int) e.getSceneY();
-
-                boolean firstPoint = wayPoints.size() == 0;
-
-                WayPoint lastWayPoint = firstPoint ? null : wayPoints.get(wayPoints.size() -1);
-                Color defaultColor = firstPoint ? Color.RED : Color.BLACK;
-
-                WayPoint wayPoint = new WayPoint(lastWayPoint, (int) e.getSceneX(), (int) e.getSceneY(), defaultColor, this);
-                wayPoint.setOnMousePressed(this::handleWayPointClick);
-                wayPoint.setOnMouseDragged(this::handleWayPointDrag);
-                wayPoint.setOnKeyPressed(this::processWayPointKeyPress);
-                wayPoint.setOnKeyTyped(this::processWayPointKeyPress);
-
-                wayPoints.add(wayPoint);
+            if (editMode) {
+                return;
             }
+
+            Point point = new Point();
+            point.x = (int) e.getSceneX();
+            point.y = (int) e.getSceneY();
+
+            boolean firstPoint = wayPoints.size() == 0;
+
+            WayPoint lastWayPoint = firstPoint ? null : wayPoints.get(wayPoints.size() -1);
+            Color defaultColor = firstPoint ? Color.RED : Color.BLACK;
+
+            WayPoint wayPoint = new WayPoint(lastWayPoint, (int) e.getSceneX(), (int) e.getSceneY(), defaultColor, this);
+            wayPoint.setOnMousePressed(this::processWayPointOnMousePressed);
+            wayPoint.setOnMouseDragged(this::processWayPointOnMouseDragged);
+            wayPoints.add(wayPoint);
         }
     }
 
-    public void processButtonPress(ActionEvent ev){
-        if (ev.getSource() == clear){
-            drives.selectToggle(null);
-            getChildren().clear();
-            getChildren().add(rect);
-            getChildren().add(clear);
-            getChildren().add(generate);
-            getChildren().add(fieldHolder);
-            getChildren().add(code);
-            getChildren().add(duckHolder);
-            getChildren().add(tankDrive);
-            getChildren().add(mecanumDrive);
-            getChildren().add(holonomicDrive);
-            getChildren().add(github);
-            if (togglingKeep ==1){
-                tankDrive.setSelected(true);
-            }else if (togglingKeep ==2){
-                holonomicDrive.setSelected(true);
-            } else if (togglingKeep == 3) {
-                mecanumDrive.setSelected(true);
-            }
-            xPixel.clear();
-            yPixel.clear();
-            lineLength.clear();
-            actualPathLength.clear();
-            encoderPathLength.clear();
-            leftOrRight.clear();
-            angleChanges.clear();
-            code.clear();
-            movements.clear();
-            wayPoints = new ArrayList<>();
-            movingWayPoint = null;
-            editMode = false;
+    private void setMovingWayPoint(WayPoint wayPoint) {
+
+        if (movingWayPoint != null) {
+            movingWayPoint.resetColor();
         }
-    }
 
-    public double getTargetAngle(WayPoint wayPoint1, WayPoint wayPoint2){
-        double dx = wayPoint2.xPoint-wayPoint1.xPoint;
-        double dy = wayPoint2.yPoint-wayPoint1.yPoint;
-        double targetAnglePi = Math.atan2(dy, dx);
-        double targetAngle = ((targetAnglePi*180)/Math.PI);
-        return normalizeAngle(targetAngle);
-    }
-
-    public double getLineLength(WayPoint wayPoint1, WayPoint wayPoint2){
-        double dx = wayPoint2.xPoint-wayPoint1.xPoint;
-        double dy = wayPoint2.yPoint-wayPoint1.yPoint;
-        return Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
-    }
-
-    public void processRadioButtons(ActionEvent e){
-
-        if ((e.getSource() == tankDrive)){
-            togglingKeep = 1;
-        } else if (e.getSource() == holonomicDrive){
-            togglingKeep = 2;
-
-        } else if (e.getSource() == mecanumDrive){
-            togglingKeep = 3;
+        if (wayPoint != null) {
+            wayPoint.setFill(Color.GREEN);
         }
+
+        movingWayPoint = wayPoint;
+        reportMovingWayPointLocation(movingWayPoint);
     }
 
-    public void generation(ActionEvent DIO){
+    public void generation(ActionEvent e){
 
-        if (DIO.getSource()==generate){
-            if (wayPoints.size()>0){
+        if (wayPoints.size()>0){
 
-                String className = classNameTextArea.getText();
+            String className = classNameTextArea.getText();
 
-                if (className == null || className.isBlank()) {
-                    className = DEFAULT_CLASS_NAME;
-                }
-
-                className = className.trim();
-
-                code.setText(
-                        "package org.firstinspires.ftc.teamcode.Autonomous;\n" +
-                                "import com.qualcomm.robotcore.eventloop.opmode.Autonomous;\n" +
-                                "\n" +
-                                "/**\n" +
-                                " * Created with Team 6183's Duckinator 3000\n" +
-                                " */\n" +
-                                "\n" +
-                                "@Autonomous(name = \""+className+"\", group = \"DuckSquad\")\n" +
-                                "public class "+ className + " extends " + getBaseClass() + " {\n" +
-                                "    @Override\n" +
-                                "    public void runOpMode() throws InterruptedException {\n" +
-                                "        initRobot();\n" +
-                                "        waitForStart();\n" +
-                                "        if (opModeIsActive()){\n" +
-                                moveHere() +
-                                "\n" +
-                                "        }\n" +
-                                "    }\n" +
-                                "}"
-                );
+            if (className == null || className.isBlank()) {
+                className = DEFAULT_CLASS_NAME;
             }
+
+            className = className.trim();
+
+            code.setText(
+                    "package org.firstinspires.ftc.teamcode.Autonomous;\n" +
+                            "import com.qualcomm.robotcore.eventloop.opmode.Autonomous;\n" +
+                            "\n" +
+                            "/**\n" +
+                            " * Created with Team 6183's Duckinator 3000\n" +
+                            " */\n" +
+                            "\n" +
+                            "@Autonomous(name = \""+className+"\", group = \"DuckSquad\")\n" +
+                            "public class "+ className + " extends " + getBaseClass() + " {\n" +
+                            "    @Override\n" +
+                            "    public void runOpMode() throws InterruptedException {\n" +
+                            "        initRobot();\n" +
+                            "        waitForStart();\n" +
+                            "        if (opModeIsActive()){\n" +
+                            generateMoveHere() +
+                            "\n" +
+                            "        }\n" +
+                            "    }\n" +
+                            "}"
+            );
         }
     }
 
@@ -462,15 +377,7 @@ public class ProjectPane extends Pane {
         }
     }
 
-    private String convertArrayList(ArrayList<String> stringList) {
-        return String.join("", stringList);
-    }
-
-    private double normalizeAngle(double angle) {
-        return ((angle + 180) % 360) - 180;
-    }
-
-    private String moveHere() {
+    private String generateMoveHere() {
         ArrayList<String> movements = new ArrayList<>();
 
         if (wayPoints.size() >= 2) {
@@ -504,9 +411,40 @@ public class ProjectPane extends Pane {
         return convertArrayList(movements);
     }
 
-    private double convertToInches(double pixelValue) {
+    // Helpers
+
+    public static String formatLocation(double x, double y) {
+        double xInches = convertToInches(x);
+        double yInches = convertToInches(y);
+        return String.format("(%.1f, %.1f)", xInches, yInches);
+    }
+
+    public static double getTargetAngle(WayPoint wayPoint1, WayPoint wayPoint2) {
+        double dx = wayPoint2.xPoint-wayPoint1.xPoint;
+        double dy = wayPoint2.yPoint-wayPoint1.yPoint;
+        double targetAnglePi = Math.atan2(dy, dx);
+        double targetAngle = ((targetAnglePi*180)/Math.PI);
+        return normalizeAngle(targetAngle);
+    }
+
+    public static double getLineLength(WayPoint wayPoint1, WayPoint wayPoint2) {
+        double dx = wayPoint2.xPoint-wayPoint1.xPoint;
+        double dy = wayPoint2.yPoint-wayPoint1.yPoint;
+        return Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
+    }
+
+    private static double convertToInches(double pixelValue) {
         int fieldMeasurementInches = 144;
         double conversionFactorPixelInch = ((double) fieldMeasurementInches / (double) FIELD_MEASUREMENT_PIXELS);
         return pixelValue * conversionFactorPixelInch;
     }
+
+    private static String convertArrayList(ArrayList<String> stringList) {
+        return String.join("", stringList);
+    }
+
+    private static double normalizeAngle(double angle) {
+        return ((angle + 180) % 360) - 180;
+    }
+
 }

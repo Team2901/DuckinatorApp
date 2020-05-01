@@ -34,6 +34,8 @@ import java.util.ArrayList;
 public class ProjectPane extends Pane {
 
     private final static String DEFAULT_CLASS_NAME = "DuckinatorAuto";
+    protected final static int FIELD_MEASUREMENT_PIXELS = 510;
+
     private static class WayPoint extends Circle {
 
         Color defaultColor;
@@ -91,15 +93,15 @@ public class ProjectPane extends Pane {
 
         public void updateCenter( int xPoint, int yPoint) {
 
-            this.xPoint = xPoint;
-            this.yPoint = yPoint;
+            this.xPoint = Math.max(Math.min(xPoint, FIELD_MEASUREMENT_PIXELS), 0);
+            this.yPoint = Math.max(Math.min(yPoint, FIELD_MEASUREMENT_PIXELS), 0);
 
-            setCenterX(xPoint);
-            setCenterY(yPoint);
+            setCenterX(this.xPoint);
+            setCenterY(this.yPoint);
 
             if (lastLine != null) {
-                lastLine.setEndX(xPoint);
-                lastLine.setEndY(yPoint);
+                lastLine.setEndX(this.xPoint);
+                lastLine.setEndY(this.yPoint);
             }
 
             if (nextWayPoint != null && nextWayPoint.lastLine != null) {
@@ -145,7 +147,6 @@ public class ProjectPane extends Pane {
     private final Button clear;
     private final Button generate;
     private final Rectangle rect;
-    private final static int FIELD_MEASUREMENT_PIXELS = 510;
     private final TextArea code;
     private final Label classNameLabel;
     private final TextField classNameTextArea;
@@ -174,8 +175,8 @@ public class ProjectPane extends Pane {
 
         Image field = new Image(this.getClass().getResourceAsStream("/field.png"));
         fieldHolder = new ImageView(field);
-        fieldHolder.setFitHeight(fieldMeasurementPixels);
-        fieldHolder.setFitWidth(fieldMeasurementPixels);
+        fieldHolder.setFitHeight(FIELD_MEASUREMENT_PIXELS);
+        fieldHolder.setFitWidth(FIELD_MEASUREMENT_PIXELS);
         fieldHolder.setLayoutX(0);
         fieldHolder.setLayoutY(0);
         getChildren().add(fieldHolder);
@@ -604,7 +605,7 @@ public class ProjectPane extends Pane {
 
     private double convertToInches(double pixelValue) {
         int fieldMeasurementInches = 144;
-        double conversionFactorPixelInch = ((double) fieldMeasurementInches / (double) fieldMeasurementPixels);
+        double conversionFactorPixelInch = ((double) fieldMeasurementInches / (double) FIELD_MEASUREMENT_PIXELS);
         return pixelValue * conversionFactorPixelInch;
     }
 }

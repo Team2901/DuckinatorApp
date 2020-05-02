@@ -1,3 +1,4 @@
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 
 public class WayLine extends Line {
@@ -5,9 +6,11 @@ public class WayLine extends Line {
     private WayPoint startPoint;
     private WayPoint endPoint;
 
+    private boolean lineSelected;
 
     public WayLine(WayPoint startPoint, WayPoint endPoint) {
         super(startPoint.xPoint, startPoint.yPoint, endPoint.xPoint, endPoint.yPoint);
+        this.setStrokeWidth(2);
         this.startPoint = startPoint;
         this.endPoint = endPoint;
 
@@ -38,5 +41,18 @@ public class WayLine extends Line {
         this.setStartY(startPoint.yPoint);
         this.setEndX(endPoint.xPoint);
         this.setEndY(endPoint.yPoint);
+    }
+
+    public void setSelected(boolean selected) {
+        this.lineSelected = selected;
+        updateColor();
+    }
+
+    private void updateColor() {
+        if (lineSelected) {
+            this.setStroke(Color.GREEN);
+        } else {
+            this.setStroke(Color.BLACK);
+        }
     }
 }

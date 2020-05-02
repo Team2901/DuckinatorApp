@@ -20,6 +20,15 @@ public class WayPoint extends Circle {
     boolean pointSelected;
 
     public WayPoint(WayPoint lastWayPoint, double xPoint, double yPoint, Color defaultColor, Pane parent) {
+        this(lastWayPoint, null, xPoint, yPoint, defaultColor, parent);
+
+    }
+
+    public WayPoint(WayLine lastWayPoint, double xPoint, double yPoint, Color defaultColor, Pane parent) {
+        this(lastWayPoint.getStartPoint(), lastWayPoint, xPoint, yPoint, defaultColor, parent);
+    }
+
+    public WayPoint(WayPoint lastWayPoint, WayLine wayLine, double xPoint, double yPoint, Color defaultColor, Pane parent) {
         super(xPoint, yPoint, 10, Color.TRANSPARENT);
 
         this.xPoint = xPoint;
@@ -29,6 +38,10 @@ public class WayPoint extends Circle {
         if (lastWayPoint != null) {
             this.inputLine = new WayLine(lastWayPoint, this);
             lastWayPoint.setOutputLine(this.inputLine);
+        }
+
+        if (wayLine != null) {
+            this.setOutputLine(wayLine);
         }
 
         this.subCircle = new Circle(xPoint, yPoint, 4, defaultColor);

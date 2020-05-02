@@ -46,6 +46,8 @@ public class ProjectPane extends Pane {
 
     private final ArrayList<WayPoint> wayPoints = new ArrayList<>();
     private WayPoint movingWayPoint;
+    private WayLine movingWayLine;
+
     private boolean editMode = false;
 
     public ProjectPane () {
@@ -128,12 +130,12 @@ public class ProjectPane extends Pane {
         fieldHolder.setOnMouseClicked(this::processFieldHolderOnMousePressed);
         github.setOnAction((e) -> {
             if (Desktop.isDesktopSupported()){
-            try {
-                Desktop.getDesktop().browse(new URI("https://www.github.com/yup-its-rowan"));
-            } catch (IOException | URISyntaxException e1) {
-                e1.printStackTrace();
-            }
-        }});
+                try {
+                    Desktop.getDesktop().browse(new URI("https://www.github.com/yup-its-rowan"));
+                } catch (IOException | URISyntaxException e1) {
+                    e1.printStackTrace();
+                }
+            }});
 
         this.setOnContextMenuRequested(this::processModeMenuRequest);
 
@@ -247,6 +249,26 @@ public class ProjectPane extends Pane {
         }
     }
 
+
+    public void processWayLineOnMousePressed(MouseEvent e) {
+
+        if (e.getButton().equals(MouseButton.PRIMARY)) {
+
+            System.out.println("HERE");
+
+            if (!editMode) {
+                processFieldHolderOnMousePressed(e);
+                return;
+            }
+
+            WayLine wayLine = (WayLine) e.getTarget();
+
+            setMovingWayLine(wayLine);
+
+            wayLine.getParent().requestFocus();
+        }
+    }
+
     public void processFieldHolderOnKeyPressed(final KeyEvent e) {
 
         if (!editMode || movingWayPoint == null) {
@@ -285,11 +307,11 @@ public class ProjectPane extends Pane {
         }
     }
 
-    public void processFieldHolderOnMousePressed(MouseEvent e){
+    public void processFieldHolderOnMousePressed123(MouseEvent e){
 
         if (e.getButton().equals(MouseButton.PRIMARY)) {
 
-            if (editMode) {
+            if (!editMode) {
                 return;
             }
 
@@ -301,9 +323,58 @@ public class ProjectPane extends Pane {
             WayPoint wayPoint = new WayPoint(lastWayPoint, e.getSceneX(), e.getSceneY(), defaultColor, this);
             wayPoint.setOnMousePressed(this::processWayPointOnMousePressed);
             wayPoint.setOnMouseDragged(this::processWayPointOnMouseDragged);
+
+            if (wayPoint.inputLine != null) {
+                wayPoint.inputLine.setOnMousePressed(this::processWayLineOnMousePressed);
+            }
             wayPoints.add(wayPoint);
         }
     }
+
+
+
+
+    public void processFieldHolderOnMousePressed(MouseEvent e){
+
+        if (e.getButton().equals(MouseButton.PRIMARY)) {
+
+            WayPoint wayPoint;
+            int addIndex = 0;
+
+            if (!editMode) {
+                addIndex = wayPoints.size();
+
+                boolean firstPoint = addIndex == 0;
+                WayPoint lastWayPoint = firstPoint ? null : wayPoints.get(wayPoints.size() -1);
+                Color defaultColor = firstPoint ? Color.RED : Color.BLACK;
+
+                wayPoint  = new WayPoint(lastWayPoint, e.getSceneX(), e.getSceneY(), defaultColor, this);
+
+            } else if (movingWayLine != null) {
+
+                addIndex = wayPoints.indexOf(movingWayLine.getEndPoint());
+
+                wayPoint  = new WayPoint(movingWayLine, e.getSceneX(), e.getSceneY(), Color.BLACK, this);
+                setMovingWayPoint(wayPoint);
+            } else {
+                wayPoint = null;
+            }
+
+            if (wayPoint != null) {
+                wayPoint.setOnMousePressed(this::processWayPointOnMousePressed);
+                wayPoint.setOnMouseDragged(this::processWayPointOnMouseDragged);
+
+                if (wayPoint.inputLine != null) {
+                    wayPoint.inputLine.setOnMousePressed(this::processWayLineOnMousePressed);
+                }
+                wayPoints.add(addIndex, wayPoint);
+            }
+        }
+    }
+
+
+
+
 
     private void setMovingWayPoint(WayPoint wayPoint) {
 
@@ -313,10 +384,25 @@ public class ProjectPane extends Pane {
 
         if (wayPoint != null) {
             wayPoint.setSelected(true);
+            setMovingWayLine(null);
         }
 
         movingWayPoint = wayPoint;
         reportMovingWayPointLocation(movingWayPoint);
+    }
+
+    private void setMovingWayLine(WayLine wayLine) {
+
+        if (movingWayLine != null) {
+            movingWayLine.setSelected(false);
+        }
+
+        if (wayLine != null) {
+            wayLine.setSelected(true);
+            setMovingWayPoint(null);
+        }
+
+        movingWayLine = wayLine;
     }
 
     public void generation(ActionEvent e){
@@ -411,7 +497,7 @@ public class ProjectPane extends Pane {
 
     public static double getTargetAngle(WayPoint wayPoint1, WayPoint wayPoint2) {
         double dx = wayPoint2.xPoint-wayPoint1.xPoint;
-        double dy = wayPoint2.yPoint-wayPoint1.yPoint;
+        double dy = wayPoint1.yPoint-wayPoint2.yPoint;
         double targetAnglePi = Math.atan2(dy, dx);
         double targetAngle = ((targetAnglePi*180)/Math.PI);
         return normalizeAngle(targetAngle);

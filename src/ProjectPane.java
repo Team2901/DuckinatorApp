@@ -232,6 +232,7 @@ public class ProjectPane extends Pane {
         if (e.getButton().equals(MouseButton.PRIMARY)) {
 
             if (!editMode) {
+                processFieldHolderOnMousePressed(e);
                 return;
             }
 

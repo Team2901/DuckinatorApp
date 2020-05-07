@@ -67,6 +67,7 @@ public class ProjectPane extends Pane{
     private Label careful;
     private Hyperlink github;
     private WayPoint selectedPoint;
+    private Drawable lastDrawable;
 
     public ProjectPane (){
 
@@ -304,7 +305,7 @@ public class ProjectPane extends Pane{
                 circleTicker = 1;
                 Circle startCircle = new WayPoint(xPoint, yPoint, 3, Color.RED);
                 startCircle.setOnMousePressed(this::selectPoint);
-                getChildren().add(startCircle);
+                addDrawable((Drawable) startCircle);
             }else if (circleTicker == 1){
                 Circle nextCircles = new WayPoint(xPoint, yPoint, 4);
                 nextCircles.setOnMousePressed(this::selectPoint);
@@ -601,6 +602,14 @@ public class ProjectPane extends Pane{
             }
         }
         return convertArrayList(movements);
+    }
+
+    public void addDrawable(Drawable drawable){
+        drawable.drawBefore = lastDrawable;
+        if(lastDrawable != null){
+            lastDrawable = drawable;
+        }
+        lastDrawable = drawable;
     }
 
 }

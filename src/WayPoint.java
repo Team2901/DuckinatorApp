@@ -1,7 +1,7 @@
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 
-public class WayPoint extends Circle {
+public class WayPoint extends Drawable {
     public Color originalColor;
 
     public WayPoint(int xPoint, int yPoint, int i) {

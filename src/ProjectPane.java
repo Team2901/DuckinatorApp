@@ -265,7 +265,8 @@ public class ProjectPane extends Pane{
         clear.setOnAction(this::processButtonPress);
         generate.setOnAction(this::generation);
         fieldHolder.setOnMouseClicked(this::processMousePress);
-        code.setOnKeyPressed(this::processKeyPress);
+        this.setOnKeyPressed(this::gameAreaKeyPress);
+        //code.setOnKeyPressed(this::processKeyPress);
         github.setOnAction(this::hyperlinky);
         driveMotors = tankDriveMotors;
         driveInit = tankDriveInit;
@@ -397,7 +398,8 @@ public class ProjectPane extends Pane{
     public void gameAreaKeyPress(KeyEvent event){
         if (event.getCode()== KeyCode.DELETE){
             if (selectedPoint != null){
-                selectedPoint.setFill(Color.PURPLE);
+                this.points.remove(selectedPoint);
+                this.getChildren().remove(selectedPoint);
             }
         }
     }

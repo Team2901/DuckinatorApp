@@ -306,6 +306,7 @@ public class ProjectPane extends Pane{
                 Circle startCircle = new WayPoint(xPoint, yPoint, 3, Color.RED);
                 startCircle.setOnMousePressed(this::selectPoint);
                 addDrawable((Drawable) startCircle);
+                getChildren().add(startCircle);
             }else if (circleTicker == 1){
                 Circle nextCircles = new WayPoint(xPoint, yPoint, 4);
                 nextCircles.setOnMousePressed(this::selectPoint);
@@ -603,11 +604,11 @@ public class ProjectPane extends Pane{
         }
         return convertArrayList(movements);
     }
-
     public void addDrawable(Drawable drawable){
         drawable.drawBefore = lastDrawable;
+        // TODO this doesnt make sense. Its useless
         if(lastDrawable != null){
-            lastDrawable = drawable;
+            lastDrawable.drawAfter = drawable;
         }
         lastDrawable = drawable;
     }

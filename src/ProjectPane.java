@@ -5,6 +5,7 @@
  */
 
 import javafx.event.ActionEvent;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
@@ -47,7 +48,7 @@ public class ProjectPane extends Pane{
     ArrayList<Point> points = new ArrayList<Point>();
     private Line line;
     private Circle startCircle, nextCircles;
-    private int circleTicker, lineTicker = 0;
+    private int lineTicker = 0;
     private Button clear, generate;
     private Rectangle rect;
     private int fieldMeasurementPixels = 510;
@@ -301,23 +302,20 @@ public class ProjectPane extends Pane{
             yPixel.add(yPoint);
             points.add(point);
             robotSpecs();
-            if (circleTicker == 0){
-                circleTicker = 1;
+            if (lastDrawable == null){
                 WayPoint startCircle = new WayPoint(xPoint, yPoint, 3, 8, Color.RED);
                 startCircle.setOnMousePressed(this::selectPoint);
-                addDrawable((Drawable) startCircle);
-                getChildren().add(startCircle);
-                getChildren().add(startCircle.subCircle);
-            }else if (circleTicker == 1){
-                Circle nextCircles = new WayPoint(xPoint, yPoint, 4, 8);
+                addDrawable(startCircle);
+            }else{
+                WayPoint nextCircles = new WayPoint(xPoint, yPoint, 4, 8);
                 nextCircles.setOnMousePressed(this::selectPoint);
-                getChildren().add(nextCircles);
                 lineTicker++;
-                Line line = new Line(xPixel.get(lineTicker-1),yPixel.get(lineTicker-1),xPixel.get(lineTicker),yPixel.get(lineTicker));
+                LineConnector line = new LineConnector(xPixel.get(lineTicker-1),yPixel.get(lineTicker-1),xPixel.get(lineTicker),yPixel.get(lineTicker));
                 lineLength.add(Math.sqrt( ( ( xPixel.get(lineTicker) - xPixel.get(lineTicker-1) ) * ( xPixel.get(lineTicker) - xPixel.get(lineTicker-1) ) ) + ( ( yPixel.get(lineTicker) - yPixel.get(lineTicker-1) ) * ( yPixel.get(lineTicker) - yPixel.get(lineTicker-1) ) ) ));
                 actualPathLength.add((lineLength.get(lineTicker-1)*conversionFactorPixelInch));
                 encoderPathLength.add(convertInchesToEncoderTicks(actualPathLength.get(lineTicker-1)));
-                getChildren().add(line);
+                addDrawable(line);
+                addDrawable(nextCircles);
                 //if (lineTicker == 1){
                 //    movements.add("            goForward(" + (int)Math.round(encoderPathLength.get(0)) + ");\n");
                 //}else if (lineTicker > 1){
@@ -380,7 +378,7 @@ public class ProjectPane extends Pane{
             angleChanges.clear();
             code.clear();
             movements.clear();
-            circleTicker = 0;
+            lastDrawable = null;
             lineTicker = 0;
         }
     }
@@ -401,8 +399,7 @@ public class ProjectPane extends Pane{
     public void gameAreaKeyPress(KeyEvent event){
         if (event.getCode()== KeyCode.DELETE){
             if (selectedPoint != null){
-                this.points.remove(selectedPoint);
-                this.getChildren().remove(selectedPoint);
+                deleteWayPoint(selectedPoint);
             }
         }
     }
@@ -605,13 +602,56 @@ public class ProjectPane extends Pane{
         }
         return convertArrayList(movements);
     }
+
     public void addDrawable(Drawable drawable){
-        drawable.drawBefore = lastDrawable;
-        // TODO this doesnt make sense. Its useless
+        drawable.setBefore(lastDrawable);
         if(lastDrawable != null){
-            lastDrawable.drawAfter = drawable;
+            lastDrawable.setAfter(drawable);
         }
         lastDrawable = drawable;
+        getChildren().add((Node) drawable);
+        if(drawable instanceof WayPoint){
+            WayPoint point = (WayPoint) drawable;
+            getChildren().add(point.subCircle);
+        }
     }
 
+    public void deleteWayPoint(Drawable point){
+        Drawable lineBefore = selectedPoint.getBefore();
+        LineConnector lineAfter = (LineConnector) selectedPoint.getAfter();
+
+        WayPoint pointBefore = selectedPoint.getPriorPoint();
+
+        if(lineBefore != null){
+            removeDrawable(lineBefore);
+        }
+
+        if(lineAfter != null){
+            if(pointBefore != null){
+                lineAfter.setStartPoint(pointBefore);
+            } else {
+                removeDrawable(lineAfter);
+            }
+        }
+
+        removeDrawable(point);
+    }
+
+    public void removeDrawable(Drawable remove){
+        getChildren().remove(remove);
+        if(remove instanceof WayPoint){
+            WayPoint point = (WayPoint) remove;
+            getChildren().remove(point.subCircle);
+        }
+        Drawable before = remove.getBefore();
+        Drawable after = remove.getAfter();
+
+        if(before != null){
+            before.setAfter(remove.getAfter());
+        }
+
+        if(after != null){
+            after.setBefore(remove.getBefore());
+        }
+    }
 }

@@ -303,12 +303,13 @@ public class ProjectPane extends Pane{
             robotSpecs();
             if (circleTicker == 0){
                 circleTicker = 1;
-                Circle startCircle = new WayPoint(xPoint, yPoint, 3, Color.RED);
+                WayPoint startCircle = new WayPoint(xPoint, yPoint, 3, 8, Color.RED);
                 startCircle.setOnMousePressed(this::selectPoint);
                 addDrawable((Drawable) startCircle);
                 getChildren().add(startCircle);
+                getChildren().add(startCircle.subCircle);
             }else if (circleTicker == 1){
-                Circle nextCircles = new WayPoint(xPoint, yPoint, 4);
+                Circle nextCircles = new WayPoint(xPoint, yPoint, 4, 8);
                 nextCircles.setOnMousePressed(this::selectPoint);
                 getChildren().add(nextCircles);
                 lineTicker++;

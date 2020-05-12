@@ -70,7 +70,6 @@ public class ProjectPane extends Pane{
     private Label careful;
     private Hyperlink github;
     private WayPoint selectedPoint;
-    private Drawable lastDrawable;
 
     public ProjectPane (){
 
@@ -312,7 +311,8 @@ public class ProjectPane extends Pane{
                 WayPoint nextCircles = new WayPoint(xPoint, yPoint, 4, 8);
                 nextCircles.setOnMousePressed(this::selectPoint);
                 lineTicker++;
-                LineConnector line = new LineConnector(xPixel.get(lineTicker-1),yPixel.get(lineTicker-1),xPixel.get(lineTicker),yPixel.get(lineTicker));
+                WayPoint lastWayPoint = drawables.isEmpty() ? null : (WayPoint) drawables.get(drawables.size() - 1);
+                LineConnector line = new LineConnector((int) lastWayPoint.getCenterX(),(int) lastWayPoint.getCenterY(),xPoint,yPoint);
                 lineLength.add(Math.sqrt( ( ( xPixel.get(lineTicker) - xPixel.get(lineTicker-1) ) * ( xPixel.get(lineTicker) - xPixel.get(lineTicker-1) ) ) + ( ( yPixel.get(lineTicker) - yPixel.get(lineTicker-1) ) * ( yPixel.get(lineTicker) - yPixel.get(lineTicker-1) ) ) ));
                 actualPathLength.add((lineLength.get(lineTicker-1)*conversionFactorPixelInch));
                 encoderPathLength.add(convertInchesToEncoderTicks(actualPathLength.get(lineTicker-1)));
@@ -380,7 +380,7 @@ public class ProjectPane extends Pane{
             angleChanges.clear();
             code.clear();
             movements.clear();
-            lastDrawable = null;
+            drawables.clear();
             lineTicker = 0;
         }
     }

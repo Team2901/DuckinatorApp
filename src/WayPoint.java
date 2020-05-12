@@ -46,4 +46,12 @@ public class WayPoint extends Circle implements Drawable {
     public Drawable getAfter() {
         return this.drawAfter;
     }
+
+    public void setSelected(boolean selected){
+        if(selected){
+            subCircle.setFill(Color.GREEN);
+        }else{
+            subCircle.setFill(originalColor);
+        }
+    }
 }

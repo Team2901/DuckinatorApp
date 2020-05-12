@@ -338,10 +338,10 @@ public class ProjectPane extends Pane{
 
     private void selectPoint(MouseEvent mouseEvent){
         if(selectedPoint != null) {
-            selectedPoint.setFill(selectedPoint.originalColor);
+            selectedPoint.setSelected(false);
         }
-        Circle circle = (Circle) mouseEvent.getTarget();
-        circle.setFill(Color.GREEN);
+        WayPoint circle = (WayPoint) mouseEvent.getTarget();
+        circle.setSelected(true);
         selectedPoint = (WayPoint) circle;
     }
 
@@ -612,11 +612,11 @@ public class ProjectPane extends Pane{
             lastDrawable.setAfter(drawable);
         }
         lastDrawable = drawable;
-        getChildren().add((Node) drawable);
         if(drawable instanceof WayPoint){
             WayPoint point = (WayPoint) drawable;
             getChildren().add(point.subCircle);
         }
+        getChildren().add((Node) drawable);
         drawables.add(drawable);
     }
 

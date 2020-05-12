@@ -46,6 +46,8 @@ public class ProjectPane extends Pane{
     ArrayList<String> leftOrRight = new ArrayList<String>();
     ArrayList<String> movements = new ArrayList<String>();
     ArrayList<Point> points = new ArrayList<Point>();
+    ArrayList<WayPoint> wayPoints = new ArrayList<>();
+    ArrayList<Drawable> drawables = new ArrayList<>();
     private Line line;
     private Circle startCircle, nextCircles;
     private int lineTicker = 0;
@@ -302,7 +304,7 @@ public class ProjectPane extends Pane{
             yPixel.add(yPoint);
             points.add(point);
             robotSpecs();
-            if (lastDrawable == null){
+            if (drawables.isEmpty()){
                 WayPoint startCircle = new WayPoint(xPoint, yPoint, 3, 8, Color.RED);
                 startCircle.setOnMousePressed(this::selectPoint);
                 addDrawable(startCircle);
@@ -604,6 +606,7 @@ public class ProjectPane extends Pane{
     }
 
     public void addDrawable(Drawable drawable){
+        Drawable lastDrawable = drawables.isEmpty() ? null : drawables.get(drawables.size() - 1);
         drawable.setBefore(lastDrawable);
         if(lastDrawable != null){
             lastDrawable.setAfter(drawable);
@@ -614,6 +617,7 @@ public class ProjectPane extends Pane{
             WayPoint point = (WayPoint) drawable;
             getChildren().add(point.subCircle);
         }
+        drawables.add(drawable);
     }
 
     public void deleteWayPoint(Drawable point){
@@ -643,6 +647,8 @@ public class ProjectPane extends Pane{
             WayPoint point = (WayPoint) remove;
             getChildren().remove(point.subCircle);
         }
+        drawables.remove(remove);
+
         Drawable before = remove.getBefore();
         Drawable after = remove.getAfter();
 

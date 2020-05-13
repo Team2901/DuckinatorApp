@@ -83,8 +83,8 @@ public class WayPoint extends Circle implements Drawable {
 
     @Override
     public void addToPane(Pane pane) {
-        pane.getChildren().add(subCircle);
         pane.getChildren().add(this);
+        pane.getChildren().add(subCircle);
     }
 
     @Override

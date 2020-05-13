@@ -277,8 +277,8 @@ public class ProjectPane extends Pane {
         }
 
         if (e.getCode().equals( KeyCode.DELETE)) {
-            clearSelectedDrawables();
             deleteWayPoint(selectedWayPoint);
+            clearSelectedDrawables();
             reportMovingWayPointLocation(null);
         } else if (e.getCode().equals(KeyCode.ESCAPE)) {
             clearSelectedDrawables();

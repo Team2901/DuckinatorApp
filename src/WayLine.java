@@ -4,6 +4,7 @@ import javafx.scene.shape.Line;
 
 public class WayLine extends Line implements Drawable {
 
+    private final Line subLine;
     private WayPoint priorPoint;
     private WayPoint nextPoint;
 
@@ -11,7 +12,11 @@ public class WayLine extends Line implements Drawable {
 
     public WayLine(final WayPoint priorPoint, final WayPoint nextPoint) {
         super(priorPoint.getXPoint(), priorPoint.getYPoint(), nextPoint.getXPoint(), nextPoint.getYPoint());
-        setStrokeWidth(2);
+        setStrokeWidth(6);
+        setStroke(Color.TRANSPARENT);
+
+        subLine = new Line(priorPoint.getXPoint(), priorPoint.getYPoint(), nextPoint.getXPoint(), nextPoint.getYPoint());
+        subLine.setStrokeWidth(2);
 
         priorPoint.setNextDrawable(this, true);
         nextPoint.setPriorDrawable(this, true);
@@ -86,12 +91,16 @@ public class WayLine extends Line implements Drawable {
 
     @Override
     public void addToPane(final Pane pane) {
-        pane.getChildren().add(this);
+
+        int index = pane.getChildren().indexOf(priorPoint);
+        pane.getChildren().add(index,subLine);
+        pane.getChildren().add(index,this);
     }
 
     @Override
     public void removeFromPane(final Pane pane) {
         pane.getChildren().remove(this);
+        pane.getChildren().remove(subLine);
     }
 
     @Override
@@ -102,8 +111,12 @@ public class WayLine extends Line implements Drawable {
             setStartY(priorPoint.getYPoint());
             setEndX(nextPoint.getXPoint());
             setEndY(nextPoint.getYPoint());
-        } else {
-            setFill(Color.RED);
+
+            subLine.setStartX(priorPoint.getXPoint());
+            subLine.setStartY(priorPoint.getYPoint());
+            subLine.setEndX(nextPoint.getXPoint());
+            subLine.setEndY(nextPoint.getYPoint());
+
         }
     }
 
@@ -115,9 +128,9 @@ public class WayLine extends Line implements Drawable {
 
     private void updateColor() {
         if (selected) {
-            setStroke(Color.GREEN);
+            subLine.setStroke(Color.GREEN);
         } else {
-            setStroke(Color.BLACK);
+            subLine.setStroke(Color.BLACK);
         }
     }
 }

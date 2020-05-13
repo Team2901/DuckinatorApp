@@ -249,7 +249,6 @@ public class ProjectPane extends Pane {
         }
     }
 
-
     public void processWayLineOnMousePressed(MouseEvent e) {
 
         if (e.getButton().equals(MouseButton.PRIMARY)) {
@@ -307,33 +306,6 @@ public class ProjectPane extends Pane {
         }
     }
 
-    public void processFieldHolderOnMousePressed123(MouseEvent e){
-
-        if (e.getButton().equals(MouseButton.PRIMARY)) {
-
-            if (!editMode) {
-                return;
-            }
-
-            boolean firstPoint = wayPoints.size() == 0;
-
-            WayPoint lastWayPoint = firstPoint ? null : wayPoints.get(wayPoints.size() -1);
-            Color defaultColor = firstPoint ? Color.RED : Color.BLACK;
-
-            WayPoint wayPoint = new WayPoint(lastWayPoint, e.getSceneX(), e.getSceneY(), defaultColor, this);
-            wayPoint.setOnMousePressed(this::processWayPointOnMousePressed);
-            wayPoint.setOnMouseDragged(this::processWayPointOnMouseDragged);
-
-            if (wayPoint.inputLine != null) {
-                wayPoint.inputLine.setOnMousePressed(this::processWayLineOnMousePressed);
-            }
-            wayPoints.add(wayPoint);
-        }
-    }
-
-
-
-
     public void processFieldHolderOnMousePressed(MouseEvent e){
 
         if (e.getButton().equals(MouseButton.PRIMARY)) {
@@ -371,10 +343,6 @@ public class ProjectPane extends Pane {
             }
         }
     }
-
-
-
-
 
     private void setMovingWayPoint(WayPoint wayPoint) {
 
@@ -521,5 +489,4 @@ public class ProjectPane extends Pane {
     private static double normalizeAngle(double angle) {
         return ((angle + 180) % 360) - 180;
     }
-
 }

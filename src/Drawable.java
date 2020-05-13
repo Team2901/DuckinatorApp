@@ -18,7 +18,7 @@ public interface Drawable {
     void addToPane(final Pane pane);
 
     void redraw();
-    
+
     void setSelected(final boolean selected);
 
     String formatLocation();

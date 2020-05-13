@@ -36,46 +36,22 @@ public class WayPoint extends Circle implements Drawable {
     }
 
     @Override
-    public WayLine getPriorLine() {
-        return priorLine;
-    }
+    public void setPriorDrawable(final Drawable priorDrawable) {
+        priorLine = (WayLine) priorDrawable;
 
-    @Override
-    public WayLine getNextLine() {
-        return nextLine;
-    }
-
-    @Override
-    public Drawable getPriorDrawable() {
-        return getPriorLine();
-    }
-
-    @Override
-    public Drawable getNextDrawable() {
-        return getNextLine();
-    }
-
-    @Override
-    public void setPriorDrawable(final Drawable drawable, final boolean recurse) {
-        final WayLine wayLine = (WayLine) drawable;
-
-        priorLine = wayLine;
-
-        if (wayLine != null && recurse) {
-            wayLine.setNextDrawable(this, false);
+        if (priorLine != null) {
+            priorLine.setNextPoint(this);
         }
 
         redraw();
     }
 
     @Override
-    public void setNextDrawable(final Drawable drawable, final boolean recurse) {
-        WayLine wayLine = (WayLine) drawable;
+    public void setNextDrawable(final Drawable nextDrawable) {
+        nextLine = (WayLine) nextDrawable;
 
-        nextLine = wayLine;
-
-        if (wayLine != null && recurse) {
-            wayLine.setPriorDrawable(this, false);
+        if (nextLine != null) {
+            nextLine.setPriorPoint(this);
         }
 
         redraw();
@@ -115,6 +91,24 @@ public class WayPoint extends Circle implements Drawable {
         return String.format("WayPoint: (%.1f, %.1f)", xInches, yInches);
     }
 
+    public WayLine getPriorLine() {
+        return priorLine;
+    }
+
+    public WayLine getNextLine() {
+        return nextLine;
+    }
+
+    public void setPriorLine(final WayLine priorLine) {
+        this.priorLine = priorLine;
+        updateColor();
+    }
+
+    public void setNextLine(final WayLine nextLine) {
+        this.nextLine = nextLine;
+        updateColor();
+    }
+
     private void updateColor() {
         if (selected) {
             subCircle.setFill(Color.GREEN);
@@ -146,6 +140,4 @@ public class WayPoint extends Circle implements Drawable {
     public double getYPoint() {
         return getCenterY();
     }
-
-
 }

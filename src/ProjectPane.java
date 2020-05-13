@@ -325,8 +325,10 @@ public class ProjectPane extends Pane {
 
                 if (selectedDrawable instanceof WayLine){
 
-                    final WayPoint lastWayPoint = selectedDrawable.getPriorPoint();
-                    final WayPoint nextWayPoint = selectedDrawable.getNextPoint();
+                    final WayLine selectedWayLine = (WayLine) selectedDrawable;
+
+                    final WayPoint lastWayPoint = selectedWayLine.getPriorPoint();
+                    final WayPoint nextWayPoint = selectedWayLine.getNextPoint();
                     final WayPoint wayPoint = new WayPoint(e.getSceneX(), e.getSceneY());
 
                     addWayPoint(wayPoint, lastWayPoint, nextWayPoint);
@@ -363,7 +365,7 @@ public class ProjectPane extends Pane {
         }
 
         if (nextWayPoint != null) {
-            wayPoint.setNextDrawable(nextWayPoint.getPriorLine(), true);
+            wayPoint.setNextDrawable(nextWayPoint.getPriorLine());
         }
 
         wayPoint.setOnMousePressed(this::processWayPointOnMousePressed);
@@ -382,10 +384,10 @@ public class ProjectPane extends Pane {
 
         if (priorPoint != null) {
             removeLine = wayPoint.getPriorLine();
-            priorPoint.setNextDrawable(wayPoint.getNextLine(), true);
+            priorPoint.setNextDrawable(wayPoint.getNextLine());
         } else if (nextPoint != null) {
             removeLine = nextPoint.getPriorLine();
-            nextPoint.setPriorDrawable(null, true);
+            nextPoint.setPriorDrawable(null);
         } else {
             removeLine = null;
         }

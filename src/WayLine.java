@@ -18,10 +18,8 @@ public class WayLine extends Line implements Drawable {
         subLine = new Line(priorPoint.getXPoint(), priorPoint.getYPoint(), nextPoint.getXPoint(), nextPoint.getYPoint());
         subLine.setStrokeWidth(2);
 
-        priorPoint.setNextDrawable(this, true);
-        nextPoint.setPriorDrawable(this, true);
-
-        redraw();
+        setPriorDrawable(priorPoint);
+        setNextDrawable(nextPoint);
     }
 
     @Override
@@ -35,55 +33,22 @@ public class WayLine extends Line implements Drawable {
     }
 
     @Override
-    public WayLine getPriorLine() {
+    public void setPriorDrawable(final Drawable priorDrawable) {
+        priorPoint = (WayPoint) priorDrawable;
+
         if (priorPoint != null) {
-            return priorPoint.getPriorLine();
-        } else {
-            return null;
-        }
-    }
-
-    @Override
-    public WayLine getNextLine() {
-
-        if (nextPoint != null) {
-            return nextPoint.getNextLine();
-        } else {
-            return null;
-        }
-    }
-
-    @Override
-    public Drawable getPriorDrawable() {
-        return getPriorLine();
-    }
-
-    @Override
-    public Drawable getNextDrawable() {
-        return getNextLine();
-    }
-
-    @Override
-    public void setPriorDrawable(final Drawable drawable, final boolean recurse) {
-        WayPoint wayPoint = (WayPoint) drawable;
-
-        priorPoint = wayPoint;
-
-        if (wayPoint != null && recurse) {
-            wayPoint.setNextDrawable(this, false);
+            priorPoint.setNextLine(this);
         }
 
         redraw();
     }
 
     @Override
-    public void setNextDrawable(final Drawable drawable, final boolean recurse) {
-        WayPoint wayPoint = (WayPoint) drawable;
+    public void setNextDrawable(final Drawable nextDrawable) {
+        nextPoint = (WayPoint) nextDrawable;
 
-        nextPoint = wayPoint;
-
-        if (wayPoint != null && recurse) {
-            wayPoint.setPriorDrawable(this, false);
+        if (nextPoint != null) {
+            nextPoint.setPriorLine(this);
         }
 
         redraw();
@@ -126,7 +91,6 @@ public class WayLine extends Line implements Drawable {
         updateColor();
     }
 
-
     @Override
     public String formatLocation() {
         double priorXInches = FieldUtils.convertToInches(priorPoint.getXPoint());
@@ -134,6 +98,16 @@ public class WayLine extends Line implements Drawable {
         double nextXInches = FieldUtils.convertToInches(nextPoint.getXPoint());
         double nextYInches = FieldUtils.convertToInches(nextPoint.getYPoint());
         return String.format("WayLine: (%.1f, %.1f) to (%.1f, %.1f)", priorXInches, priorYInches, nextXInches, nextYInches);
+    }
+
+    public void setPriorPoint(WayPoint priorPoint) {
+        this.priorPoint = priorPoint;
+        redraw();
+    }
+
+    public void setNextPoint(WayPoint nextPoint) {
+        this.nextPoint = nextPoint;
+        redraw();
     }
 
     private void updateColor() {

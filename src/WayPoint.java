@@ -2,151 +2,141 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 
-public class WayPoint extends Circle {
+public class WayPoint extends Circle implements Drawable {
 
-    Color defaultColor;
+    private final Circle subCircle;
 
-    WayLine inputLine;
-    WayLine outputLine;
+    private WayLine priorLine;
+    private WayLine nextLine;
 
-    Circle subCircle;
+    private boolean selected;
 
-    double xPoint;
-    double yPoint;
-
-    double pressOffsetX;
-    double pressOffsetY;
-
-    boolean pointSelected;
-
-    public WayPoint(WayPoint lastWayPoint, double xPoint, double yPoint, Color defaultColor, Pane parent) {
-        this(lastWayPoint, null, xPoint, yPoint, defaultColor, parent);
-
-    }
-
-    public WayPoint(WayLine lastWayPoint, double xPoint, double yPoint, Color defaultColor, Pane parent) {
-        this(lastWayPoint.getStartPoint(), lastWayPoint, xPoint, yPoint, defaultColor, parent);
-    }
-
-    public WayPoint(WayPoint lastWayPoint, WayLine wayLine, double xPoint, double yPoint, Color defaultColor, Pane parent) {
+    public WayPoint(final double xPoint, final double yPoint) {
         super(xPoint, yPoint, 10, Color.TRANSPARENT);
-
-        this.xPoint = xPoint;
-        this.yPoint = yPoint;
-        this.defaultColor = defaultColor;
-
-        if (lastWayPoint != null) {
-            this.inputLine = new WayLine(lastWayPoint, this);
-            lastWayPoint.setOutputLine(this.inputLine);
-        }
-
-        if (wayLine != null) {
-            this.setOutputLine(wayLine);
-        }
-
-        this.subCircle = new Circle(xPoint, yPoint, 4, defaultColor);
-
-        if (inputLine != null) {
-            parent.getChildren().add(inputLine);
-        }
-
-        parent.getChildren().add(subCircle);
-
-        parent.getChildren().add(this);
+        subCircle = new Circle(xPoint, yPoint, 4);
+        setCenter(xPoint, yPoint);
     }
 
-    public void setSelected(boolean selected) {
+    @Override
+    public WayPoint getPriorPoint() {
+        if (priorLine != null) {
+            return priorLine.getPriorPoint();
+        } else {
+            return null;
+        }
+    }
 
-        pointSelected = selected;
+    @Override
+    public WayPoint getNextPoint() {
+        if (nextLine != null) {
+            return nextLine.getNextPoint();
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    public WayLine getPriorLine() {
+        return priorLine;
+    }
+
+    @Override
+    public WayLine getNextLine() {
+        return nextLine;
+    }
+
+    @Override
+    public Drawable getPriorDrawable() {
+        return getPriorLine();
+    }
+
+    @Override
+    public Drawable getNextDrawable() {
+        return getNextLine();
+    }
+
+    @Override
+    public void setPriorDrawable(final Drawable drawable, final boolean recurse) {
+        final WayLine wayLine = (WayLine) drawable;
+
+        priorLine = wayLine;
+
+        if (wayLine != null && recurse) {
+            wayLine.setNextDrawable(this, false);
+        }
+
+        redraw();
+    }
+
+    @Override
+    public void setNextDrawable(final Drawable drawable, final boolean recurse) {
+        WayLine wayLine = (WayLine) drawable;
+
+        nextLine = wayLine;
+
+        if (wayLine != null && recurse) {
+            wayLine.setPriorDrawable(this, false);
+        }
+
+        redraw();
+    }
+
+    @Override
+    public void addToPane(Pane pane) {
+        pane.getChildren().add(subCircle);
+        pane.getChildren().add(this);
+    }
+
+    @Override
+    public void removeFromPane(Pane pane) {
+        pane.getChildren().remove(subCircle);
+        pane.getChildren().remove(this);
+    }
+
+    @Override
+    public void redraw() {
+
+        subCircle.setCenterX(getXPoint());
+        subCircle.setCenterY(getYPoint());
+
         updateColor();
     }
 
-    public void delete(Pane parent) {
-
-        WayLine removeLine;
-        if (inputLine != null) {
-
-            removeLine = inputLine;
-
-            WayPoint lastPoint = inputLine.getStartPoint();
-
-            lastPoint.setOutputLine(outputLine);
-
-        } else if (outputLine != null) {
-
-            removeLine = outputLine;
-
-            WayPoint nextPoint = outputLine.getEndPoint();
-
-            nextPoint.setInputLine(null);
-
-        } else {
-            removeLine = null;
-        }
-
-        if (removeLine != null) {
-            parent.getChildren().remove(removeLine);
-        }
-
-        parent.getChildren().remove(subCircle);
-        parent.getChildren().remove(this);
-    }
-
-    private void setDefaultColor(Color defaultColor) {
-        this.defaultColor = defaultColor;
-        this.updateColor();
-    }
-
-    public void setInputLine(WayLine inputLine) {
-        this.inputLine = inputLine;
-
-        if (inputLine != null) {
-            inputLine.setEndPoint(this);
-            setDefaultColor(Color.BLACK);
-        } else {
-            setDefaultColor(Color.RED);
-        }
-    }
-
-    public void setOutputLine(WayLine outputLine) {
-        this.outputLine = outputLine;
-
-        if (outputLine != null) {
-            outputLine.setStartPoint(this);
-        }
-    }
-
-    public void update() {
-
-        if (inputLine != null) {
-            inputLine.update();
-        }
-
-        if (outputLine != null) {
-            outputLine.update();
-        }
-
-        this.setCenterX(xPoint);
-        this.setCenterY(yPoint);
-
-        this.updateColor();
-        this.subCircle.setCenterX(xPoint);
-        this.subCircle.setCenterY(yPoint);
+    @Override
+    public void setSelected(final boolean selected) {
+        this.selected = selected;
+        updateColor();
     }
 
     private void updateColor() {
-        if (pointSelected) {
+        if (selected) {
             subCircle.setFill(Color.GREEN);
         } else {
-            subCircle.setFill(defaultColor);
+            subCircle.setFill(priorLine == null ? Color.RED : Color.BLACK);
         }
     }
 
-    public void updateCenter(double xPoint, double yPoint) {
+    public void setCenter(double xPoint, double yPoint) {
 
-        this.xPoint = Math.max(Math.min(xPoint, ProjectPane.FIELD_MEASUREMENT_PIXELS), 0);
-        this.yPoint = Math.max(Math.min(yPoint, ProjectPane.FIELD_MEASUREMENT_PIXELS), 0);
+        setCenterX(Math.max(Math.min(xPoint, ProjectPane.FIELD_MEASUREMENT_PIXELS), 0));
+        setCenterY(Math.max(Math.min(yPoint, ProjectPane.FIELD_MEASUREMENT_PIXELS), 0));
 
-        update();
+        redraw();
+
+        if (priorLine != null) {
+            priorLine.redraw();
+        }
+
+        if (nextLine != null) {
+            nextLine.redraw();
+        }
+    }
+
+    public double getXPoint() {
+        return getCenterX();
+    }
+
+    public double getYPoint() {
+        return getCenterY();
     }
 }

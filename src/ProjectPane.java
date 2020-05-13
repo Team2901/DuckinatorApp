@@ -45,9 +45,11 @@ public class ProjectPane extends Pane {
     ContextMenu modeContextMenu;
 
     private final ArrayList<WayPoint> wayPoints = new ArrayList<>();
-    private WayPoint movingWayPoint;
-    private WayLine movingWayLine;
+    private WayPoint selectedWayPoint;
+    private WayLine selectedWayLine;
 
+    private double pressOffsetX = 0;
+    private double pressOffsetY = 0;
     private boolean editMode = false;
 
     public ProjectPane () {
@@ -160,11 +162,11 @@ public class ProjectPane extends Pane {
         this.setOnMouseDragged(processMouseMovement);
     }
 
-    public void reportMovingWayPointLocation(WayPoint wayPoint) {
+    public void reportMovingWayPointLocation(final WayPoint wayPoint) {
 
         final String msg;
         if (wayPoint != null) {
-            msg = String.format("WayPoint: %s", formatLocation(wayPoint.xPoint, wayPoint.yPoint));
+            msg = String.format("WayPoint: %s", formatLocation(wayPoint.getXPoint(), wayPoint.getYPoint()));
         } else {
             msg = null;
         }
@@ -172,20 +174,20 @@ public class ProjectPane extends Pane {
         wayPointLocationReporter.setText(msg);
     }
 
-    public void processCleanButtonOnPressed(ActionEvent e) {
+    public void processCleanButtonOnPressed(final ActionEvent e) {
 
-        setMovingWayPoint(null);
+        selectedWayPoint = null;
+        selectedWayLine = null;
 
-        for (WayPoint wayPoint : wayPoints) {
-            wayPoint.delete(this);
+        while (wayPoints.size() > 0) {
+            deleteWayPoint(wayPoints.get(0));
         }
 
-        wayPoints.clear();
         code.clear();
         editMode = false;
     }
 
-    public void processModeMenuRequest(ContextMenuEvent me) {
+    public void processModeMenuRequest(final ContextMenuEvent me) {
 
         if (modeContextMenu != null) {
             modeContextMenu.hide();
@@ -200,7 +202,7 @@ public class ProjectPane extends Pane {
 
         placeModeItem.setOnAction(e -> {
             editMode = false;
-            setMovingWayPoint(null);
+            clearSelectedDrawables();
         });
 
         if (editMode) {
@@ -212,24 +214,24 @@ public class ProjectPane extends Pane {
         modeContextMenu.show((Node) me.getTarget(), me.getScreenX(), me.getScreenY());
     }
 
-    public void processWayPointOnMouseDragged(MouseEvent e) {
+    public void processWayPointOnMouseDragged(final MouseEvent e) {
 
         if (e.getButton().equals(MouseButton.PRIMARY)) {
 
-            WayPoint wayPoint = (WayPoint) e.getTarget();
+            final WayPoint wayPoint = (WayPoint) e.getTarget();
 
-            if (movingWayPoint == wayPoint) {
+            if (selectedWayPoint == wayPoint) {
 
-                double newX = wayPoint.pressOffsetX + e.getSceneX();
-                double newY = wayPoint.pressOffsetY + e.getSceneY();
+                double newX = pressOffsetX + e.getSceneX();
+                double newY = pressOffsetY + e.getSceneY();
 
-                wayPoint.updateCenter(newX, newY);
-                reportMovingWayPointLocation(movingWayPoint);
+                wayPoint.setCenter(newX, newY);
+                reportMovingWayPointLocation(selectedWayPoint);
             }
         }
     }
 
-    public void processWayPointOnMousePressed(MouseEvent e) {
+    public void processWayPointOnMousePressed(final MouseEvent e) {
 
         if (e.getButton().equals(MouseButton.PRIMARY)) {
 
@@ -238,18 +240,18 @@ public class ProjectPane extends Pane {
                 return;
             }
 
-            WayPoint wayPoint = (WayPoint) e.getTarget();
+            final WayPoint wayPoint = (WayPoint) e.getTarget();
 
-            wayPoint.pressOffsetX = wayPoint.xPoint - e.getSceneX();
-            wayPoint.pressOffsetY = wayPoint.yPoint - e.getSceneY();
+            pressOffsetX = wayPoint.getXPoint() - e.getSceneX();
+            pressOffsetY = wayPoint.getYPoint() - e.getSceneY();
 
-            setMovingWayPoint(wayPoint);
+            setSelectedWayPoint(wayPoint);
 
             wayPoint.getParent().requestFocus();
         }
     }
 
-    public void processWayLineOnMousePressed(MouseEvent e) {
+    public void processWayLineOnMousePressed(final MouseEvent e) {
 
         if (e.getButton().equals(MouseButton.PRIMARY)) {
 
@@ -262,7 +264,7 @@ public class ProjectPane extends Pane {
 
             WayLine wayLine = (WayLine) e.getTarget();
 
-            setMovingWayLine(wayLine);
+            setSelectedWayLine(wayLine);
 
             wayLine.getParent().requestFocus();
         }
@@ -270,15 +272,16 @@ public class ProjectPane extends Pane {
 
     public void processFieldHolderOnKeyPressed(final KeyEvent e) {
 
-        if (!editMode || movingWayPoint == null) {
+        if (!editMode || selectedWayPoint == null) {
             return;
         }
 
         if (e.getCode().equals( KeyCode.DELETE)) {
-            wayPoints.remove(movingWayPoint);
-            movingWayPoint.delete(this);
-            setMovingWayPoint(null);
+            clearSelectedDrawables();
+            deleteWayPoint(selectedWayPoint);
             reportMovingWayPointLocation(null);
+        } else if (e.getCode().equals(KeyCode.ESCAPE)) {
+            clearSelectedDrawables();
         } else if (e.getCode().isArrowKey()) {
 
             int stepSize = 1;
@@ -301,79 +304,136 @@ public class ProjectPane extends Pane {
                     break;
             }
 
-            movingWayPoint.updateCenter(movingWayPoint.xPoint + dx, movingWayPoint.yPoint + dy);
-            reportMovingWayPointLocation(movingWayPoint);
+            selectedWayPoint.setCenter(selectedWayPoint.getXPoint() + dx, selectedWayPoint.getYPoint() + dy);
+            reportMovingWayPointLocation(selectedWayPoint);
         }
     }
 
-    public void processFieldHolderOnMousePressed(MouseEvent e){
+    public void processFieldHolderOnMousePressed(final MouseEvent e){
 
         if (e.getButton().equals(MouseButton.PRIMARY)) {
 
             WayPoint wayPoint;
-            int addIndex = 0;
+            WayPoint lastWayPoint;
+            WayPoint nextWayPoint;
 
             if (!editMode) {
-                addIndex = wayPoints.size();
 
-                boolean firstPoint = addIndex == 0;
-                WayPoint lastWayPoint = firstPoint ? null : wayPoints.get(wayPoints.size() -1);
-                Color defaultColor = firstPoint ? Color.RED : Color.BLACK;
+                lastWayPoint = (wayPoints.size() == 0) ? null : wayPoints.get(wayPoints.size() -1);
+                nextWayPoint = null;
 
-                wayPoint  = new WayPoint(lastWayPoint, e.getSceneX(), e.getSceneY(), defaultColor, this);
+                wayPoint = new WayPoint(e.getSceneX(), e.getSceneY());
 
-            } else if (movingWayLine != null) {
+            } else if (selectedWayLine != null) {
 
-                addIndex = wayPoints.indexOf(movingWayLine.getEndPoint());
+                lastWayPoint = selectedWayLine.getPriorPoint();
+                nextWayPoint = selectedWayLine.getNextPoint();
 
-                wayPoint  = new WayPoint(movingWayLine, e.getSceneX(), e.getSceneY(), Color.BLACK, this);
-                setMovingWayPoint(wayPoint);
+                wayPoint = new WayPoint(e.getSceneX(), e.getSceneY());
+                setSelectedWayPoint(wayPoint);
+
             } else {
                 wayPoint = null;
+                lastWayPoint = null;
+                nextWayPoint = null;
             }
 
             if (wayPoint != null) {
-                wayPoint.setOnMousePressed(this::processWayPointOnMousePressed);
-                wayPoint.setOnMouseDragged(this::processWayPointOnMouseDragged);
-
-                if (wayPoint.inputLine != null) {
-                    wayPoint.inputLine.setOnMousePressed(this::processWayLineOnMousePressed);
-                }
-                wayPoints.add(addIndex, wayPoint);
+                addWayPoint(wayPoint, lastWayPoint, nextWayPoint);
             }
         }
     }
 
-    private void setMovingWayPoint(WayPoint wayPoint) {
+    public void addWayPoint(final WayPoint wayPoint, final WayPoint lastWayPoint, final WayPoint nextWayPoint) {
 
-        if (movingWayPoint != null) {
-            movingWayPoint.setSelected(false);
+        int addIndex;
+
+        if (lastWayPoint == null) {
+            addIndex = 0;
+        } else if (nextWayPoint == null) {
+            addIndex = wayPoints.size();
+        } else {
+            addIndex = wayPoints.indexOf(nextWayPoint);
+        }
+
+
+        if (lastWayPoint != null) {
+            WayLine wayLine = new WayLine(lastWayPoint, wayPoint);
+            wayLine.addToPane(this);
+            wayLine.setOnMousePressed(this::processWayLineOnMousePressed);
+        }
+
+        if (nextWayPoint != null) {
+            wayPoint.setNextDrawable(nextWayPoint.getPriorLine(), true);
+        }
+
+        wayPoint.setOnMousePressed(this::processWayPointOnMousePressed);
+        wayPoint.setOnMouseDragged(this::processWayPointOnMouseDragged);
+
+        wayPoint.addToPane(this);
+        wayPoints.add(addIndex, wayPoint);
+    }
+
+    public void deleteWayPoint(final WayPoint wayPoint){
+
+        final WayPoint priorPoint = wayPoint.getPriorPoint();
+        final WayPoint nextPoint = wayPoint.getNextPoint();
+
+        final WayLine removeLine;
+
+        if (priorPoint != null) {
+            removeLine = wayPoint.getPriorLine();
+            priorPoint.setNextDrawable(wayPoint.getNextLine(), true);
+        } else if (nextPoint != null) {
+            removeLine = nextPoint.getPriorLine();
+            nextPoint.setPriorDrawable(null, true);
+        } else {
+            removeLine = null;
+        }
+
+        if (removeLine != null) {
+            removeLine.removeFromPane(this);
+        }
+
+        wayPoint.removeFromPane(this);
+        wayPoints.remove(wayPoint);
+    }
+
+    public void clearSelectedDrawables() {
+        setSelectedWayLine(null);
+        setSelectedWayPoint(null);
+    }
+
+    private void setSelectedWayPoint(final WayPoint wayPoint) {
+
+        if (selectedWayPoint != null) {
+            selectedWayPoint.setSelected(false);
         }
 
         if (wayPoint != null) {
             wayPoint.setSelected(true);
-            setMovingWayLine(null);
+            setSelectedWayLine(null);
         }
 
-        movingWayPoint = wayPoint;
-        reportMovingWayPointLocation(movingWayPoint);
+        selectedWayPoint = wayPoint;
+        reportMovingWayPointLocation(selectedWayPoint);
     }
 
-    private void setMovingWayLine(WayLine wayLine) {
+    private void setSelectedWayLine(final WayLine wayLine) {
 
-        if (movingWayLine != null) {
-            movingWayLine.setSelected(false);
+        if (selectedWayLine != null) {
+            selectedWayLine.setSelected(false);
         }
 
         if (wayLine != null) {
             wayLine.setSelected(true);
-            setMovingWayPoint(null);
+            setSelectedWayPoint(null);
         }
 
-        movingWayLine = wayLine;
+        selectedWayLine = wayLine;
     }
 
-    public void generation(ActionEvent e){
+    public void generation(final ActionEvent e){
 
         if (wayPoints.size()>0){
 
@@ -457,36 +517,36 @@ public class ProjectPane extends Pane {
 
     // Helpers
 
-    public static String formatLocation(double x, double y) {
+    public static String formatLocation(final double x, final double y) {
         double xInches = convertToInches(x);
         double yInches = convertToInches(y);
         return String.format("(%.1f, %.1f)", xInches, yInches);
     }
 
-    public static double getTargetAngle(WayPoint wayPoint1, WayPoint wayPoint2) {
-        double dx = wayPoint2.xPoint-wayPoint1.xPoint;
-        double dy = wayPoint1.yPoint-wayPoint2.yPoint;
+    public static double getTargetAngle(final WayPoint wayPoint1, final WayPoint wayPoint2) {
+        double dx = wayPoint2.getXPoint() - wayPoint1.getXPoint();
+        double dy = wayPoint1.getYPoint() - wayPoint2.getYPoint();
         double targetAnglePi = Math.atan2(dy, dx);
         double targetAngle = ((targetAnglePi*180)/Math.PI);
         return normalizeAngle(targetAngle);
     }
 
-    public static double getLineLength(WayPoint wayPoint1, WayPoint wayPoint2) {
-        double dx = wayPoint2.xPoint-wayPoint1.xPoint;
-        double dy = wayPoint2.yPoint-wayPoint1.yPoint;
+    public static double getLineLength(final WayPoint wayPoint1, final WayPoint wayPoint2) {
+        double dx = wayPoint2.getXPoint() - wayPoint1.getXPoint();
+        double dy = wayPoint2.getYPoint() - wayPoint1.getYPoint();
         return Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
     }
 
-    private static double convertToInches(double pixelValue) {
+    private static double convertToInches(final double pixelValue) {
         double conversionFactorPixelInch = ((double) FIELD_MEASUREMENT_INCHES / (double) FIELD_MEASUREMENT_PIXELS);
         return pixelValue * conversionFactorPixelInch;
     }
 
-    private static String convertArrayList(ArrayList<String> stringList) {
+    private static String convertArrayList(final ArrayList<String> stringList) {
         return String.join("", stringList);
     }
 
-    private static double normalizeAngle(double angle) {
+    public static double normalizeAngle(final double angle) {
         return ((angle + 180) % 360) - 180;
     }
 }

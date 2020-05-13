@@ -1,58 +1,123 @@
+import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 
-public class WayLine extends Line {
+public class WayLine extends Line implements Drawable {
 
-    private WayPoint startPoint;
-    private WayPoint endPoint;
+    private WayPoint priorPoint;
+    private WayPoint nextPoint;
 
-    private boolean lineSelected;
+    private boolean selected;
 
-    public WayLine(WayPoint startPoint, WayPoint endPoint) {
-        super(startPoint.xPoint, startPoint.yPoint, endPoint.xPoint, endPoint.yPoint);
-        this.setStrokeWidth(2);
-        this.startPoint = startPoint;
-        this.endPoint = endPoint;
+    public WayLine(final WayPoint priorPoint, final WayPoint nextPoint) {
+        super(priorPoint.getXPoint(), priorPoint.getYPoint(), nextPoint.getXPoint(), nextPoint.getYPoint());
+        setStrokeWidth(2);
 
-        this.update();
+        priorPoint.setNextDrawable(this, true);
+        nextPoint.setPriorDrawable(this, true);
+
+        redraw();
     }
 
-    public WayPoint getStartPoint() {
-        return startPoint;
+    @Override
+    public WayPoint getPriorPoint() {
+        return priorPoint;
     }
 
-    public void setStartPoint(WayPoint startPoint) {
-        this.startPoint = startPoint;
-        this.update();
+    @Override
+    public WayPoint getNextPoint() {
+        return nextPoint;
     }
 
-    public WayPoint getEndPoint() {
-        return endPoint;
+    @Override
+    public WayLine getPriorLine() {
+        if (priorPoint != null) {
+            return priorPoint.getPriorLine();
+        } else {
+            return null;
+        }
     }
 
-    public void setEndPoint(WayPoint endPoint) {
-        this.endPoint = endPoint;
-        this.update();
+    @Override
+    public WayLine getNextLine() {
+
+        if (nextPoint != null) {
+            return nextPoint.getNextLine();
+        } else {
+            return null;
+        }
     }
 
-    public void update() {
-
-        this.setStartX(startPoint.xPoint);
-        this.setStartY(startPoint.yPoint);
-        this.setEndX(endPoint.xPoint);
-        this.setEndY(endPoint.yPoint);
+    @Override
+    public Drawable getPriorDrawable() {
+        return getPriorLine();
     }
 
-    public void setSelected(boolean selected) {
-        this.lineSelected = selected;
+    @Override
+    public Drawable getNextDrawable() {
+        return getNextLine();
+    }
+
+    @Override
+    public void setPriorDrawable(final Drawable drawable, final boolean recurse) {
+        WayPoint wayPoint = (WayPoint) drawable;
+
+        priorPoint = wayPoint;
+
+        if (wayPoint != null && recurse) {
+            wayPoint.setNextDrawable(this, false);
+        }
+
+        redraw();
+    }
+
+    @Override
+    public void setNextDrawable(final Drawable drawable, final boolean recurse) {
+        WayPoint wayPoint = (WayPoint) drawable;
+
+        nextPoint = wayPoint;
+
+        if (wayPoint != null && recurse) {
+            wayPoint.setPriorDrawable(this, false);
+        }
+
+        redraw();
+    }
+
+    @Override
+    public void addToPane(final Pane pane) {
+        pane.getChildren().add(this);
+    }
+
+    @Override
+    public void removeFromPane(final Pane pane) {
+        pane.getChildren().remove(this);
+    }
+
+    @Override
+    public void redraw() {
+
+        if (priorPoint != null && nextPoint != null) {
+            setStartX(priorPoint.getXPoint());
+            setStartY(priorPoint.getYPoint());
+            setEndX(nextPoint.getXPoint());
+            setEndY(nextPoint.getYPoint());
+        } else {
+            setFill(Color.RED);
+        }
+    }
+
+    @Override
+    public void setSelected(final boolean selected) {
+        this.selected = selected;
         updateColor();
     }
 
     private void updateColor() {
-        if (lineSelected) {
-            this.setStroke(Color.GREEN);
+        if (selected) {
+            setStroke(Color.GREEN);
         } else {
-            this.setStroke(Color.BLACK);
+            setStroke(Color.BLACK);
         }
     }
 }

@@ -33,8 +33,6 @@ import java.util.ArrayList;
 public class ProjectPane extends Pane {
 
     private final static String DEFAULT_CLASS_NAME = "DuckinatorAuto";
-    protected final static int FIELD_MEASUREMENT_PIXELS = 510;
-    protected final static int FIELD_MEASUREMENT_INCHES = 144;
 
     private final TextArea code;
     private final TextField classNameTextArea;
@@ -45,8 +43,8 @@ public class ProjectPane extends Pane {
     ContextMenu modeContextMenu;
 
     private final ArrayList<WayPoint> wayPoints = new ArrayList<>();
-    private WayPoint selectedWayPoint;
-    private WayLine selectedWayLine;
+
+    private Drawable selectedDrawable;
 
     private double pressOffsetX = 0;
     private double pressOffsetY = 0;
@@ -58,8 +56,8 @@ public class ProjectPane extends Pane {
 
         Image field = new Image(this.getClass().getResourceAsStream("/field.png"));
         ImageView fieldHolder = new ImageView(field);
-        fieldHolder.setFitHeight(FIELD_MEASUREMENT_PIXELS);
-        fieldHolder.setFitWidth(FIELD_MEASUREMENT_PIXELS);
+        fieldHolder.setFitHeight(FieldUtils.FIELD_MEASUREMENT_PIXELS);
+        fieldHolder.setFitWidth(FieldUtils.FIELD_MEASUREMENT_PIXELS);
         fieldHolder.setLayoutX(0);
         fieldHolder.setLayoutY(0);
         getChildren().add(fieldHolder);
@@ -154,7 +152,9 @@ public class ProjectPane extends Pane {
         getChildren().add(wayPointLocationReporter);
 
         EventHandler<MouseEvent> processMouseMovement = event -> {
-            final String msg = String.format("Mouse: %s", formatLocation(event.getSceneX(), event.getSceneY()));
+            double xInches = FieldUtils.convertToInches(event.getSceneX());
+            double yInches = FieldUtils.convertToInches(event.getSceneY());
+            final String msg = String.format("Mouse: (%.1f, %.1f)", xInches, yInches);
             mouseLocationReporter.setText(msg);
         };
 
@@ -162,11 +162,11 @@ public class ProjectPane extends Pane {
         this.setOnMouseDragged(processMouseMovement);
     }
 
-    public void reportMovingWayPointLocation(final WayPoint wayPoint) {
+    public void reportMovingWayPointLocation() {
 
         final String msg;
-        if (wayPoint != null) {
-            msg = String.format("WayPoint: %s", formatLocation(wayPoint.getXPoint(), wayPoint.getYPoint()));
+        if (selectedDrawable != null) {
+            msg = selectedDrawable.formatLocation();
         } else {
             msg = null;
         }
@@ -176,9 +176,7 @@ public class ProjectPane extends Pane {
 
     public void processCleanButtonOnPressed(final ActionEvent e) {
 
-        selectedWayPoint = null;
-        selectedWayLine = null;
-
+        selectedDrawable = null;
         while (wayPoints.size() > 0) {
             deleteWayPoint(wayPoints.get(0));
         }
@@ -202,7 +200,7 @@ public class ProjectPane extends Pane {
 
         placeModeItem.setOnAction(e -> {
             editMode = false;
-            clearSelectedDrawables();
+            setSelectedDrawable(null);
         });
 
         if (editMode) {
@@ -220,13 +218,13 @@ public class ProjectPane extends Pane {
 
             final WayPoint wayPoint = (WayPoint) e.getTarget();
 
-            if (selectedWayPoint == wayPoint) {
+            if (selectedDrawable == wayPoint) {
 
                 double newX = pressOffsetX + e.getSceneX();
                 double newY = pressOffsetY + e.getSceneY();
 
                 wayPoint.setCenter(newX, newY);
-                reportMovingWayPointLocation(selectedWayPoint);
+                reportMovingWayPointLocation();
             }
         }
     }
@@ -245,7 +243,7 @@ public class ProjectPane extends Pane {
             pressOffsetX = wayPoint.getXPoint() - e.getSceneX();
             pressOffsetY = wayPoint.getYPoint() - e.getSceneY();
 
-            setSelectedWayPoint(wayPoint);
+            setSelectedDrawable(wayPoint);
 
             wayPoint.getParent().requestFocus();
         }
@@ -255,57 +253,60 @@ public class ProjectPane extends Pane {
 
         if (e.getButton().equals(MouseButton.PRIMARY)) {
 
-            System.out.println("HERE");
-
             if (!editMode) {
                 processFieldHolderOnMousePressed(e);
                 return;
             }
 
             WayLine wayLine = (WayLine) e.getTarget();
-
-            setSelectedWayLine(wayLine);
-
+            setSelectedDrawable(wayLine);
             wayLine.getParent().requestFocus();
         }
     }
 
     public void processFieldHolderOnKeyPressed(final KeyEvent e) {
 
-        if (!editMode || selectedWayPoint == null) {
+        if (!editMode) {
             return;
         }
 
-        if (e.getCode().equals( KeyCode.DELETE)) {
-            deleteWayPoint(selectedWayPoint);
-            clearSelectedDrawables();
-            reportMovingWayPointLocation(null);
-        } else if (e.getCode().equals(KeyCode.ESCAPE)) {
-            clearSelectedDrawables();
-        } else if (e.getCode().isArrowKey()) {
+        if (selectedDrawable != null) {
+            final WayPoint selectedWayPoint = (selectedDrawable instanceof WayPoint) ? (WayPoint) selectedDrawable : null;
 
-            int stepSize = 1;
-            int dx = 0;
-            int dy = 0;
-
-            switch (e.getCode()) {
-
-                case UP:
-                    dy = -stepSize;
-                    break;
-                case DOWN:
-                    dy = stepSize;
-                    break;
-                case LEFT:
-                    dx = -stepSize;
-                    break;
-                case RIGHT:
-                    dx = stepSize;
-                    break;
+            if (e.getCode().equals(KeyCode.ESCAPE)) {
+                setSelectedDrawable(null);
             }
 
-            selectedWayPoint.setCenter(selectedWayPoint.getXPoint() + dx, selectedWayPoint.getYPoint() + dy);
-            reportMovingWayPointLocation(selectedWayPoint);
+            if (e.getCode().equals(KeyCode.DELETE) && selectedWayPoint != null) {
+                deleteWayPoint(selectedWayPoint);
+                setSelectedDrawable(null);
+                reportMovingWayPointLocation();
+            } else if (e.getCode().isArrowKey() && selectedWayPoint != null) {
+
+                int stepSize = 1;
+                int dx = 0;
+                int dy = 0;
+
+                switch (e.getCode()) {
+
+                    case UP:
+                        dy = -stepSize;
+                        break;
+                    case DOWN:
+                        dy = stepSize;
+                        break;
+                    case LEFT:
+                        dx = -stepSize;
+                        break;
+                    case RIGHT:
+                        dx = stepSize;
+                        break;
+                }
+
+                selectedWayPoint.setCenter(selectedWayPoint.getXPoint() + dx, selectedWayPoint.getYPoint() + dy);
+            }
+
+            reportMovingWayPointLocation();
         }
     }
 
@@ -313,33 +314,31 @@ public class ProjectPane extends Pane {
 
         if (e.getButton().equals(MouseButton.PRIMARY)) {
 
-            WayPoint wayPoint;
-            WayPoint lastWayPoint;
-            WayPoint nextWayPoint;
-
             if (!editMode) {
 
-                lastWayPoint = (wayPoints.size() == 0) ? null : wayPoints.get(wayPoints.size() -1);
-                nextWayPoint = null;
+                final WayPoint lastWayPoint = (wayPoints.size() == 0) ? null : wayPoints.get(wayPoints.size() - 1);
+                final WayPoint wayPoint = new WayPoint(e.getSceneX(), e.getSceneY());
 
-                wayPoint = new WayPoint(e.getSceneX(), e.getSceneY());
+                addWayPoint(wayPoint, lastWayPoint, null);
 
-            } else if (selectedWayLine != null) {
+            } else if (selectedDrawable != null) {
 
-                lastWayPoint = selectedWayLine.getPriorPoint();
-                nextWayPoint = selectedWayLine.getNextPoint();
+                if (selectedDrawable instanceof WayLine){
 
-                wayPoint = new WayPoint(e.getSceneX(), e.getSceneY());
-                setSelectedWayPoint(wayPoint);
+                    final WayPoint lastWayPoint = selectedDrawable.getPriorPoint();
+                    final WayPoint nextWayPoint = selectedDrawable.getNextPoint();
+                    final WayPoint wayPoint = new WayPoint(e.getSceneX(), e.getSceneY());
 
-            } else {
-                wayPoint = null;
-                lastWayPoint = null;
-                nextWayPoint = null;
-            }
+                    addWayPoint(wayPoint, lastWayPoint, nextWayPoint);
 
-            if (wayPoint != null) {
-                addWayPoint(wayPoint, lastWayPoint, nextWayPoint);
+                    setSelectedDrawable(wayPoint);
+
+                } else {
+
+                    final WayPoint selectedWayPoint = (WayPoint) selectedDrawable;
+                    selectedWayPoint.setCenter(e.getSceneX(), e.getSceneY());
+
+                }
             }
         }
     }
@@ -399,38 +398,18 @@ public class ProjectPane extends Pane {
         wayPoints.remove(wayPoint);
     }
 
-    public void clearSelectedDrawables() {
-        setSelectedWayLine(null);
-        setSelectedWayPoint(null);
-    }
+    private void setSelectedDrawable(final Drawable drawable) {
 
-    private void setSelectedWayPoint(final WayPoint wayPoint) {
-
-        if (selectedWayPoint != null) {
-            selectedWayPoint.setSelected(false);
+        if (selectedDrawable != null) {
+            selectedDrawable.setSelected(false);
         }
 
-        if (wayPoint != null) {
-            wayPoint.setSelected(true);
-            setSelectedWayLine(null);
+        if (drawable != null) {
+            drawable.setSelected(true);
         }
 
-        selectedWayPoint = wayPoint;
-        reportMovingWayPointLocation(selectedWayPoint);
-    }
-
-    private void setSelectedWayLine(final WayLine wayLine) {
-
-        if (selectedWayLine != null) {
-            selectedWayLine.setSelected(false);
-        }
-
-        if (wayLine != null) {
-            wayLine.setSelected(true);
-            setSelectedWayPoint(null);
-        }
-
-        selectedWayLine = wayLine;
+        selectedDrawable = drawable;
+        reportMovingWayPointLocation();
     }
 
     public void generation(final ActionEvent e){
@@ -494,9 +473,9 @@ public class ProjectPane extends Pane {
                 WayPoint lastPoint = wayPoints.get(i - 1);
                 WayPoint targetPoint = wayPoints.get(i);
 
-                double targetAngle = getTargetAngle(lastPoint, targetPoint);
+                double targetAngle = FieldUtils.getTargetAngle(lastPoint, targetPoint);
 
-                double diffAngle = normalizeAngle(targetAngle - currentAngle);
+                double diffAngle = FieldUtils.normalizeAngle(targetAngle - currentAngle);
 
                 currentAngle = targetAngle;
 
@@ -505,48 +484,13 @@ public class ProjectPane extends Pane {
                     movements.add(String.format("\t\t\trotate(%.1f);\n", diffAngle));
                 }
 
-                double pathLength = getLineLength(lastPoint, targetPoint);
-                double pathLengthInches = convertToInches(pathLength);
+                double pathLength = FieldUtils.getLineLength(lastPoint, targetPoint);
+                double pathLengthInches = FieldUtils.convertToInches(pathLength);
 
                 movements.add(String.format("\t\t\tgoForward(%.1f);\n", pathLengthInches));
             }
         }
 
-        return convertArrayList(movements);
-    }
-
-    // Helpers
-
-    public static String formatLocation(final double x, final double y) {
-        double xInches = convertToInches(x);
-        double yInches = convertToInches(y);
-        return String.format("(%.1f, %.1f)", xInches, yInches);
-    }
-
-    public static double getTargetAngle(final WayPoint wayPoint1, final WayPoint wayPoint2) {
-        double dx = wayPoint2.getXPoint() - wayPoint1.getXPoint();
-        double dy = wayPoint1.getYPoint() - wayPoint2.getYPoint();
-        double targetAnglePi = Math.atan2(dy, dx);
-        double targetAngle = ((targetAnglePi*180)/Math.PI);
-        return normalizeAngle(targetAngle);
-    }
-
-    public static double getLineLength(final WayPoint wayPoint1, final WayPoint wayPoint2) {
-        double dx = wayPoint2.getXPoint() - wayPoint1.getXPoint();
-        double dy = wayPoint2.getYPoint() - wayPoint1.getYPoint();
-        return Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
-    }
-
-    private static double convertToInches(final double pixelValue) {
-        double conversionFactorPixelInch = ((double) FIELD_MEASUREMENT_INCHES / (double) FIELD_MEASUREMENT_PIXELS);
-        return pixelValue * conversionFactorPixelInch;
-    }
-
-    private static String convertArrayList(final ArrayList<String> stringList) {
-        return String.join("", stringList);
-    }
-
-    public static double normalizeAngle(final double angle) {
-        return ((angle + 180) % 360) - 180;
+        return String.join("", movements);
     }
 }

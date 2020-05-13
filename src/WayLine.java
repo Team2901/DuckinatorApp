@@ -126,6 +126,16 @@ public class WayLine extends Line implements Drawable {
         updateColor();
     }
 
+
+    @Override
+    public String formatLocation() {
+        double priorXInches = FieldUtils.convertToInches(priorPoint.getXPoint());
+        double priorYInches = FieldUtils.convertToInches(priorPoint.getYPoint());
+        double nextXInches = FieldUtils.convertToInches(nextPoint.getXPoint());
+        double nextYInches = FieldUtils.convertToInches(nextPoint.getYPoint());
+        return String.format("WayLine: (%.1f, %.1f) to (%.1f, %.1f)", priorXInches, priorYInches, nextXInches, nextYInches);
+    }
+
     private void updateColor() {
         if (selected) {
             subLine.setStroke(Color.GREEN);

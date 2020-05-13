@@ -83,8 +83,8 @@ public class WayPoint extends Circle implements Drawable {
 
     @Override
     public void addToPane(Pane pane) {
-        pane.getChildren().add(this);
         pane.getChildren().add(subCircle);
+        pane.getChildren().add(this);
     }
 
     @Override
@@ -108,6 +108,13 @@ public class WayPoint extends Circle implements Drawable {
         updateColor();
     }
 
+    @Override
+    public String formatLocation() {
+        double xInches = FieldUtils.convertToInches(getXPoint());
+        double yInches = FieldUtils.convertToInches(getYPoint());
+        return String.format("WayPoint: (%.1f, %.1f)", xInches, yInches);
+    }
+
     private void updateColor() {
         if (selected) {
             subCircle.setFill(Color.GREEN);
@@ -118,8 +125,8 @@ public class WayPoint extends Circle implements Drawable {
 
     public void setCenter(double xPoint, double yPoint) {
 
-        setCenterX(Math.max(Math.min(xPoint, ProjectPane.FIELD_MEASUREMENT_PIXELS), 0));
-        setCenterY(Math.max(Math.min(yPoint, ProjectPane.FIELD_MEASUREMENT_PIXELS), 0));
+        setCenterX(Math.max(Math.min(xPoint, FieldUtils.FIELD_MEASUREMENT_PIXELS), 0));
+        setCenterY(Math.max(Math.min(yPoint, FieldUtils.FIELD_MEASUREMENT_PIXELS), 0));
 
         redraw();
 
@@ -139,4 +146,6 @@ public class WayPoint extends Circle implements Drawable {
     public double getYPoint() {
         return getCenterY();
     }
+
+
 }

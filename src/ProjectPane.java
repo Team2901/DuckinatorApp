@@ -304,7 +304,7 @@ public class ProjectPane extends Pane{
             points.add(point);
             robotSpecs();
             if (drawables.isEmpty()){
-                WayPoint startCircle = new WayPoint(xPoint, yPoint, 3, 8, Color.RED);
+                WayPoint startCircle = new WayPoint(xPoint, yPoint, 3, 8);
                 startCircle.setOnMousePressed(this::selectPoint);
                 addDrawable(startCircle);
             }else{
@@ -611,20 +611,29 @@ public class ProjectPane extends Pane{
         if(lastDrawable != null){
             lastDrawable.setAfter(drawable);
         }
-        lastDrawable = drawable;
         if(drawable instanceof WayPoint){
             WayPoint point = (WayPoint) drawable;
+            if(lastDrawable == null){
+                point.setFirstPoint(true);
+            }
             getChildren().add(point.subCircle);
         }
         getChildren().add((Node) drawable);
         drawables.add(drawable);
     }
 
-    public void deleteWayPoint(Drawable point){
-        Drawable lineBefore = selectedPoint.getBefore();
-        LineConnector lineAfter = (LineConnector) selectedPoint.getAfter();
+    public void deleteWayPoint(WayPoint point){
+        Drawable lineBefore = point.getBefore();
+        LineConnector lineAfter = (LineConnector) point.getAfter();
 
-        WayPoint pointBefore = selectedPoint.getPriorPoint();
+        WayPoint pointBefore = point.getPriorPoint();
+
+        if(point.isFirstPoint()){
+            WayPoint pointAfter = point.getNextPoint();
+            if(pointAfter != null){
+                pointAfter.setFirstPoint(true);
+            }
+        }
 
         if(lineBefore != null){
             removeDrawable(lineBefore);

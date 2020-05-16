@@ -605,7 +605,7 @@ public class ProjectPane extends Pane{
         return convertArrayList(movements);
     }
 
-    /*private String moveHere(ArrayList<Point> points) {
+    private String moveHereTwo(ArrayList<Point> points) {
         ArrayList<String> movements = new ArrayList<String>();
 
         for (int ii = 0; ii < points.size(); ii++) {
@@ -624,7 +624,26 @@ public class ProjectPane extends Pane{
         }
 
         return convertArrayList(movements);
-    }*/
+    }
+
+
+    private Double distanceBetweenTwoPointsInEncoderCounts(Point firstPoint, Point secondPoint) {
+        int dx = secondPoint.x - firstPoint.x;
+        int dy = secondPoint.y - firstPoint.y;
+
+        double dxSquared = Math.pow(dx,2);
+        double dySquared = Math.pow(dy,2);
+
+        double distanceInPixels = Math.sqrt(dxSquared + dySquared);
+
+        double distanceInInches = distanceInPixels * (fieldMeasurementInches/fieldMeasurementPixels);
+
+        return convertInchesToEncoderTicks(distanceInInches);
+    }
+
+    private double changeInOrientation(Point firstPoint, Point secondPoint, Point thirdPoint) {
+        return 0;
+    }
 
     public void addDrawable(Drawable drawable){
         Drawable lastDrawable = drawables.isEmpty() ? null : drawables.get(drawables.size() - 1);

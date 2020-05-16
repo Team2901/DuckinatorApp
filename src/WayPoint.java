@@ -6,9 +6,12 @@ public class WayPoint extends Circle implements Drawable {
     public Drawable drawAfter = null;
     public Color originalColor;
     public Circle subCircle;
+    public static int firstPointRadius = 3;
+    public static int subsequentPointsRadius = 4;
+    public static int bufferZone = 8;
 
-    public WayPoint(int xPoint, int yPoint, int i, int bufferZone) {
-        this(xPoint, yPoint, i, bufferZone, Color.BLACK);
+    public WayPoint(int xPoint, int yPoint) {
+        this(xPoint, yPoint, subsequentPointsRadius, bufferZone, Color.BLACK);
     }
 
     private WayPoint(int xPoint, int yPoint, int i, int bufferZone, Color color) {
@@ -73,9 +76,11 @@ public class WayPoint extends Circle implements Drawable {
         if(b == false){
             subCircle.setFill(Color.BLACK);
             originalColor = Color.BLACK;
+            subCircle.setRadius(subsequentPointsRadius);
         } else {
             subCircle.setFill(Color.RED);
             originalColor = Color.RED;
+            subCircle.setRadius(firstPointRadius);
         }
     }
 }

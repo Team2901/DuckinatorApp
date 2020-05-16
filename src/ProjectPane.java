@@ -304,11 +304,11 @@ public class ProjectPane extends Pane{
             points.add(point);
             robotSpecs();
             if (drawables.isEmpty()){
-                WayPoint startCircle = new WayPoint(xPoint, yPoint, 3, 8);
+                WayPoint startCircle = new WayPoint(xPoint, yPoint);
                 startCircle.setOnMousePressed(this::selectPoint);
                 addDrawable(startCircle);
             }else{
-                WayPoint nextCircles = new WayPoint(xPoint, yPoint, 4, 8);
+                WayPoint nextCircles = new WayPoint(xPoint, yPoint);
                 nextCircles.setOnMousePressed(this::selectPoint);
                 lineTicker++;
                 WayPoint lastWayPoint = drawables.isEmpty() ? null : (WayPoint) drawables.get(drawables.size() - 1);
@@ -604,6 +604,27 @@ public class ProjectPane extends Pane{
         }
         return convertArrayList(movements);
     }
+
+    /*private String moveHere(ArrayList<Point> points) {
+        ArrayList<String> movements = new ArrayList<String>();
+
+        for (int ii = 0; ii < points.size(); ii++) {
+            // first point.. nothing to do. assume robot was placed here.
+            if (ii == 0) continue;
+            // 2 or more points present.
+            // calculate the distance to travel between last point and this point
+            Double encoderCounts = distanceBetweenTwoPointsInEncoderCounts(points.get(ii), points.get(ii - 1));
+            // Three or more points present
+            // calculate change in direction.
+            if (ii > 1) {
+                double angleChange = changeInOrientation(points.get(ii - 2), points.get(ii - 1), points.get(ii));
+                movements.add(" rotate(" + (int) Math.round(angleChange) + ");\n");
+            }
+            movements.add(" goForward(" + (int) Math.round(encoderCounts) + ");\n");
+        }
+
+        return convertArrayList(movements);
+    }*/
 
     public void addDrawable(Drawable drawable){
         Drawable lastDrawable = drawables.isEmpty() ? null : drawables.get(drawables.size() - 1);

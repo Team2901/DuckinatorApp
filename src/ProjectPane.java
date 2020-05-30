@@ -540,6 +540,9 @@ public class ProjectPane extends Pane{
                                 driveInit+
                                 "        waitForStart();\n" +
                                 "        if (opModeIsActive()){\n" +
+                                " //Our version \n" +
+                                moveHereTwo(points) +
+                                " //Original version \n" +
                                 moveHere() +
                                 "\n" +
                                 "        }\n" +
@@ -636,7 +639,7 @@ public class ProjectPane extends Pane{
 
         double distanceInPixels = Math.sqrt(dxSquared + dySquared);
 
-        double distanceInInches = distanceInPixels * (fieldMeasurementInches/fieldMeasurementPixels);
+        double distanceInInches = distanceInPixels * fieldMeasurementInches/fieldMeasurementPixels;
 
         return convertInchesToEncoderTicks(distanceInInches);
     }

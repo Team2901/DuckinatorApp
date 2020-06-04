@@ -645,7 +645,14 @@ public class ProjectPane extends Pane{
     }
 
     private double changeInOrientation(Point firstPoint, Point secondPoint, Point thirdPoint) {
-        return 0;
+        double dx1 = secondPoint.getX() - firstPoint.getX();
+        double dx2 = thirdPoint.getX() - secondPoint.getX();
+        double dy1 = secondPoint.getY() - firstPoint.getY();
+        double dy2 = thirdPoint.getY() - secondPoint.getY();
+        double length1 = Math.sqrt(Math.pow(dx1,2) + Math.pow(dy1,2));
+        double length2 = Math.sqrt(Math.pow(dx2,2) + Math.pow(dy2,2));
+        angleTemp = Math.acos(((dx1*dx2)+(dy1*dy2))/(length1 * length2));
+        return ((angleTemp*180)/Math.PI);
     }
 
     public void addDrawable(Drawable drawable){

@@ -83,4 +83,11 @@ public class WayPoint extends Circle implements Drawable {
             subCircle.setRadius(firstPointRadius);
         }
     }
+
+    public int getX() {
+        return (int) this.getCenterX();
+    }
+    public int getY() {
+        return (int) this.getCenterY();
+    }
 }

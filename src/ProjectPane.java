@@ -45,7 +45,7 @@ public class ProjectPane extends Pane{
     ArrayList<Double> angleChanges = new ArrayList<Double>();
     ArrayList<String> leftOrRight = new ArrayList<String>();
     ArrayList<String> movements = new ArrayList<String>();
-    ArrayList<Point> points = new ArrayList<Point>();
+    ArrayList<WayPoint> points = new ArrayList<WayPoint>();
     ArrayList<WayPoint> wayPoints = new ArrayList<>();
     ArrayList<Drawable> drawables = new ArrayList<>();
     private Line line;
@@ -296,17 +296,18 @@ public class ProjectPane extends Pane{
         if (e.getSource() == fieldHolder){
             xPoint = (int) e.getSceneX();
             yPoint = (int) e.getSceneY();
-            Point point = new Point();
-            point.x = (int) e.getSceneX();
-            point.y = (int) e.getSceneY();
+            //Point point = new Point();
+            //point.x = (int) e.getSceneX();
+            //point.y = (int) e.getSceneY();
             xPixel.add(xPoint);
             yPixel.add(yPoint);
-            points.add(point);
+            //points.add(point);
             robotSpecs();
             if (drawables.isEmpty()){
                 WayPoint startCircle = new WayPoint(xPoint, yPoint);
                 startCircle.setOnMousePressed(this::selectPoint);
                 addDrawable(startCircle);
+                points.add(startCircle);
             }else{
                 WayPoint nextCircles = new WayPoint(xPoint, yPoint);
                 nextCircles.setOnMousePressed(this::selectPoint);
@@ -318,6 +319,7 @@ public class ProjectPane extends Pane{
                 encoderPathLength.add(convertInchesToEncoderTicks(actualPathLength.get(lineTicker-1)));
                 addDrawable(line);
                 addDrawable(nextCircles);
+                points.add(nextCircles);
                 //if (lineTicker == 1){
                 //    movements.add("            goForward(" + (int)Math.round(encoderPathLength.get(0)) + ");\n");
                 //}else if (lineTicker > 1){
@@ -596,19 +598,24 @@ public class ProjectPane extends Pane{
                 movements.add("            goForward(" + (int)Math.round(encoderPathLength.get(0)) + ");\n");
             }else{
                 movementTemp = ("            goForward(" + (int)Math.round(encoderPathLength.get(i-1)) + ");\n");
-                angleChanges.add(getAngle2((double)xPixel.get(lineTicker-2), (double)xPixel.get(lineTicker-1), (double)xPixel.get(lineTicker), (double)yPixel.get(lineTicker-2), (double)yPixel.get(lineTicker-1), (double)yPixel.get(lineTicker), lineLength.get(lineTicker-2), lineLength.get(lineTicker-1)));
-                orientation(xPixel.get(lineTicker-2), xPixel.get(lineTicker-1), xPixel.get(lineTicker),yPixel.get(lineTicker-2), yPixel.get(lineTicker-1), yPixel.get(lineTicker));
-                if (leftOrRight.get(lineTicker-2).equals("Right")){
-                    angleChanges.set(lineTicker-2, -angleChanges.get(lineTicker-2));
+                angleChanges.add(getAngle2(
+                        (double)xPixel.get(i-1), (double)xPixel.get(i), (double)xPixel.get(i+1),
+                        (double)yPixel.get(i-1), (double)yPixel.get(i), (double)yPixel.get(i+1),
+                        lineLength.get(i-1), lineLength.get(i)));
+                orientation(
+                        xPixel.get(i-1), xPixel.get(i), xPixel.get(i+1),
+                        yPixel.get(i-1), yPixel.get(i), yPixel.get(i+1));
+                if (leftOrRight.get(i-1).equals("Right")){
+                    angleChanges.set(i-1, -angleChanges.get(i-1));
                 }
-                movements.add("            rotate(" + (int)Math.round(angleChanges.get(lineTicker-2)) + ");\n");
+                movements.add("            rotate(" + (int)Math.round(angleChanges.get(i-1)) + ");\n");
                 movements.add(movementTemp);
             }
         }
         return convertArrayList(movements);
     }
 
-    private String moveHereTwo(ArrayList<Point> points) {
+    private String moveHereTwo(ArrayList<WayPoint> points) {
         ArrayList<String> movements = new ArrayList<String>();
 
         for (int ii = 0; ii < points.size(); ii++) {
@@ -630,9 +637,9 @@ public class ProjectPane extends Pane{
     }
 
 
-    private Double distanceBetweenTwoPointsInEncoderCounts(Point firstPoint, Point secondPoint) {
-        int dx = secondPoint.x - firstPoint.x;
-        int dy = secondPoint.y - firstPoint.y;
+    private Double distanceBetweenTwoPointsInEncoderCounts(WayPoint firstPoint, WayPoint secondPoint) {
+        int dx = secondPoint.getX() - firstPoint.getX();
+        int dy = secondPoint.getY() - firstPoint.getY();
 
         double dxSquared = Math.pow(dx,2);
         double dySquared = Math.pow(dy,2);
@@ -644,7 +651,7 @@ public class ProjectPane extends Pane{
         return convertInchesToEncoderTicks(distanceInInches);
     }
 
-    private double changeInOrientation(Point firstPoint, Point secondPoint, Point thirdPoint) {
+    private double changeInOrientation(WayPoint firstPoint, WayPoint secondPoint, WayPoint thirdPoint) {
         double dx1 = secondPoint.getX() - firstPoint.getX();
         double dx2 = thirdPoint.getX() - secondPoint.getX();
         double dy1 = secondPoint.getY() - firstPoint.getY();
@@ -698,6 +705,7 @@ public class ProjectPane extends Pane{
         }
 
         removeDrawable(point);
+        points.remove(point);
     }
 
     public void removeDrawable(Drawable remove){

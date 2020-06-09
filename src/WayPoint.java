@@ -20,6 +20,23 @@ public class WayPoint extends Circle implements Drawable {
         subCircle = new Circle(xPoint, yPoint, i, originalColor);
     }
 
+    public void setCirclePositionSet(double x, double y){
+        subCircle.setCenterX(x);
+        subCircle.setCenterY(y);
+        this.setCenterX(x);
+        this.setCenterY(y);
+        LineConnector beforeLine = (LineConnector) this.getBefore();
+        LineConnector afterLine = (LineConnector) this.getAfter();
+        if(beforeLine != null) {
+            beforeLine.setEndX(x);
+            beforeLine.setEndY(y);
+        }
+        if(afterLine != null) {
+            afterLine.setStartX(x);
+            afterLine.setStartY(y);
+        }
+    }
+
     public WayPoint getPriorPoint(){
         LineConnector line = (LineConnector) this.getBefore();
 

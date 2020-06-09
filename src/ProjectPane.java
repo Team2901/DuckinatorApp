@@ -306,11 +306,13 @@ public class ProjectPane extends Pane{
             if (drawables.isEmpty()){
                 WayPoint startCircle = new WayPoint(xPoint, yPoint);
                 startCircle.setOnMousePressed(this::selectPoint);
+                startCircle.setOnMouseDragged(this::dragPoint);
                 addDrawable(startCircle);
                 points.add(startCircle);
             }else{
                 WayPoint nextCircles = new WayPoint(xPoint, yPoint);
                 nextCircles.setOnMousePressed(this::selectPoint);
+                nextCircles.setOnMouseDragged(this::dragPoint);
                 lineTicker++;
                 WayPoint lastWayPoint = drawables.isEmpty() ? null : (WayPoint) drawables.get(drawables.size() - 1);
                 LineConnector line = new LineConnector((int) lastWayPoint.getCenterX(),(int) lastWayPoint.getCenterY(),xPoint,yPoint);
@@ -336,6 +338,13 @@ public class ProjectPane extends Pane{
             //    movements.add(movementTemp);
             //}
         }
+    }
+
+    private void dragPoint(MouseEvent mouseEvent){
+        WayPoint circle = (WayPoint) mouseEvent.getTarget();
+        double mouseX = mouseEvent.getSceneX();
+        double mouseY = mouseEvent.getSceneY();
+        circle.setCirclePositionSet(mouseX, mouseY);
     }
 
     private void selectPoint(MouseEvent mouseEvent){
@@ -545,8 +554,8 @@ public class ProjectPane extends Pane{
                                 "        if (opModeIsActive()){\n" +
                                 " //Our version \n" +
                                 moveHereTwo(points) +
-                                " //Original version \n" +
-                                moveHere() +
+                                //" //Original version \n" +
+                                //moveHere() +
                                 "\n" +
                                 "        }\n" +
                                 "    }\n" +

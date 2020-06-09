@@ -378,6 +378,7 @@ public class ProjectPane extends Pane{
             lineLength.clear();
             actualPathLength.clear();
             encoderPathLength.clear();
+            points.clear();
             leftOrRight.clear();
             angleChanges.clear();
             code.clear();
@@ -592,12 +593,12 @@ public class ProjectPane extends Pane{
         if (encoderPathLength.size() == 0){
             return "";
         }
-        for(int i = 0; i < points.size(); i++)
+        for(int i = 0; i < points.size()-1; i++)
         {
             if (i == 0){
                 movements.add("            goForward(" + (int)Math.round(encoderPathLength.get(0)) + ");\n");
             }else{
-                movementTemp = ("            goForward(" + (int)Math.round(encoderPathLength.get(i-1)) + ");\n");
+                movementTemp = ("            goForward(" + (int)Math.round(encoderPathLength.get(i)) + ");\n");
                 angleChanges.add(getAngle2(
                         (double)xPixel.get(i-1), (double)xPixel.get(i), (double)xPixel.get(i+1),
                         (double)yPixel.get(i-1), (double)yPixel.get(i), (double)yPixel.get(i+1),
@@ -658,7 +659,12 @@ public class ProjectPane extends Pane{
         double dy2 = thirdPoint.getY() - secondPoint.getY();
         double length1 = Math.sqrt(Math.pow(dx1,2) + Math.pow(dy1,2));
         double length2 = Math.sqrt(Math.pow(dx2,2) + Math.pow(dy2,2));
-        angleTemp = Math.acos(((dx1*dx2)+(dy1*dy2))/(length1 * length2));
+        double angleTemp = Math.acos(((dx1*dx2)+(dy1*dy2))/(length1 * length2));
+
+        if (((secondPoint.getX() - firstPoint.getX())*(thirdPoint.getY() - firstPoint.getY()) - (secondPoint.getY() - firstPoint.getY())*(thirdPoint.getX() - firstPoint.getX())) > 0){
+            angleTemp *= -1;
+        }
+
         return ((angleTemp*180)/Math.PI);
     }
 

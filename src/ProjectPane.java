@@ -23,6 +23,7 @@ import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 
 import java.awt.*;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -294,49 +295,35 @@ public class ProjectPane extends Pane{
 
     public void processMousePress(MouseEvent e){
         if (e.getSource() == fieldHolder){
-            xPoint = (int) e.getSceneX();
-            yPoint = (int) e.getSceneY();
-            //Point point = new Point();
-            //point.x = (int) e.getSceneX();
-            //point.y = (int) e.getSceneY();
-            xPixel.add(xPoint);
-            yPixel.add(yPoint);
-            //points.add(point);
-            robotSpecs();
-            if (drawables.isEmpty()){
-                WayPoint startCircle = new WayPoint(xPoint, yPoint);
-                startCircle.setOnMousePressed(this::selectPoint);
-                startCircle.setOnMouseDragged(this::dragPoint);
-                addDrawable(startCircle);
-                points.add(startCircle);
-            }else{
-                WayPoint nextCircles = new WayPoint(xPoint, yPoint);
-                nextCircles.setOnMousePressed(this::selectPoint);
-                nextCircles.setOnMouseDragged(this::dragPoint);
-                lineTicker++;
-                WayPoint lastWayPoint = drawables.isEmpty() ? null : (WayPoint) drawables.get(drawables.size() - 1);
-                LineConnector line = new LineConnector((int) lastWayPoint.getCenterX(),(int) lastWayPoint.getCenterY(),xPoint,yPoint);
-                lineLength.add(Math.sqrt( ( ( xPixel.get(lineTicker) - xPixel.get(lineTicker-1) ) * ( xPixel.get(lineTicker) - xPixel.get(lineTicker-1) ) ) + ( ( yPixel.get(lineTicker) - yPixel.get(lineTicker-1) ) * ( yPixel.get(lineTicker) - yPixel.get(lineTicker-1) ) ) ));
-                actualPathLength.add((lineLength.get(lineTicker-1)*conversionFactorPixelInch));
-                encoderPathLength.add(convertInchesToEncoderTicks(actualPathLength.get(lineTicker-1)));
-                addDrawable(line);
-                addDrawable(nextCircles);
-                points.add(nextCircles);
-                //if (lineTicker == 1){
-                //    movements.add("            goForward(" + (int)Math.round(encoderPathLength.get(0)) + ");\n");
-                //}else if (lineTicker > 1){
-                //    movementTemp = ("            goForward(" + (int)Math.round(encoderPathLength.get(lineTicker-1)) + ");\n");
-                //}
-            }
-            // if (lineTicker > 1){
-            //    angleChanges.add(getAngle2((double)xPixel.get(lineTicker-2), (double)xPixel.get(lineTicker-1), (double)xPixel.get(lineTicker), (double)yPixel.get(lineTicker-2), (double)yPixel.get(lineTicker-1), (double)yPixel.get(lineTicker), lineLength.get(lineTicker-2), lineLength.get(lineTicker-1)));
-            //    orientation(xPixel.get(lineTicker-2), xPixel.get(lineTicker-1), xPixel.get(lineTicker),yPixel.get(lineTicker-2), yPixel.get(lineTicker-1), yPixel.get(lineTicker));
-            //    if (leftOrRight.get(lineTicker-2).equals("Right")){
-            //        angleChanges.set(lineTicker-2, -angleChanges.get(lineTicker-2));
-            //    }
-            //    movements.add("            rotate(" + (int)Math.round(angleChanges.get(lineTicker-2)) + ");\n");
-            //    movements.add(movementTemp);
-            //}
+            int xPoint = (int) e.getSceneX();
+            int yPoint = (int) e.getSceneY();
+            createWayPoint(xPoint,yPoint);
+        }
+    }
+
+    public void createWayPoint(int xPoint, int yPoint){
+        xPixel.add(xPoint);
+        yPixel.add(yPoint);
+        robotSpecs();
+        if (drawables.isEmpty()){
+            WayPoint startCircle = new WayPoint(xPoint, yPoint);
+            startCircle.setOnMousePressed(this::selectPoint);
+            startCircle.setOnMouseDragged(this::dragPoint);
+            addDrawable(startCircle);
+            points.add(startCircle);
+        }else{
+            WayPoint nextCircles = new WayPoint(xPoint, yPoint);
+            nextCircles.setOnMousePressed(this::selectPoint);
+            nextCircles.setOnMouseDragged(this::dragPoint);
+            lineTicker++;
+            WayPoint lastWayPoint = drawables.isEmpty() ? null : (WayPoint) drawables.get(drawables.size() - 1);
+            LineConnector line = new LineConnector((int) lastWayPoint.getCenterX(),(int) lastWayPoint.getCenterY(),xPoint,yPoint);
+            lineLength.add(Math.sqrt( ( ( xPixel.get(lineTicker) - xPixel.get(lineTicker-1) ) * ( xPixel.get(lineTicker) - xPixel.get(lineTicker-1) ) ) + ( ( yPixel.get(lineTicker) - yPixel.get(lineTicker-1) ) * ( yPixel.get(lineTicker) - yPixel.get(lineTicker-1) ) ) ));
+            actualPathLength.add((lineLength.get(lineTicker-1)*conversionFactorPixelInch));
+            encoderPathLength.add(convertInchesToEncoderTicks(actualPathLength.get(lineTicker-1)));
+            addDrawable(line);
+            addDrawable(nextCircles);
+            points.add(nextCircles);
         }
     }
 
@@ -741,5 +728,15 @@ public class ProjectPane extends Pane{
         if(after != null){
             after.setBefore(remove.getBefore());
         }
+    }
+
+    public void savePoints(String filePath, ArrayList <WayPoint> pointsInGivenPathway) throws IOException{
+        FileWriter fileWriter = new FileWriter(filePath);
+        for(WayPoint point : pointsInGivenPathway)
+        {
+            String pointString = String.format("%s,%s",point.getX(),point.getY());
+            fileWriter.write(pointString);
+        }
+        fileWriter.close();
     }
 }

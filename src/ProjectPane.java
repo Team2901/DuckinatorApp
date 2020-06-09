@@ -23,6 +23,8 @@ import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 
 import java.awt.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URI;
@@ -738,5 +740,17 @@ public class ProjectPane extends Pane{
             fileWriter.write(pointString);
         }
         fileWriter.close();
+    }
+    public ArrayList<WayPoint> loadPoints(String filePath) throws IOException{
+        FileReader fileReader = new FileReader(filePath);
+        BufferedReader bufferedReader = new BufferedReader(fileReader);
+        String line = bufferedReader.readLine();
+        ArrayList<WayPoint> preexistingPoints = new ArrayList();
+        while(line != null){
+            String[] lineArray = line.split(",");
+            //TODO Convert values to waypoints
+            line = bufferedReader.readLine();
+        }
+        return preexistingPoints;
     }
 }

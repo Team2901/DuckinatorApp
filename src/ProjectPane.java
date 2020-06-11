@@ -6,6 +6,7 @@
 
 import javafx.event.ActionEvent;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
@@ -17,12 +18,15 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 
 import java.awt.*;
+import java.awt.Menu;
+import java.awt.MenuBar;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -75,7 +79,8 @@ public class ProjectPane extends Pane{
     private Label careful;
     private Hyperlink github;
     private WayPoint selectedPoint;
-
+    private MenuBar loadOptions;
+    private Menu loadMenu;
     public ProjectPane (){
 
         this.setOnKeyPressed(this::gameAreaKeyPress);
@@ -142,6 +147,10 @@ public class ProjectPane extends Pane{
         code.setLayoutX(540);
         code.setLayoutY(70);
         getChildren().add(code);
+
+        loadOptions = new MenuBar();
+
+        loadMenu = new Menu("Load Files");
 
         drives = new ToggleGroup();
 

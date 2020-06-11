@@ -22,6 +22,11 @@ public class FieldUtils {
         return pixelValue * conversionFactorPixelInch;
     }
 
+    public static double convertToPixels(final double inchesValue) {
+        double conversionFactorInchPixel = ((double) FIELD_MEASUREMENT_PIXELS / (double) FIELD_MEASUREMENT_INCHES);
+        return inchesValue * conversionFactorInchPixel;
+    }
+
     public static double normalizeAngle(final double angle) {
         return ((angle + 180) % 360) - 180;
     }

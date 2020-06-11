@@ -2,6 +2,8 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 
+import java.util.List;
+
 public class WayPoint extends Circle implements Drawable {
 
     private final Circle subCircle;
@@ -11,10 +13,13 @@ public class WayPoint extends Circle implements Drawable {
 
     private boolean selected;
 
-    public WayPoint(final double xPoint, final double yPoint) {
+    public WayPoint(final Double xPoint, final Double yPoint) {
         super(xPoint, yPoint, 10, Color.TRANSPARENT);
         subCircle = new Circle(xPoint, yPoint, 4);
         setCenter(xPoint, yPoint);
+    }
+    public WayPoint(final List<Double> location) {
+        this(location.get(0), location.get(1));
     }
 
     @Override
@@ -115,6 +120,10 @@ public class WayPoint extends Circle implements Drawable {
         } else {
             subCircle.setFill(priorLine == null ? Color.RED : Color.BLACK);
         }
+    }
+
+    public void setCenter(final List<Double> location) {
+        setCenter(location.get(0), location.get(1));
     }
 
     public void setCenter(double xPoint, double yPoint) {

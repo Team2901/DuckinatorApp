@@ -21,7 +21,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
 import java.awt.*;
-import java.io.IOException;
+import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -35,7 +35,7 @@ public class ProjectPane extends Pane {
     private final static String DEFAULT_CLASS_NAME = "DuckinatorAuto";
 
     private final TextArea code;
-    private final TextField classNameTextArea;
+    public final TextField classNameTextArea;
     private int togglingKeep = 1;
 
     private final Label wayPointLocationReporter;
@@ -152,14 +152,30 @@ public class ProjectPane extends Pane {
         getChildren().add(wayPointLocationReporter);
 
         EventHandler<MouseEvent> processMouseMovement = event -> {
-            double xInches = FieldUtils.convertToInches(event.getSceneX());
-            double yInches = FieldUtils.convertToInches(event.getSceneY());
+
+            ArrayList<Double> mouseLocation = getMouseLocation(event);
+            double xInches = FieldUtils.convertToInches(mouseLocation.get(0));
+            double yInches = FieldUtils.convertToInches(mouseLocation.get(1));
             final String msg = String.format("Mouse: (%.1f, %.1f)", xInches, yInches);
             mouseLocationReporter.setText(msg);
         };
 
         this.setOnMouseMoved(processMouseMovement);
         this.setOnMouseDragged(processMouseMovement);
+    }
+
+    public ArrayList<Double> getMouseLocation(MouseEvent event) {
+
+        double offsetX = this.getLayoutX();
+        double offsetY = this.getLayoutY();
+
+        Double mouseX = event.getSceneX() - offsetX;
+        Double mouseY = event.getSceneY() - offsetY;
+
+        ArrayList<Double> mouseLocation = new ArrayList<>();
+        mouseLocation.add(mouseX);
+        mouseLocation.add(mouseY);
+        return mouseLocation;
     }
 
     public void reportMovingWayPointLocation() {
@@ -175,14 +191,7 @@ public class ProjectPane extends Pane {
     }
 
     public void processCleanButtonOnPressed(final ActionEvent e) {
-
-        selectedDrawable = null;
-        while (wayPoints.size() > 0) {
-            deleteWayPoint(wayPoints.get(0));
-        }
-
-        code.clear();
-        editMode = false;
+        clear();
     }
 
     public void processModeMenuRequest(final ContextMenuEvent me) {
@@ -313,34 +322,38 @@ public class ProjectPane extends Pane {
     public void processFieldHolderOnMousePressed(final MouseEvent e){
 
         if (e.getButton().equals(MouseButton.PRIMARY)) {
+            ArrayList<Double> mouseLocation = getMouseLocation(e);
+            addWayPoint(mouseLocation);
+        }
+    }
 
-            if (!editMode) {
+    public void addWayPoint(ArrayList<Double> mouseLocation) {
+        if (!editMode) {
 
-                final WayPoint lastWayPoint = (wayPoints.size() == 0) ? null : wayPoints.get(wayPoints.size() - 1);
-                final WayPoint wayPoint = new WayPoint(e.getSceneX(), e.getSceneY());
+            final WayPoint lastWayPoint = (wayPoints.size() == 0) ? null : wayPoints.get(wayPoints.size() - 1);
+            final WayPoint wayPoint = new WayPoint(mouseLocation);
 
-                addWayPoint(wayPoint, lastWayPoint, null);
+            addWayPoint(wayPoint, lastWayPoint, null);
 
-            } else if (selectedDrawable != null) {
+        } else if (selectedDrawable != null) {
 
-                if (selectedDrawable instanceof WayLine){
+            if (selectedDrawable instanceof WayLine){
 
-                    final WayLine selectedWayLine = (WayLine) selectedDrawable;
+                final WayLine selectedWayLine = (WayLine) selectedDrawable;
 
-                    final WayPoint lastWayPoint = selectedWayLine.getPriorPoint();
-                    final WayPoint nextWayPoint = selectedWayLine.getNextPoint();
-                    final WayPoint wayPoint = new WayPoint(e.getSceneX(), e.getSceneY());
+                final WayPoint lastWayPoint = selectedWayLine.getPriorPoint();
+                final WayPoint nextWayPoint = selectedWayLine.getNextPoint();
+                final WayPoint wayPoint = new WayPoint(mouseLocation);
 
-                    addWayPoint(wayPoint, lastWayPoint, nextWayPoint);
+                addWayPoint(wayPoint, lastWayPoint, nextWayPoint);
 
-                    setSelectedDrawable(wayPoint);
+                setSelectedDrawable(wayPoint);
 
-                } else {
+            } else {
 
-                    final WayPoint selectedWayPoint = (WayPoint) selectedDrawable;
-                    selectedWayPoint.setCenter(e.getSceneX(), e.getSceneY());
+                final WayPoint selectedWayPoint = (WayPoint) selectedDrawable;
+                selectedWayPoint.setCenter(mouseLocation);
 
-                }
             }
         }
     }
@@ -414,8 +427,11 @@ public class ProjectPane extends Pane {
         reportMovingWayPointLocation();
     }
 
-    public void generation(final ActionEvent e){
+    public void generation(final ActionEvent e) {
+        generation();
+    }
 
+    public void generation(){
         if (wayPoints.size()>0){
 
             String className = classNameTextArea.getText();
@@ -494,5 +510,95 @@ public class ProjectPane extends Pane {
         }
 
         return String.join("", movements);
+    }
+
+    public void clear() {
+        selectedDrawable = null;
+        while (wayPoints.size() > 0) {
+            deleteWayPoint(wayPoints.get(0));
+        }
+
+        code.clear();
+        editMode = false;
+    }
+
+    public void savePointsToFile(File file) {
+
+        try {
+            savePoints(file, wayPoints);
+        } catch (IOException e) {
+            throw new RuntimeException("error in savePointsToFile", e);
+        }
+    }
+
+    public static String getBaseName(String fileName) {
+        int index = fileName.lastIndexOf('.');
+        if (index == -1) {
+            return fileName;
+        } else {
+            return fileName.substring(0, index);
+        }
+    }
+
+    public void readPointsFromFile(File file) {
+
+        // Remove all the points from the list of waypoints and from the screen
+        clear();
+
+        try {
+            // Set the name to that of the file
+            classNameTextArea.setText(getBaseName(file.getName()));
+
+            // Load the points
+            ArrayList<ArrayList<Double>> wayPointLocations = loadPoints(file);
+            for (ArrayList<Double> wayPointLocation : wayPointLocations) {
+                this.addWayPoint(wayPointLocation);
+            }
+
+            // Regenerate the code
+            this.generation();
+        } catch (IOException e) {
+            throw new RuntimeException("error in readPointsFromFile", e);
+        }
+    }
+
+    public void savePoints(File file, ArrayList <WayPoint> wayPoints) throws IOException {
+
+        try (FileWriter fileWriter = new FileWriter(file)) {
+            for(WayPoint point : wayPoints) {
+
+                // Format the line into a inches location of the form "x,y"
+                String pointString = String.format("%s,%s\n",
+                        FieldUtils.convertToInches(point.getXPoint()),
+                        FieldUtils.convertToInches(point.getYPoint()));
+                fileWriter.write(pointString);
+            }
+        }
+    }
+
+    public ArrayList<ArrayList<Double>> loadPoints(File file) throws IOException{
+
+        ArrayList<ArrayList<Double>> wayPointLocations = new ArrayList<>();
+
+        try (FileReader fileReader = new FileReader(file); BufferedReader bufferedReader = new BufferedReader(fileReader)) {
+
+            String line = bufferedReader.readLine();
+
+            while (line != null) {
+
+                // Parse the line into a pixel x,y location
+                String[] lineArray = line.split(",");
+                double x = FieldUtils.convertToPixels(Double.parseDouble(lineArray[0]));
+                double y = FieldUtils.convertToPixels(Double.parseDouble(lineArray[1]));
+                ArrayList<Double> wayPointLocation = new ArrayList<>();
+                wayPointLocation.add(x);
+                wayPointLocation.add(y);
+                wayPointLocations.add(wayPointLocation);
+
+                line = bufferedReader.readLine();
+            }
+        }
+
+        return wayPointLocations;
     }
 }

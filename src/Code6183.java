@@ -1,39 +1,54 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 import javafx.application.Application;
 import javafx.scene.Scene;
-import javafx.scene.layout.Pane;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+
+import java.io.File;
 
 /**
  *
  * @author akkir
  */
-public class Code6183 extends Application{
+public class Code6183 extends Application {
 
-    public ProjectPane clickerPane;
-
-    /**
-     * @param args the command line arguments
-     */
     @Override
     public void start(Stage primaryStage) {
 
-        clickerPane = new ProjectPane();
+        final FileChooser fileChooser = new FileChooser();
 
-        Pane root = new Pane(clickerPane);
+        final ProjectPane clickerPane = new ProjectPane();
 
-        Scene scene = new Scene(root, 0, 0);
-        scene.setFill(Color.BLANCHEDALMOND);
+        final MenuItem open = new MenuItem("Open");
+        open.setOnAction(e -> {
+            final File file = fileChooser.showOpenDialog(primaryStage);
+            if (file != null) {
+                clickerPane.readPointsFromFile(file);
+            }
+        });
+
+        final MenuItem save = new MenuItem("Save");
+        save.setOnAction(e -> {
+            fileChooser.setInitialFileName(String.format("%s.csv",  clickerPane.classNameTextArea.getText()));
+            final File file = fileChooser.showSaveDialog(primaryStage);
+            if (file != null) {
+                clickerPane.savePointsToFile(file);
+            }
+        });
+
+        final Menu menuFile = new Menu("File", null, open, save);
+        final MenuBar menuBar = new MenuBar(menuFile);
+
+        final VBox vBox = new VBox(menuBar, clickerPane);
+
+        final Scene scene = new Scene(vBox, 1050, 543, Color.BLANCHEDALMOND);
+
         primaryStage.setTitle("Duckinator 3000");
         primaryStage.setScene(scene);
-        primaryStage.setWidth(1050);
-        primaryStage.setHeight(543);
         primaryStage.setX(150);
         primaryStage.setY(150);
         primaryStage.show();

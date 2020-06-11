@@ -732,6 +732,17 @@ public class ProjectPane extends Pane{
         }
     }
 
+    /*
+     * TODO from Margaret
+     *
+     * Learn how to create a menu bar for housing the save/load options (http://tutorials.jenkov.com/javafx/menubar.html)
+     * This code will need to be added in Code6183.java
+     *
+     * Learn how to create a popup to navigate your file system (http://tutorials.jenkov.com/javafx/filechooser.html)
+     *  add the ability to your new save/load options
+     * 
+     */
+
     public void savePoints(String filePath, ArrayList <WayPoint> pointsInGivenPathway) throws IOException{
         FileWriter fileWriter = new FileWriter(filePath);
         for(WayPoint point : pointsInGivenPathway)

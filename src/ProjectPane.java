@@ -31,6 +31,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 
+import static java.lang.Integer.parseInt;
+
 /**
  * @author akkir
  */
@@ -347,43 +349,48 @@ public class ProjectPane extends Pane{
 
     public void processButtonPress(ActionEvent ev){
         if (ev.getSource() == clear){
-            drives.selectToggle(null);
-            getChildren().clear();
-            getChildren().add(rect);
-            getChildren().add(clear);
-            getChildren().add(generate);
-            getChildren().add(fieldHolder);
-            getChildren().add(code);
-            getChildren().add(duckHolder);
-            getChildren().add(tankDrive);
-            getChildren().add(mecanumDrive);
-            getChildren().add(holonomicDrive);
-            getChildren().add(ticksPer);
-            getChildren().add(ticksPerr);
-            getChildren().add(wheelDi);
-            getChildren().add(wheelDia);
-            getChildren().add(careful);
-            getChildren().add(github);
-            if (togglingKeep ==1){
-                tankDrive.setSelected(true);
-            }else if (togglingKeep ==2){
-                holonomicDrive.setSelected(true);
-            } else if (togglingKeep == 3){
-                mecanumDrive.setSelected(true);
-            }
-            xPixel.clear();
-            yPixel.clear();
-            lineLength.clear();
-            actualPathLength.clear();
-            encoderPathLength.clear();
-            points.clear();
-            leftOrRight.clear();
-            angleChanges.clear();
-            code.clear();
-            movements.clear();
-            drawables.clear();
-            lineTicker = 0;
+            clear();
         }
+    }
+
+    public void clear()
+    {
+        drives.selectToggle(null);
+        getChildren().clear();
+        getChildren().add(rect);
+        getChildren().add(clear);
+        getChildren().add(generate);
+        getChildren().add(fieldHolder);
+        getChildren().add(code);
+        getChildren().add(duckHolder);
+        getChildren().add(tankDrive);
+        getChildren().add(mecanumDrive);
+        getChildren().add(holonomicDrive);
+        getChildren().add(ticksPer);
+        getChildren().add(ticksPerr);
+        getChildren().add(wheelDi);
+        getChildren().add(wheelDia);
+        getChildren().add(careful);
+        getChildren().add(github);
+        if (togglingKeep ==1){
+            tankDrive.setSelected(true);
+        }else if (togglingKeep ==2){
+            holonomicDrive.setSelected(true);
+        } else if (togglingKeep == 3){
+            mecanumDrive.setSelected(true);
+        }
+        xPixel.clear();
+        yPixel.clear();
+        lineLength.clear();
+        actualPathLength.clear();
+        encoderPathLength.clear();
+        points.clear(); //Needed
+        leftOrRight.clear();
+        angleChanges.clear();
+        code.clear();
+        movements.clear();
+        drawables.clear(); //Needed
+        lineTicker = 0;
     }
 
     public double convertInchesToEncoderTicks(double c){
@@ -498,6 +505,12 @@ public class ProjectPane extends Pane{
 
     public void generation(ActionEvent DIO){
         if (DIO.getSource()==generate){
+            try {
+                savePoints("C:\\Users\\dominice23507\\OneDrive - Cardinal Gibbons High School\\Duckinator Saved Pathways\\SavedPathways.txt",points);
+                loadPoints("C:\\Users\\dominice23507\\OneDrive - Cardinal Gibbons High School\\Duckinator Saved Pathways\\SavedPathways.txt");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             if (encoderPathLength.size()>0){
                 code.setText(
                         "package org.firstinspires.ftc.teamcode;\n" +
@@ -747,21 +760,20 @@ public class ProjectPane extends Pane{
         FileWriter fileWriter = new FileWriter(filePath);
         for(WayPoint point : pointsInGivenPathway)
         {
-            String pointString = String.format("%s,%s",point.getX(),point.getY());
+            String pointString = String.format("%s,%s\n",point.getX(),point.getY());
             fileWriter.write(pointString);
         }
         fileWriter.close();
     }
-    public ArrayList<WayPoint> loadPoints(String filePath) throws IOException{
+    public void loadPoints(String filePath) throws IOException{
+        clear();
         FileReader fileReader = new FileReader(filePath);
         BufferedReader bufferedReader = new BufferedReader(fileReader);
         String line = bufferedReader.readLine();
-        ArrayList<WayPoint> preexistingPoints = new ArrayList();
-        while(line != null){
+        while(line != null) {
             String[] lineArray = line.split(",");
-            //TODO Convert values to waypoints
+            createWayPoint(parseInt(lineArray[0]), parseInt(lineArray[1]));
             line = bufferedReader.readLine();
         }
-        return preexistingPoints;
     }
 }

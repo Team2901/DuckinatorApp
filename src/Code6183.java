@@ -11,8 +11,11 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.scene.control.MenuBar;
+
+import java.io.File;
 
 /**
  *
@@ -29,13 +32,21 @@ public class Code6183 extends Application{
     //Added comment
     @Override
     public void start(Stage primaryStage) {
+        FileChooser fileChooser = new FileChooser();
 
         clickerPane = new ProjectPane();
 
         Pane root = new Pane(clickerPane);
         Menu loadMenu = new Menu("File", null);
         MenuItem open = new MenuItem("Open");
+        open.setOnAction(e -> {
+            File selectedFile = fileChooser.showOpenDialog(primaryStage);
+        });
         MenuItem save = new MenuItem("Save");
+        save.setOnAction(e -> {
+            File selectedFile = fileChooser.showSaveDialog(primaryStage);
+            clickerPane.savePoints(selectedFile);
+        });
         loadMenu.getItems().add(open);
         loadMenu.getItems().add(save);
         MenuBar loadOptions = new MenuBar();

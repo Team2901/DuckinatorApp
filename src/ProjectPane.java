@@ -27,10 +27,7 @@ import javafx.scene.shape.Rectangle;
 import java.awt.*;
 import java.awt.Menu;
 import java.awt.MenuBar;
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -514,12 +511,6 @@ public class ProjectPane extends Pane{
 
     public void generation(ActionEvent DIO){
         if (DIO.getSource()==generate){
-            try {
-                savePoints("C:\\Users\\dominice23507\\OneDrive - Cardinal Gibbons High School\\Duckinator Saved Pathways\\SavedPathways.txt",points);
-                loadPoints("C:\\Users\\dominice23507\\OneDrive - Cardinal Gibbons High School\\Duckinator Saved Pathways\\SavedPathways.txt");
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
             if (encoderPathLength.size()>0){
                 code.setText(
                         "package org.firstinspires.ftc.teamcode;\n" +
@@ -765,7 +756,16 @@ public class ProjectPane extends Pane{
      * 
      */
 
-    public void savePoints(String filePath, ArrayList <WayPoint> pointsInGivenPathway) throws IOException{
+    public void savePoints(File file)
+    {
+        try {
+            savePoints(file,points);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void savePoints(File filePath, ArrayList <WayPoint> pointsInGivenPathway) throws IOException{
         FileWriter fileWriter = new FileWriter(filePath);
         for(WayPoint point : pointsInGivenPathway)
         {

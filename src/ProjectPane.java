@@ -76,6 +76,7 @@ public class ProjectPane extends Pane{
     private Label careful;
     private Hyperlink github;
     private WayPoint selectedPoint;
+    private LineConnector selectedLine;
     private MenuBar loadOptions;
     private Menu loadMenu;
     public ProjectPane (){
@@ -328,6 +329,7 @@ public class ProjectPane extends Pane{
             lineTicker++;
             WayPoint lastWayPoint = drawables.isEmpty() ? null : (WayPoint) drawables.get(drawables.size() - 1);
             LineConnector line = new LineConnector((int) lastWayPoint.getCenterX(),(int) lastWayPoint.getCenterY(),xPoint,yPoint);
+            line.setOnMousePressed(this::selectLine);
             lineLength.add(Math.sqrt( ( ( xPixel.get(lineTicker) - xPixel.get(lineTicker-1) ) * ( xPixel.get(lineTicker) - xPixel.get(lineTicker-1) ) ) + ( ( yPixel.get(lineTicker) - yPixel.get(lineTicker-1) ) * ( yPixel.get(lineTicker) - yPixel.get(lineTicker-1) ) ) ));
             actualPathLength.add((lineLength.get(lineTicker-1)*conversionFactorPixelInch));
             encoderPathLength.add(convertInchesToEncoderTicks(actualPathLength.get(lineTicker-1)));
@@ -348,9 +350,26 @@ public class ProjectPane extends Pane{
         if(selectedPoint != null) {
             selectedPoint.setSelected(false);
         }
+        if(selectedLine != null){
+            selectedLine.setSelected(false);
+            selectedLine = null;
+        }
         WayPoint circle = (WayPoint) mouseEvent.getTarget();
         circle.setSelected(true);
         selectedPoint = (WayPoint) circle;
+    }
+
+    private void selectLine(MouseEvent mouseEvent){
+        if(selectedPoint != null) {
+            selectedPoint.setSelected(false);
+            selectedPoint = null;
+        }
+        if(selectedLine != null){
+            selectedLine.setSelected(false);
+        }
+        LineConnector line = (LineConnector) mouseEvent.getTarget();
+        line.setSelected(true);
+        selectedLine = (LineConnector) line;
     }
 
     public void processButtonPress(ActionEvent ev){
@@ -691,8 +710,14 @@ public class ProjectPane extends Pane{
                 point.setFirstPoint(true);
             }
             getChildren().add(point.subCircle);
+            getChildren().add((Node) drawable);
         }
-        getChildren().add((Node) drawable);
+        else if(drawable instanceof LineConnector){
+            LineConnector line = (LineConnector) drawable;
+            int index = this.getChildren().indexOf(lastDrawable);
+            getChildren().add(index, line.subLine);
+            getChildren().add(index, (Node) drawable);
+        }
         drawables.add(drawable);
     }
 
@@ -730,6 +755,10 @@ public class ProjectPane extends Pane{
         if(remove instanceof WayPoint){
             WayPoint point = (WayPoint) remove;
             getChildren().remove(point.subCircle);
+        }
+        else if(remove instanceof LineConnector){
+            LineConnector line = (LineConnector) remove;
+            getChildren().remove(line.subLine);
         }
         drawables.remove(remove);
 
@@ -774,7 +803,7 @@ public class ProjectPane extends Pane{
         }
         fileWriter.close();
     }
-    public void loadPoints(String filePath) throws IOException{
+    public void loadPoints(File filePath) throws IOException{
         clear();
         FileReader fileReader = new FileReader(filePath);
         BufferedReader bufferedReader = new BufferedReader(fileReader);

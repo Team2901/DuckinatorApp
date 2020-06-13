@@ -28,12 +28,10 @@ public class WayPoint extends Circle implements Drawable {
         LineConnector beforeLine = (LineConnector) this.getBefore();
         LineConnector afterLine = (LineConnector) this.getAfter();
         if(beforeLine != null) {
-            beforeLine.setEndX(x);
-            beforeLine.setEndY(y);
+            beforeLine.setLinePositionSetEnd(x,y);
         }
         if(afterLine != null) {
-            afterLine.setStartX(x);
-            afterLine.setStartY(y);
+            afterLine.setLinePositionSetStart(x,y);
         }
     }
 

@@ -16,6 +16,7 @@ import javafx.stage.Stage;
 import javafx.scene.control.MenuBar;
 
 import java.io.File;
+import java.io.IOException;
 
 /**
  *
@@ -41,6 +42,11 @@ public class Code6183 extends Application{
         MenuItem open = new MenuItem("Open");
         open.setOnAction(e -> {
             File selectedFile = fileChooser.showOpenDialog(primaryStage);
+            try {
+                clickerPane.loadPoints(selectedFile);
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            }
         });
         MenuItem save = new MenuItem("Save");
         save.setOnAction(e -> {

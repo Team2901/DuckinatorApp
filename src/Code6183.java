@@ -49,15 +49,12 @@ public class Code6183 extends Application{
         });
         loadMenu.getItems().add(open);
         loadMenu.getItems().add(save);
-        MenuBar loadOptions = new MenuBar();
+        MenuBar loadOptions = new MenuBar(loadMenu);
         VBox vBox = new VBox(loadOptions, clickerPane);
-        loadOptions.getMenus().add(loadMenu);
         Scene scene = new Scene(vBox, 1050, 543, Color.BLANCHEDALMOND);
         scene.setFill(Color.BLANCHEDALMOND);
         primaryStage.setTitle("Duckinator 3000");
         primaryStage.setScene(scene);
-        primaryStage.setWidth(1050);
-        primaryStage.setHeight(543);
         primaryStage.setX(150);
         primaryStage.setY(150);
         primaryStage.show();

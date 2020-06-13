@@ -305,8 +305,8 @@ public class ProjectPane extends Pane{
 
     public void processMousePress(MouseEvent e){
         if (e.getSource() == fieldHolder){
-            int xPoint = (int) e.getSceneX();
-            int yPoint = (int) e.getSceneY();
+            int xPoint = (int) e.getSceneX() - (int) this.getLayoutX();
+            int yPoint = (int) e.getSceneY() - (int) this.getLayoutY();
             createWayPoint(xPoint,yPoint);
         }
     }
@@ -339,8 +339,8 @@ public class ProjectPane extends Pane{
 
     private void dragPoint(MouseEvent mouseEvent){
         WayPoint circle = (WayPoint) mouseEvent.getTarget();
-        double mouseX = mouseEvent.getSceneX();
-        double mouseY = mouseEvent.getSceneY();
+        double mouseX = mouseEvent.getSceneX() - this.getLayoutX();
+        double mouseY = mouseEvent.getSceneY() - this.getLayoutY();
         circle.setCirclePositionSet(mouseX, mouseY);
     }
 

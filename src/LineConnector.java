@@ -44,6 +44,7 @@ public class LineConnector extends Line implements Drawable {
     }
 
     public void setStartPoint(WayPoint point){
+        drawBefore = point;
         setLinePositionSetStart(point.getCenterX(),point.getCenterY());
     }
 

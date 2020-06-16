@@ -6,7 +6,6 @@
 
 import javafx.event.ActionEvent;
 import javafx.scene.Node;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
@@ -18,15 +17,10 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
-import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 
 import java.awt.*;
-import java.awt.Menu;
-import java.awt.MenuBar;
 import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -304,26 +298,41 @@ public class ProjectPane extends Pane{
     }
 
     public void createWayPoint(int xPoint, int yPoint){
-        xPixel.add(xPoint);
-        yPixel.add(yPoint);
         robotSpecs();
-        if (drawables.isEmpty()){
+        if (points.isEmpty()){
             WayPoint startCircle = new WayPoint(xPoint, yPoint);
-            startCircle.setOnMousePressed(this::selectPoint);
+            startCircle.setOnMousePressed(this::selectPointPress);
             startCircle.setOnMouseDragged(this::dragPoint);
-            addDrawable(startCircle);
+            addDrawable(startCircle, null);
             points.add(startCircle);
         }else{
             WayPoint nextCircles = new WayPoint(xPoint, yPoint);
-            nextCircles.setOnMousePressed(this::selectPoint);
+            nextCircles.setOnMousePressed(this::selectPointPress);
             nextCircles.setOnMouseDragged(this::dragPoint);
-            WayPoint lastWayPoint = drawables.isEmpty() ? null : (WayPoint) drawables.get(drawables.size() - 1);
+            WayPoint lastWayPoint;
+            WayPoint nextWayPoint;
+            int index;
+            if(selectedLine != null)
+            {
+                lastWayPoint = (WayPoint) selectedLine.getBefore();
+                nextWayPoint = (WayPoint) selectedLine.getAfter();
+                index = points.indexOf(nextWayPoint);
+                selectedLine.setStartPoint(nextCircles);
+                nextCircles.setAfter(selectedLine);
+            }
+            else
+            {
+                lastWayPoint = points.get(points.size() - 1);
+                nextWayPoint = null;
+                index = points.size();
+            }
             LineConnector line = new LineConnector((int) lastWayPoint.getCenterX(),(int) lastWayPoint.getCenterY(),xPoint,yPoint);
-            line.setOnMousePressed(this::selectLine);
-            addDrawable(line);
-            addDrawable(nextCircles);
-            points.add(nextCircles);
+            line.setOnMousePressed(this::selectLinePress);
+            addDrawable(line, lastWayPoint);
+            addDrawable(nextCircles, line);
+            points.add(index,nextCircles);
         }
+        selectLine(null);
     }
 
     private void dragPoint(MouseEvent mouseEvent){
@@ -333,7 +342,11 @@ public class ProjectPane extends Pane{
         circle.setCirclePositionSet(mouseX, mouseY);
     }
 
-    private void selectPoint(MouseEvent mouseEvent){
+    private void selectPointPress(MouseEvent mouseEvent){
+        selectPoint((WayPoint) mouseEvent.getTarget());
+    }
+
+    private void selectPoint(WayPoint point){
         if(selectedPoint != null) {
             selectedPoint.setSelected(false);
         }
@@ -341,12 +354,17 @@ public class ProjectPane extends Pane{
             selectedLine.setSelected(false);
             selectedLine = null;
         }
-        WayPoint circle = (WayPoint) mouseEvent.getTarget();
-        circle.setSelected(true);
-        selectedPoint = (WayPoint) circle;
+        if (point != null){
+            point.setSelected(true);
+        }
+        selectedPoint = (WayPoint) point;
     }
 
-    private void selectLine(MouseEvent mouseEvent){
+    private void selectLinePress(MouseEvent mouseEvent){
+        selectLine((LineConnector) mouseEvent.getTarget());
+    }
+
+    private void selectLine(LineConnector line){
         if(selectedPoint != null) {
             selectedPoint.setSelected(false);
             selectedPoint = null;
@@ -354,8 +372,9 @@ public class ProjectPane extends Pane{
         if(selectedLine != null){
             selectedLine.setSelected(false);
         }
-        LineConnector line = (LineConnector) mouseEvent.getTarget();
-        line.setSelected(true);
+        if(line != null){
+            line.setSelected(true);
+        }
         selectedLine = (LineConnector) line;
     }
 
@@ -400,7 +419,6 @@ public class ProjectPane extends Pane{
         angleChanges.clear();
         code.clear();
         movements.clear();
-        drawables.clear(); //Needed
         lineTicker = 0;
     }
 
@@ -422,6 +440,10 @@ public class ProjectPane extends Pane{
             if (selectedPoint != null){
                 deleteWayPoint(selectedPoint);
             }
+        }
+        if(event.getCode() == KeyCode.ESCAPE){
+            selectPoint(null);
+            selectLine(null);
         }
     }
 
@@ -657,8 +679,7 @@ public class ProjectPane extends Pane{
         return ((angleTemp*180)/Math.PI);
     }
 
-    public void addDrawable(Drawable drawable){
-        Drawable lastDrawable = drawables.isEmpty() ? null : drawables.get(drawables.size() - 1);
+    public void addDrawable(Drawable drawable, Drawable lastDrawable){
         drawable.setBefore(lastDrawable);
         if(lastDrawable != null){
             lastDrawable.setAfter(drawable);
@@ -677,7 +698,6 @@ public class ProjectPane extends Pane{
             getChildren().add(index, line.subLine);
             getChildren().add(index, (Node) drawable);
         }
-        drawables.add(drawable);
     }
 
     public void deleteWayPoint(WayPoint point){
@@ -719,7 +739,6 @@ public class ProjectPane extends Pane{
             LineConnector line = (LineConnector) remove;
             getChildren().remove(line.subLine);
         }
-        drawables.remove(remove);
 
         Drawable before = remove.getBefore();
         Drawable after = remove.getAfter();

@@ -33,6 +33,12 @@ public class Code6183 extends Application{
     //Added comment
     @Override
     public void start(Stage primaryStage) {
+
+        /*
+         * How to create a menu bar for housing the save/load options (http://tutorials.jenkov.com/javafx/menubar.html)
+         * How to create a popup to navigate your file system (http://tutorials.jenkov.com/javafx/filechooser.html)
+         */
+
         FileChooser fileChooser = new FileChooser();
 
         clickerPane = new ProjectPane();

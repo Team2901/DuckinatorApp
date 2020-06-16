@@ -40,7 +40,6 @@ import static java.lang.Integer.parseInt;
 
 public class ProjectPane extends Pane{
 
-    private int xPoint, yPoint;
     private Image field, duck;
     private ImageView fieldHolder, duckHolder;
     ArrayList<Integer> xPixel = new ArrayList<Integer>();
@@ -52,10 +51,7 @@ public class ProjectPane extends Pane{
     ArrayList<String> leftOrRight = new ArrayList<String>();
     ArrayList<String> movements = new ArrayList<String>();
     ArrayList<WayPoint> points = new ArrayList<WayPoint>();
-    ArrayList<WayPoint> wayPoints = new ArrayList<>();
     ArrayList<Drawable> drawables = new ArrayList<>();
-    private Line line;
-    private Circle startCircle, nextCircles;
     private int lineTicker = 0;
     private Button clear, generate;
     private Rectangle rect;
@@ -77,8 +73,7 @@ public class ProjectPane extends Pane{
     private Hyperlink github;
     private WayPoint selectedPoint;
     private LineConnector selectedLine;
-    private MenuBar loadOptions;
-    private Menu loadMenu;
+
     public ProjectPane (){
 
         this.setOnKeyPressed(this::gameAreaKeyPress);
@@ -145,10 +140,6 @@ public class ProjectPane extends Pane{
         code.setLayoutX(540);
         code.setLayoutY(70);
         getChildren().add(code);
-
-        loadOptions = new MenuBar();
-
-        loadMenu = new Menu("Load Files");
 
         drives = new ToggleGroup();
 
@@ -378,8 +369,7 @@ public class ProjectPane extends Pane{
         }
     }
 
-    public void clear()
-    {
+    public void clear() {
         drives.selectToggle(null);
         getChildren().clear();
         getChildren().add(rect);
@@ -667,7 +657,6 @@ public class ProjectPane extends Pane{
         return convertArrayList(movements);
     }
 
-
     private Double distanceBetweenTwoPointsInEncoderCounts(WayPoint firstPoint, WayPoint secondPoint) {
         int dx = secondPoint.getX() - firstPoint.getX();
         int dy = secondPoint.getY() - firstPoint.getY();
@@ -774,19 +763,7 @@ public class ProjectPane extends Pane{
         }
     }
 
-    /*
-     * TODO from Margaret
-     *
-     * Learn how to create a menu bar for housing the save/load options (http://tutorials.jenkov.com/javafx/menubar.html)
-     * This code will need to be added in Code6183.java
-     *
-     * Learn how to create a popup to navigate your file system (http://tutorials.jenkov.com/javafx/filechooser.html)
-     *  add the ability to your new save/load options
-     * 
-     */
-
-    public void savePoints(File file)
-    {
+    public void savePoints(File file) {
         try {
             savePoints(file,points);
         } catch (IOException e) {
@@ -803,6 +780,7 @@ public class ProjectPane extends Pane{
         }
         fileWriter.close();
     }
+
     public void loadPoints(File filePath) throws IOException{
         clear();
         FileReader fileReader = new FileReader(filePath);

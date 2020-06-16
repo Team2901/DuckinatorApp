@@ -317,13 +317,9 @@ public class ProjectPane extends Pane{
             WayPoint nextCircles = new WayPoint(xPoint, yPoint);
             nextCircles.setOnMousePressed(this::selectPoint);
             nextCircles.setOnMouseDragged(this::dragPoint);
-            lineTicker++;
             WayPoint lastWayPoint = drawables.isEmpty() ? null : (WayPoint) drawables.get(drawables.size() - 1);
             LineConnector line = new LineConnector((int) lastWayPoint.getCenterX(),(int) lastWayPoint.getCenterY(),xPoint,yPoint);
             line.setOnMousePressed(this::selectLine);
-            lineLength.add(Math.sqrt( ( ( xPixel.get(lineTicker) - xPixel.get(lineTicker-1) ) * ( xPixel.get(lineTicker) - xPixel.get(lineTicker-1) ) ) + ( ( yPixel.get(lineTicker) - yPixel.get(lineTicker-1) ) * ( yPixel.get(lineTicker) - yPixel.get(lineTicker-1) ) ) ));
-            actualPathLength.add((lineLength.get(lineTicker-1)*conversionFactorPixelInch));
-            encoderPathLength.add(convertInchesToEncoderTicks(actualPathLength.get(lineTicker-1)));
             addDrawable(line);
             addDrawable(nextCircles);
             points.add(nextCircles);
@@ -520,7 +516,7 @@ public class ProjectPane extends Pane{
 
     public void generation(ActionEvent DIO){
         if (DIO.getSource()==generate){
-            if (encoderPathLength.size()>0){
+            if (points.size() >= 2){
                 code.setText(
                         "package org.firstinspires.ftc.teamcode;\n" +
                                 "import com.qualcomm.hardware.bosch.BNO055IMU;\n" +
@@ -599,6 +595,8 @@ public class ProjectPane extends Pane{
                                 "    }\n" +
                                 "}"
                 );
+            } else {
+                code.setText("");
             }
         }
     }
@@ -606,34 +604,6 @@ public class ProjectPane extends Pane{
     private String convertArrayList(ArrayList<String> stringList) {
         String joinedString = String.join("", stringList);
         return joinedString;
-    }
-
-    private String moveHere(){
-        ArrayList<String> movements = new ArrayList<String>();
-        if (encoderPathLength.size() == 0){
-            return "";
-        }
-        for(int i = 0; i < points.size()-1; i++)
-        {
-            if (i == 0){
-                movements.add("            goForward(" + (int)Math.round(encoderPathLength.get(0)) + ");\n");
-            }else{
-                movementTemp = ("            goForward(" + (int)Math.round(encoderPathLength.get(i)) + ");\n");
-                angleChanges.add(getAngle2(
-                        (double)xPixel.get(i-1), (double)xPixel.get(i), (double)xPixel.get(i+1),
-                        (double)yPixel.get(i-1), (double)yPixel.get(i), (double)yPixel.get(i+1),
-                        lineLength.get(i-1), lineLength.get(i)));
-                orientation(
-                        xPixel.get(i-1), xPixel.get(i), xPixel.get(i+1),
-                        yPixel.get(i-1), yPixel.get(i), yPixel.get(i+1));
-                if (leftOrRight.get(i-1).equals("Right")){
-                    angleChanges.set(i-1, -angleChanges.get(i-1));
-                }
-                movements.add("            rotate(" + (int)Math.round(angleChanges.get(i-1)) + ");\n");
-                movements.add(movementTemp);
-            }
-        }
-        return convertArrayList(movements);
     }
 
     private String moveHereTwo(ArrayList<WayPoint> points) {

@@ -6,16 +6,17 @@
 
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
-import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.*;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -25,6 +26,7 @@ import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author akkir
@@ -32,6 +34,50 @@ import java.util.ArrayList;
 
 public class ProjectPane extends Pane {
 
+    public static class WayPointHistory {
+        private final double x;
+        private final double y;
+        private final boolean wayPointSelected;
+        private final boolean wayLineSelected;
+
+        public WayPointHistory(WayPoint wayPoint) {
+            // this(wayPoint.getXPoint(), wayPoint.getYPoint(), wayPoint.isSelected(), wayPoint.getPriorLine() != null && wayPoint.getPriorLine().isSelected());
+            this(wayPoint.getXPoint(), wayPoint.getYPoint(), false, false);
+        }
+
+        public WayPointHistory(double x, double y, boolean wayPointSelected, boolean wayLineSelected) {
+            this.x = x;
+            this.y = y;
+            this.wayPointSelected = wayPointSelected;
+            this.wayLineSelected = wayLineSelected;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            WayPointHistory that = (WayPointHistory) o;
+
+            if (Double.compare(that.x, x) != 0) return false;
+            if (Double.compare(that.y, y) != 0) return false;
+            if (wayPointSelected != that.wayPointSelected) return false;
+            return wayLineSelected == that.wayLineSelected;
+        }
+
+        @Override
+        public int hashCode() {
+            int result;
+            long temp;
+            temp = Double.doubleToLongBits(x);
+            result = (int) (temp ^ (temp >>> 32));
+            temp = Double.doubleToLongBits(y);
+            result = 31 * result + (int) (temp ^ (temp >>> 32));
+            result = 31 * result + (wayPointSelected ? 1 : 0);
+            result = 31 * result + (wayLineSelected ? 1 : 0);
+            return result;
+        }
+    }
     private final static String DEFAULT_CLASS_NAME = "DuckinatorAuto";
 
     private final TextArea code;
@@ -40,15 +86,15 @@ public class ProjectPane extends Pane {
 
     private final Label wayPointLocationReporter;
 
-    ContextMenu modeContextMenu;
-
-    private final ArrayList<WayPoint> wayPoints = new ArrayList<>();
+    private final List<WayPoint> wayPoints = new ArrayList<>();
 
     private Drawable selectedDrawable;
 
     private double pressOffsetX = 0;
     private double pressOffsetY = 0;
-    private boolean editMode = false;
+
+    private List<List<WayPointHistory>> wayPointLocationHistory = new ArrayList<>();
+    private int currentIndex = -1;
 
     public ProjectPane () {
         Rectangle rect1 = new Rectangle(1200, 600, Color.BLANCHEDALMOND);
@@ -137,9 +183,8 @@ public class ProjectPane extends Pane {
                 }
             }});
 
-        this.setOnContextMenuRequested(this::processModeMenuRequest);
-
         this.setOnKeyPressed(this::processFieldHolderOnKeyPressed);
+        this.setOnKeyReleased(this::processFieldHolderOnKeyReleased);
 
         final Label mouseLocationReporter = new Label();
         mouseLocationReporter.setLayoutX(0);
@@ -153,7 +198,7 @@ public class ProjectPane extends Pane {
 
         EventHandler<MouseEvent> processMouseMovement = event -> {
 
-            ArrayList<Double> mouseLocation = getMouseLocation(event);
+            List<Double> mouseLocation = getMouseLocation(event);
             double xInches = FieldUtils.convertToInches(mouseLocation.get(0));
             double yInches = FieldUtils.convertToInches(mouseLocation.get(1));
             final String msg = String.format("Mouse: (%.1f, %.1f)", xInches, yInches);
@@ -162,9 +207,11 @@ public class ProjectPane extends Pane {
 
         this.setOnMouseMoved(processMouseMovement);
         this.setOnMouseDragged(processMouseMovement);
+
+        addHistory();
     }
 
-    public ArrayList<Double> getMouseLocation(MouseEvent event) {
+    public List<Double> getMouseLocation(MouseEvent event) {
 
         double offsetX = this.getLayoutX();
         double offsetY = this.getLayoutY();
@@ -172,7 +219,7 @@ public class ProjectPane extends Pane {
         Double mouseX = event.getSceneX() - offsetX;
         Double mouseY = event.getSceneY() - offsetY;
 
-        ArrayList<Double> mouseLocation = new ArrayList<>();
+        List<Double> mouseLocation = new ArrayList<>();
         mouseLocation.add(mouseX);
         mouseLocation.add(mouseY);
         return mouseLocation;
@@ -192,33 +239,7 @@ public class ProjectPane extends Pane {
 
     public void processCleanButtonOnPressed(final ActionEvent e) {
         clear();
-    }
-
-    public void processModeMenuRequest(final ContextMenuEvent me) {
-
-        if (modeContextMenu != null) {
-            modeContextMenu.hide();
-        }
-
-        modeContextMenu = new ContextMenu();
-
-        MenuItem editModeItem = new MenuItem("Edit");
-        MenuItem placeModeItem = new MenuItem("Append");
-
-        editModeItem.setOnAction(e -> editMode = true);
-
-        placeModeItem.setOnAction(e -> {
-            editMode = false;
-            setSelectedDrawable(null);
-        });
-
-        if (editMode) {
-            modeContextMenu.getItems().add(placeModeItem);
-        } else {
-            modeContextMenu.getItems().add(editModeItem);
-        }
-
-        modeContextMenu.show((Node) me.getTarget(), me.getScreenX(), me.getScreenY());
+        addHistory();
     }
 
     public void processWayPointOnMouseDragged(final MouseEvent e) {
@@ -238,14 +259,18 @@ public class ProjectPane extends Pane {
         }
     }
 
+    public void processOnMouseReleased(final MouseEvent e) {
+        if (e.getButton() == MouseButton.PRIMARY) {
+            Drawable target = (Drawable) e.getTarget();
+            if (target == selectedDrawable) {
+                this.addHistory();
+            }
+        }
+    }
+
     public void processWayPointOnMousePressed(final MouseEvent e) {
 
         if (e.getButton().equals(MouseButton.PRIMARY)) {
-
-            if (!editMode) {
-                processFieldHolderOnMousePressed(e);
-                return;
-            }
 
             final WayPoint wayPoint = (WayPoint) e.getTarget();
 
@@ -255,6 +280,7 @@ public class ProjectPane extends Pane {
             setSelectedDrawable(wayPoint);
 
             wayPoint.getParent().requestFocus();
+            addHistory();
         }
     }
 
@@ -262,34 +288,36 @@ public class ProjectPane extends Pane {
 
         if (e.getButton().equals(MouseButton.PRIMARY)) {
 
-            if (!editMode) {
-                processFieldHolderOnMousePressed(e);
-                return;
-            }
-
             WayLine wayLine = (WayLine) e.getTarget();
             setSelectedDrawable(wayLine);
             wayLine.getParent().requestFocus();
+            addHistory();
         }
     }
 
     public void processFieldHolderOnKeyPressed(final KeyEvent e) {
 
-        if (!editMode) {
-            return;
+        if (e.getCode().equals(KeyCode.Z) && e.isControlDown()) {
+            if (e.isShiftDown()) {
+                redo();
+            } else {
+                undo();
+            }
         }
 
-        if (selectedDrawable != null) {
+        else if (selectedDrawable != null) {
             final WayPoint selectedWayPoint = (selectedDrawable instanceof WayPoint) ? (WayPoint) selectedDrawable : null;
 
             if (e.getCode().equals(KeyCode.ESCAPE)) {
                 setSelectedDrawable(null);
+                addHistory();
             }
 
-            if (e.getCode().equals(KeyCode.DELETE) && selectedWayPoint != null) {
+            if ((e.getCode().equals(KeyCode.DELETE) || e.getCode().equals(KeyCode.BACK_SPACE)) && selectedWayPoint != null) {
                 deleteWayPoint(selectedWayPoint);
                 setSelectedDrawable(null);
                 reportMovingWayPointLocation();
+                addHistory();
             } else if (e.getCode().isArrowKey() && selectedWayPoint != null) {
 
                 int stepSize = 1;
@@ -319,23 +347,28 @@ public class ProjectPane extends Pane {
         }
     }
 
-    public void processFieldHolderOnMousePressed(final MouseEvent e){
+    public void processFieldHolderOnKeyReleased(final KeyEvent e) {
 
-        if (e.getButton().equals(MouseButton.PRIMARY)) {
-            ArrayList<Double> mouseLocation = getMouseLocation(e);
-            addWayPoint(mouseLocation);
+        final WayPoint selectedWayPoint = (selectedDrawable instanceof WayPoint) ? (WayPoint) selectedDrawable : null;
+
+        if (e.getCode().isArrowKey() && selectedWayPoint != null) {
+            addHistory();
         }
     }
 
-    public void addWayPoint(ArrayList<Double> mouseLocation) {
-        if (!editMode) {
+    public void processFieldHolderOnMousePressed(final MouseEvent e){
 
-            final WayPoint lastWayPoint = (wayPoints.size() == 0) ? null : wayPoints.get(wayPoints.size() - 1);
-            final WayPoint wayPoint = new WayPoint(mouseLocation);
+        if (e.getButton().equals(MouseButton.PRIMARY)) {
+            List<Double> mouseLocation = getMouseLocation(e);
+            addWayPoint(mouseLocation);
+            addHistory();
+        }
+    }
 
-            addWayPoint(wayPoint, lastWayPoint, null);
+    public WayPoint addWayPoint(List<Double> mouseLocation) {
 
-        } else if (selectedDrawable != null) {
+        WayPoint newWayPoint;
+        if (selectedDrawable != null) {
 
             if (selectedDrawable instanceof WayLine){
 
@@ -349,13 +382,23 @@ public class ProjectPane extends Pane {
 
                 setSelectedDrawable(wayPoint);
 
+                newWayPoint = wayPoint;
             } else {
 
                 final WayPoint selectedWayPoint = (WayPoint) selectedDrawable;
                 selectedWayPoint.setCenter(mouseLocation);
 
+                newWayPoint = selectedWayPoint;
             }
+        } else {
+            final WayPoint lastWayPoint = (wayPoints.size() == 0) ? null : wayPoints.get(wayPoints.size() - 1);
+            final WayPoint wayPoint = new WayPoint(mouseLocation);
+
+            addWayPoint(wayPoint, lastWayPoint, null);
+            newWayPoint = wayPoint;
         }
+
+        return newWayPoint;
     }
 
     public void addWayPoint(final WayPoint wayPoint, final WayPoint lastWayPoint, final WayPoint nextWayPoint) {
@@ -370,11 +413,11 @@ public class ProjectPane extends Pane {
             addIndex = wayPoints.indexOf(nextWayPoint);
         }
 
-
         if (lastWayPoint != null) {
             WayLine wayLine = new WayLine(lastWayPoint, wayPoint);
             wayLine.addToPane(this);
             wayLine.setOnMousePressed(this::processWayLineOnMousePressed);
+            wayLine.setOnMouseReleased(this::processOnMouseReleased);
         }
 
         if (nextWayPoint != null) {
@@ -383,6 +426,7 @@ public class ProjectPane extends Pane {
 
         wayPoint.setOnMousePressed(this::processWayPointOnMousePressed);
         wayPoint.setOnMouseDragged(this::processWayPointOnMouseDragged);
+        wayPoint.setOnMouseReleased(this::processOnMouseReleased);
 
         wayPoint.addToPane(this);
         wayPoints.add(addIndex, wayPoint);
@@ -480,7 +524,7 @@ public class ProjectPane extends Pane {
     }
 
     private String generateMoveHere() {
-        ArrayList<String> movements = new ArrayList<>();
+        List<String> movements = new ArrayList<>();
 
         if (wayPoints.size() >= 2) {
 
@@ -512,6 +556,46 @@ public class ProjectPane extends Pane {
         return String.join("", movements);
     }
 
+    public void undo() {
+        if (currentIndex > 0) {
+            currentIndex--;
+            List<WayPointHistory> current = getCurrentHistory();
+            this.loadHistory(current);
+        }
+    }
+
+    public void redo() {
+        if (currentIndex < wayPointLocationHistory.size() - 1) {
+            currentIndex++;
+            List<WayPointHistory> current = getCurrentHistory();
+            this.loadHistory(current);
+        }
+    }
+
+    public List<WayPointHistory> getCurrentHistory() {
+        if (currentIndex < 0) {
+            return new ArrayList<>();
+        } else {
+            return wayPointLocationHistory.get(currentIndex);
+        }
+    }
+
+    public void addHistory() {
+
+        List<WayPointHistory> newValue = new ArrayList<>();
+        for (WayPoint wayPoint : this.wayPoints) {
+            newValue.add(new WayPointHistory(wayPoint));
+        }
+
+        List<WayPointHistory> currentValue = currentIndex < 0 ? new ArrayList<>() : wayPointLocationHistory.get(currentIndex);
+
+        if (!newValue.equals(currentValue)) {
+            wayPointLocationHistory = wayPointLocationHistory.subList(0, currentIndex + 1);
+            wayPointLocationHistory.add(newValue);
+            currentIndex = wayPointLocationHistory.size() - 1;
+        }
+    }
+
     public void clear() {
         selectedDrawable = null;
         while (wayPoints.size() > 0) {
@@ -519,7 +603,6 @@ public class ProjectPane extends Pane {
         }
 
         code.clear();
-        editMode = false;
     }
 
     public void savePointsToFile(File file) {
@@ -540,29 +623,59 @@ public class ProjectPane extends Pane {
         }
     }
 
-    public void readPointsFromFile(File file) {
+    public void loadPoints(List<List<Double>> wayPointLocations) {
 
         // Remove all the points from the list of waypoints and from the screen
         clear();
+
+        for (List<Double> wayPointLocation : wayPointLocations) {
+            this.addWayPoint(wayPointLocation);
+        }
+
+        // Regenerate the code
+        this.generation();
+
+    }
+
+    public void loadHistory(List<WayPointHistory> wayPointLocations) {
+
+        // Remove all the points from the list of waypoints and from the screen
+        clear();
+
+        for (WayPointHistory wayPointHistory : wayPointLocations) {
+            List<Double> location = new ArrayList<>();
+            location.add(wayPointHistory.x);
+            location.add(wayPointHistory.y);
+            WayPoint wayPoint = this.addWayPoint(location);
+            if (wayPointHistory.wayLineSelected) {
+                setSelectedDrawable(wayPoint.getPriorLine());
+            } else if (wayPointHistory.wayPointSelected) {
+                setSelectedDrawable(wayPoint);
+            }
+        }
+
+        // Regenerate the code
+        this.generation();
+
+    }
+
+    public void readPointsFromFile(File file) {
 
         try {
             // Set the name to that of the file
             classNameTextArea.setText(getBaseName(file.getName()));
 
             // Load the points
-            ArrayList<ArrayList<Double>> wayPointLocations = loadPoints(file);
-            for (ArrayList<Double> wayPointLocation : wayPointLocations) {
-                this.addWayPoint(wayPointLocation);
-            }
+            List<List<Double>> wayPointLocations = loadPoints(file);
 
-            // Regenerate the code
-            this.generation();
+            loadPoints(wayPointLocations);
+
         } catch (IOException e) {
             throw new RuntimeException("error in readPointsFromFile", e);
         }
     }
 
-    public void savePoints(File file, ArrayList <WayPoint> wayPoints) throws IOException {
+    public void savePoints(File file, List<WayPoint> wayPoints) throws IOException {
 
         try (FileWriter fileWriter = new FileWriter(file)) {
             for(WayPoint point : wayPoints) {
@@ -576,9 +689,9 @@ public class ProjectPane extends Pane {
         }
     }
 
-    public ArrayList<ArrayList<Double>> loadPoints(File file) throws IOException{
+    public List<List<Double>> loadPoints(File file) throws IOException{
 
-        ArrayList<ArrayList<Double>> wayPointLocations = new ArrayList<>();
+        List<List<Double>> wayPointLocations = new ArrayList<>();
 
         try (FileReader fileReader = new FileReader(file); BufferedReader bufferedReader = new BufferedReader(fileReader)) {
 
@@ -590,7 +703,7 @@ public class ProjectPane extends Pane {
                 String[] lineArray = line.split(",");
                 double x = FieldUtils.convertToPixels(Double.parseDouble(lineArray[0]));
                 double y = FieldUtils.convertToPixels(Double.parseDouble(lineArray[1]));
-                ArrayList<Double> wayPointLocation = new ArrayList<>();
+                List<Double> wayPointLocation = new ArrayList<>();
                 wayPointLocation.add(x);
                 wayPointLocation.add(y);
                 wayPointLocations.add(wayPointLocation);

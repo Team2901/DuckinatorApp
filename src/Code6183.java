@@ -40,8 +40,19 @@ public class Code6183 extends Application {
             }
         });
 
+        final MenuItem undo = new MenuItem("Undd");
+        undo.setOnAction(e -> {
+            clickerPane.undo();
+        });
+
+        final MenuItem redo = new MenuItem("Redo");
+        redo.setOnAction(e -> {
+            clickerPane.redo();
+        });
+
         final Menu menuFile = new Menu("File", null, open, save);
-        final MenuBar menuBar = new MenuBar(menuFile);
+        final Menu menuEdit = new Menu("Edit", null, undo, redo);
+        final MenuBar menuBar = new MenuBar(menuFile, menuEdit);
 
         final VBox vBox = new VBox(menuBar, clickerPane);
 

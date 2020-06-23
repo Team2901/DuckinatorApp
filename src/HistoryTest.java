@@ -71,6 +71,10 @@ public class HistoryTest {
         /*
          * Moves the current value to the next value in the history
          */
+        if(currentIndex != valueHistory.size()-1)
+        {
+            currentIndex++;
+        }
     }
 
     private void printCurrentValue() {

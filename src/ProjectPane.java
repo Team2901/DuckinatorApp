@@ -774,4 +774,8 @@ public class ProjectPane extends Pane {
             line = bufferedReader.readLine();
         }
     }
+
+    public void loadPoints(List<List<Object>> coordinates){
+
+    }
 }

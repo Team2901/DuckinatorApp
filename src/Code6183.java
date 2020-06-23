@@ -7,22 +7,21 @@
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import javafx.scene.control.MenuBar;
 
 import java.io.File;
 import java.io.IOException;
 
 /**
- *
  * @author akkir
  */
-public class Code6183 extends Application{
+public class Code6183 extends Application {
 
     public ProjectPane clickerPane;
 

@@ -68,6 +68,8 @@ public class ProjectPane extends Pane {
     private Hyperlink github;
     private WayPoint selectedPoint;
     private LineConnector selectedLine;
+    private List<List<Point>> pointHistory = new ArrayList<>();
+    private Integer currentIndex = null;
 
     public ProjectPane() {
 
@@ -294,6 +296,32 @@ public class ProjectPane extends Pane {
             int xPoint = (int) e.getSceneX() - (int) this.getLayoutX();
             int yPoint = (int) e.getSceneY() - (int) this.getLayoutY();
             createWayPoint(xPoint, yPoint);
+            addToPointHistory();
+        }
+    }
+
+    public void addToPointHistory()
+    {
+        List<Point> newValue = new ArrayList<>();
+        for(WayPoint wayPoint : points)
+        {
+            Point point = new Point(wayPoint.getX(),wayPoint.getY());
+            newValue.add(point);
+        }
+
+        List<Point> currentValue = pointHistory.isEmpty() ? null : pointHistory.get(currentIndex);
+        if(newValue.equals(currentValue))
+        {
+            // Don't do add anything
+        }
+        else
+        {
+            if(currentIndex != null)
+            {
+                pointHistory = pointHistory.subList(0,currentIndex+1);
+            }
+            pointHistory.add(newValue);
+            currentIndex = pointHistory.size() - 1;
         }
     }
 
@@ -724,6 +752,7 @@ public class ProjectPane extends Pane {
 
         removeDrawable(point);
         points.remove(point);
+        addToPointHistory();
     }
 
     public void removeDrawable(Drawable remove) {
@@ -777,8 +806,10 @@ public class ProjectPane extends Pane {
         }
     }
 
-    public void loadPoints(List<List<Double>> points) {
-
+    public void loadPoints(List<Point> points) {
+        clear();
+        for(Point point : points){
+            createWayPoint((int) point.getX(),(int) point.getY());
+        }
     }
-
 }

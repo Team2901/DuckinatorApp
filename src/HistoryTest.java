@@ -5,7 +5,7 @@ import java.util.Scanner;
 public class HistoryTest {
 
     List<String> valueHistory = new ArrayList<>();
-    Integer currentIndex = null;
+    Integer currentIndex = 0;
 
     public static void main(String[] args) {
         new HistoryTest();
@@ -20,7 +20,7 @@ public class HistoryTest {
         Scanner scanner = new Scanner(System.in);
 
         while (true) {
-            String input = scanner.next();
+            String input = scanner.nextLine();
             System.out.println(input);
 
             if ("undo".equals(input)) {
@@ -38,6 +38,8 @@ public class HistoryTest {
     }
 
     public void updateValue(String newValue) {
+        valueHistory.add(newValue);
+        currentIndex = valueHistory.size() - 1;
         /*
          * Adds the new value to the history
          */
@@ -59,11 +61,14 @@ public class HistoryTest {
         /*
          * Prints the current value
          */
-        String currentValue = null;
+        String currentValue = valueHistory.get(currentIndex);
         System.out.println(String.format("current value: %s", currentValue));
     }
 
     private void printHistory() {
+        for(int i = 0; i < valueHistory.size(); i++){
+            System.out.println(i + " " + valueHistory.get(i));
+        }
         /*
          * Prints a list of all the values in the history with a special marker next to the current value
          */

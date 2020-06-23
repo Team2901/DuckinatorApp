@@ -25,6 +25,7 @@ import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.List;
 
 import static java.lang.Integer.parseInt;
 
@@ -418,6 +419,7 @@ public class ProjectPane extends Pane {
         lineTicker = 0;
     }
 
+
     public double convertInchesToEncoderTicks(double c) {
         return ((c / (Math.PI * wheelDiameter)) * ticksPerRotation);
     }
@@ -775,7 +777,8 @@ public class ProjectPane extends Pane {
         }
     }
 
-    public void loadPoints(List<List<Object>> coordinates){
+    public void loadPoints(List<List<Double>> points) {
 
     }
+
 }

@@ -40,7 +40,7 @@ public class Code6183 extends Application {
             }
         });
 
-        final MenuItem undo = new MenuItem("Undd");
+        final MenuItem undo = new MenuItem("Undo");
         undo.setOnAction(e -> {
             clickerPane.undo();
         });

@@ -84,7 +84,6 @@ public class Code6183 extends Application {
         primaryStage.setY(150);
         primaryStage.show();
         primaryStage.setResizable(false);
-
     }
 
 

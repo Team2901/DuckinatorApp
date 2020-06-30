@@ -65,6 +65,8 @@ public class ProjectPane extends Pane {
     private Label wheelDi, ticksPer;
     private TextField wheelDia, ticksPerr;
     private Label careful;
+    private Label mouseLocation;
+    private Label selectedDrawableLocation;
     private Hyperlink github;
     private WayPoint selectedPoint;
     private LineConnector selectedLine;
@@ -275,6 +277,35 @@ public class ProjectPane extends Pane {
         resetBusyForward = resetBusyForwardTank;
         rotating = rotateTank;
         zPower = tankZPower;
+        mouseLocation = new Label();
+        selectedDrawableLocation = new Label();
+        mouseLocation.setLayoutX(0);
+        mouseLocation.setLayoutY(0);
+        selectedDrawableLocation.setLayoutX(0);
+        selectedDrawableLocation.setLayoutY(20);
+        getChildren().add(mouseLocation);
+        getChildren().add(selectedDrawableLocation);
+        this.setOnMouseMoved(this::mouseLocationUpdate);
+        this.setOnMouseDragged(this::mouseLocationUpdate);
+    }
+
+    public void mouseLocationUpdate(MouseEvent event){
+        double mouseX = (event.getSceneX()-this.getLayoutX())* fieldMeasurementInches / fieldMeasurementPixels;
+        double mouseY = (event.getSceneY()-this.getLayoutY())* fieldMeasurementInches / fieldMeasurementPixels;
+        String mouseString = String.format("%.2f,%.2f",mouseX,mouseY);
+        mouseLocation.setText(mouseString);
+    }
+
+    public void selectedWayPointLocationUpdate(){
+        if(selectedPoint != null){
+            double wayPointX = (selectedPoint.getX())* fieldMeasurementInches / fieldMeasurementPixels;
+            double wayPointY = (selectedPoint.getY())* fieldMeasurementInches / fieldMeasurementPixels;
+            String wayPointString = String.format("%.2f,%.2f",wayPointX,wayPointY);
+            selectedDrawableLocation.setText(wayPointString);
+        }
+        else{
+            selectedDrawableLocation.setText("");
+        }
     }
 
     public void hyperlinky(ActionEvent eeeee) {
@@ -398,6 +429,7 @@ public class ProjectPane extends Pane {
         double mouseX = mouseEvent.getSceneX() - this.getLayoutX();
         double mouseY = mouseEvent.getSceneY() - this.getLayoutY();
         circle.setCirclePositionSet(mouseX, mouseY);
+        selectedWayPointLocationUpdate();
     }
 
     private void releasePoint(MouseEvent mouseEvent) {
@@ -420,6 +452,7 @@ public class ProjectPane extends Pane {
             point.setSelected(true);
         }
         selectedPoint = (WayPoint) point;
+        selectedWayPointLocationUpdate();
     }
 
     private void selectLinePress(MouseEvent mouseEvent) {
@@ -449,7 +482,7 @@ public class ProjectPane extends Pane {
 
     public void clear() {
         drives.selectToggle(null);
-        getChildren().clear();
+        /* getChildren().clear();
         getChildren().add(rect);
         getChildren().add(clear);
         getChildren().add(generate);
@@ -483,6 +516,11 @@ public class ProjectPane extends Pane {
         code.clear();
         movements.clear();
         lineTicker = 0;
+         */
+
+        while(points.size() != 0){
+            deleteWayPoint(points.get(0));
+        }
     }
 
 
@@ -503,6 +541,7 @@ public class ProjectPane extends Pane {
         if (event.getCode() == KeyCode.DELETE) {
             if (selectedPoint != null) {
                 deleteWayPoint(selectedPoint);
+                addToPointHistory();
             }
         }
         if (event.getCode() == KeyCode.ESCAPE) {
@@ -798,7 +837,7 @@ public class ProjectPane extends Pane {
 
         removeDrawable(point);
         points.remove(point);
-        addToPointHistory();
+        selectPoint(null);
     }
 
     public void removeDrawable(Drawable remove) {

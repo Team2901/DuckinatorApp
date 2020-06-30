@@ -61,7 +61,20 @@ public class Code6183 extends Application {
         });
         loadMenu.getItems().add(open);
         loadMenu.getItems().add(save);
-        MenuBar loadOptions = new MenuBar(loadMenu);
+
+        Menu edit = new Menu("Edit",null);
+        MenuItem redo = new MenuItem("Redo");
+        redo.setOnAction(e -> {
+            clickerPane.redo();
+        });
+        MenuItem undo = new MenuItem("Undo");
+        undo.setOnAction(e -> {
+            clickerPane.undo();
+        });
+        edit.getItems().add(redo);
+        edit.getItems().add(undo);
+
+        MenuBar loadOptions = new MenuBar(loadMenu,edit);
         VBox vBox = new VBox(loadOptions, clickerPane);
         Scene scene = new Scene(vBox, 1050, 543, Color.BLANCHEDALMOND);
         scene.setFill(Color.BLANCHEDALMOND);
@@ -71,6 +84,7 @@ public class Code6183 extends Application {
         primaryStage.setY(150);
         primaryStage.show();
         primaryStage.setResizable(false);
+
     }
 
 

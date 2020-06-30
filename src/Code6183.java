@@ -42,7 +42,6 @@ public class Code6183 extends Application {
 
         clickerPane = new ProjectPane();
 
-        Pane root = new Pane(clickerPane);
         Menu loadMenu = new Menu("File", null);
         MenuItem open = new MenuItem("Open");
         open.setOnAction(e -> {
@@ -73,6 +72,8 @@ public class Code6183 extends Application {
         primaryStage.show();
         primaryStage.setResizable(false);
     }
+
+
 
     public static void main(String[] args) {
         launch(args);

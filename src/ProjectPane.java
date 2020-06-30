@@ -362,12 +362,14 @@ public class ProjectPane extends Pane {
             WayPoint startCircle = new WayPoint(xPoint, yPoint);
             startCircle.setOnMousePressed(this::selectPointPress);
             startCircle.setOnMouseDragged(this::dragPoint);
+            startCircle.setOnMouseReleased(this::releasePoint);
             addDrawable(startCircle, null);
             points.add(startCircle);
         } else {
             WayPoint nextCircles = new WayPoint(xPoint, yPoint);
             nextCircles.setOnMousePressed(this::selectPointPress);
             nextCircles.setOnMouseDragged(this::dragPoint);
+            nextCircles.setOnMouseReleased(this::releasePoint);
             WayPoint lastWayPoint;
             WayPoint nextWayPoint;
             int index;
@@ -396,6 +398,10 @@ public class ProjectPane extends Pane {
         double mouseX = mouseEvent.getSceneX() - this.getLayoutX();
         double mouseY = mouseEvent.getSceneY() - this.getLayoutY();
         circle.setCirclePositionSet(mouseX, mouseY);
+    }
+
+    private void releasePoint(MouseEvent mouseEvent) {
+        addToPointHistory();
     }
 
     private void selectPointPress(MouseEvent mouseEvent) {
@@ -437,6 +443,7 @@ public class ProjectPane extends Pane {
     public void processButtonPress(ActionEvent ev) {
         if (ev.getSource() == clear) {
             clear();
+            addToPointHistory();
         }
     }
 
@@ -501,6 +508,14 @@ public class ProjectPane extends Pane {
         if (event.getCode() == KeyCode.ESCAPE) {
             selectPoint(null);
             selectLine(null);
+        }
+        if (event.getCode() == KeyCode.Z && event.isControlDown()) {
+            if (event.isShiftDown()){
+                redo();
+            }
+            else{
+                undo();
+            }
         }
     }
 
@@ -835,6 +850,7 @@ public class ProjectPane extends Pane {
             createWayPoint(parseInt(lineArray[0]), parseInt(lineArray[1]));
             line = bufferedReader.readLine();
         }
+        addToPointHistory();
     }
 
     public void loadPoints(List<Point> points) {

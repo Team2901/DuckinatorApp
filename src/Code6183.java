@@ -48,7 +48,9 @@ public class Code6183 extends Application {
         open.setOnAction(e -> {
             File selectedFile = fileChooser.showOpenDialog(primaryStage);
             try {
-                clickerPane.loadPoints(selectedFile);
+                if (selectedFile != null){
+                    clickerPane.loadPoints(selectedFile);
+                }
             } catch (IOException ioException) {
                 ioException.printStackTrace();
             }

@@ -325,6 +325,37 @@ public class ProjectPane extends Pane {
         }
     }
 
+    public void undo() {
+        /*
+         * Moves the current value to the previous value in the history
+         */
+        if(currentIndex != 0)
+        {
+            currentIndex--;
+        }
+        List<Point> currentValue = pointHistory.isEmpty() ? null : pointHistory.get(currentIndex);
+
+        if(currentValue != null){
+            loadPoints(currentValue);
+        }
+    }
+
+    public void redo() {
+        /*
+         * Moves the current value to the next value in the history
+         */
+        if(currentIndex != pointHistory.size()-1)
+        {
+            currentIndex++;
+        }
+
+        List<Point> currentValue = pointHistory.isEmpty() ? null : pointHistory.get(currentIndex);
+
+        if(currentValue != null){
+            loadPoints(currentValue);
+        }
+    }
+
     public void createWayPoint(int xPoint, int yPoint) {
         robotSpecs();
         if (points.isEmpty()) {

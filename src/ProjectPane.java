@@ -428,6 +428,18 @@ public class ProjectPane extends Pane {
         WayPoint circle = (WayPoint) mouseEvent.getTarget();
         double mouseX = mouseEvent.getSceneX() - this.getLayoutX();
         double mouseY = mouseEvent.getSceneY() - this.getLayoutY();
+        if(mouseX < 0){
+            mouseX = 0;
+        }
+        if(mouseY < 0){
+            mouseY = 0;
+        }
+        if(mouseX > fieldMeasurementPixels){
+            mouseX = fieldMeasurementPixels;
+        }
+        if(mouseY > fieldMeasurementPixels){
+            mouseY = fieldMeasurementPixels;
+        }
         circle.setCirclePositionSet(mouseX, mouseY);
         selectedWayPointLocationUpdate();
     }

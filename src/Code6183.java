@@ -19,12 +19,22 @@ public class Code6183 extends Application {
     @Override
     public void start(Stage primaryStage) {
 
+        final ProjectPane clickerPane = new ProjectPane();
+
         final FileChooser fileChooser = new FileChooser();
 
-        final ProjectPane clickerPane = new ProjectPane();
+        // Set the default directory the file chooser opens
+        final File outputFile = new File("output");
+        fileChooser.setInitialDirectory(outputFile);
+
+        // Only allow opening csv files
+        FileChooser.ExtensionFilter extFilter =
+                new FileChooser.ExtensionFilter("CSV files (*.csv)", "*.csv");
+        fileChooser.getExtensionFilters().add(extFilter);
 
         final MenuItem open = new MenuItem("Open");
         open.setOnAction(e -> {
+
             final File file = fileChooser.showOpenDialog(primaryStage);
             if (file != null) {
                 clickerPane.readPointsFromFile(file);

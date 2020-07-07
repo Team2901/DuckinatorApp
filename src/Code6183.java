@@ -41,6 +41,9 @@ public class Code6183 extends Application {
 
         FileChooser fileChooser = new FileChooser();
         File file = new File("DuckinatorPathways");
+        if(!file.exists()){
+            file.mkdir();
+        }
         fileChooser.setInitialDirectory(file);
 
         FileChooser.ExtensionFilter extensionFilter = new FileChooser.ExtensionFilter("CSV files (*.csv)", "*.csv");

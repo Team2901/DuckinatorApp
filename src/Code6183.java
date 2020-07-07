@@ -36,11 +36,15 @@ public class Code6183 extends Application {
         /*
          * How to create a menu bar for housing the save/load options (http://tutorials.jenkov.com/javafx/menubar.html)
          * How to create a popup to navigate your file system (http://tutorials.jenkov.com/javafx/filechooser.html)
+         * Default directory: https://stackoverflow.com/questions/14256588/opening-a-javafx-filechooser-in-the-user-directory
          */
 
         FileChooser fileChooser = new FileChooser();
         File file = new File("DuckinatorPathways");
         fileChooser.setInitialDirectory(file);
+
+        FileChooser.ExtensionFilter extensionFilter = new FileChooser.ExtensionFilter("CSV files (*.csv)", "*.csv");
+        fileChooser.getExtensionFilters().add(extensionFilter);
 
         clickerPane = new ProjectPane();
 

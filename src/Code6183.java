@@ -39,6 +39,8 @@ public class Code6183 extends Application {
          */
 
         FileChooser fileChooser = new FileChooser();
+        File file = new File("DuckinatorPathways");
+        fileChooser.setInitialDirectory(file);
 
         clickerPane = new ProjectPane();
 

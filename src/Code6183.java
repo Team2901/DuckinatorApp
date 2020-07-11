@@ -71,6 +71,24 @@ public class Code6183 extends Application {
         loadMenu.getItems().add(open);
         loadMenu.getItems().add(save);
 
+        FileChooser fileChooserForCode = new FileChooser();
+        File fileForCode = new File("DuckinatorCode");
+        if(!fileForCode.exists()){
+            fileForCode.mkdir();
+        }
+        fileChooserForCode.setInitialDirectory(fileForCode);
+
+        FileChooser.ExtensionFilter extensionFilterForCode = new FileChooser.ExtensionFilter("Java files (*.java)", "*.java");
+        fileChooserForCode.getExtensionFilters().add(extensionFilterForCode);
+
+        MenuItem generateTheCode = new MenuItem("Generate Code");
+        generateTheCode.setOnAction(e -> {
+            File selectedCodeFile = fileChooserForCode.showSaveDialog(primaryStage);
+            clickerPane.generateCode(selectedCodeFile);
+        });
+
+        loadMenu.getItems().add(generateTheCode);
+
         Menu edit = new Menu("Edit",null);
         MenuItem redo = new MenuItem("Redo");
         redo.setOnAction(e -> {

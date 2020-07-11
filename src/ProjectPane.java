@@ -48,15 +48,14 @@ public class ProjectPane extends Pane {
     private Image field, duck;
     private ImageView fieldHolder, duckHolder;
     private int lineTicker = 0;
-    private Button clear, generate;
+    private Button clear;
     private Rectangle rect;
     private int fieldMeasurementPixels = 510;
     private int fieldMeasurementInches = 144;
     private double conversionFactorPixelInch = ((double) fieldMeasurementInches / (double) fieldMeasurementPixels);
     private double wheelDiameter = 4;
     private double ticksPerRotation = 1120;
-    private double angleTemp, multiplier;
-    private TextArea code;
+    private double multiplier;
     private String tankDriveMotors, holonomicDriveMotors, driveMotors, tankDriveInit, holonomicDriveInit, driveInit, movementTemp, moveHere;
     private String resetBusyForwardTank, resetBusyForwardHoloMeca, resetBusyForward, rotateTank, rotateHolo, rotating, tankZPower, holoZPower, zPower;
     private RadioButton tankDrive, holonomicDrive, mecanumDrive;
@@ -129,16 +128,6 @@ public class ProjectPane extends Pane {
         ticksPerr.setLayoutX(680);
         ticksPerr.setLayoutY(357);
         getChildren().add(ticksPerr);
-
-        generate = new Button("Generate Code");
-        generate.setLayoutX(600);
-        generate.setLayoutY(20);
-        getChildren().add(generate);
-
-        code = new TextArea("Click on the field to makes on a path for your robot to follow. \n\nThen, hit the \"Generate Code\" button to generate copy and pastable code!");
-        code.setLayoutX(540);
-        code.setLayoutY(70);
-        getChildren().add(code);
 
         drives = new ToggleGroup();
 
@@ -267,7 +256,6 @@ public class ProjectPane extends Pane {
         holonomicDrive.setOnAction(this::processRadioButtons);
         mecanumDrive.setOnAction(this::processRadioButtons);
         clear.setOnAction(this::processButtonPress);
-        generate.setOnAction(this::generation);
         fieldHolder.setOnMouseClicked(this::processMousePress);
         this.setOnKeyPressed(this::gameAreaKeyPress);
         //code.setOnKeyPressed(this::processKeyPress);
@@ -494,59 +482,14 @@ public class ProjectPane extends Pane {
 
     public void clear() {
         drives.selectToggle(null);
-        /* getChildren().clear();
-        getChildren().add(rect);
-        getChildren().add(clear);
-        getChildren().add(generate);
-        getChildren().add(fieldHolder);
-        getChildren().add(code);
-        getChildren().add(duckHolder);
-        getChildren().add(tankDrive);
-        getChildren().add(mecanumDrive);
-        getChildren().add(holonomicDrive);
-        getChildren().add(ticksPer);
-        getChildren().add(ticksPerr);
-        getChildren().add(wheelDi);
-        getChildren().add(wheelDia);
-        getChildren().add(careful);
-        getChildren().add(github);
-        if (togglingKeep == 1) {
-            tankDrive.setSelected(true);
-        } else if (togglingKeep == 2) {
-            holonomicDrive.setSelected(true);
-        } else if (togglingKeep == 3) {
-            mecanumDrive.setSelected(true);
-        }
-        xPixel.clear();
-        yPixel.clear();
-        lineLength.clear();
-        actualPathLength.clear();
-        encoderPathLength.clear();
-        points.clear(); //Needed
-        leftOrRight.clear();
-        angleChanges.clear();
-        code.clear();
-        movements.clear();
-        lineTicker = 0;
-         */
 
         while(points.size() != 0){
             deleteWayPoint(points.get(0));
         }
     }
 
-
     public double convertInchesToEncoderTicks(double c) {
         return ((c / (Math.PI * wheelDiameter)) * ticksPerRotation);
-    }
-
-    public double getAngle2(double x1, double x2, double x3, double y1, double y2, double y3, double length1, double length2) {
-        double dx1 = x2 - x1;
-        double dx2 = x3 - x2;
-        double dy1 = y2 - y1;
-        double dy2 = y3 - y2;
-        angleTemp = Math.acos(((dx1 * dx2) + (dy1 * dy2)) / (length1 * length2));
-        return ((angleTemp * 180) / Math.PI);
     }
 
     public void gameAreaKeyPress(KeyEvent event) {
@@ -567,24 +510,6 @@ public class ProjectPane extends Pane {
             else{
                 undo();
             }
-        }
-    }
-
-    public void processKeyPress(KeyEvent event) {
-        if (event.getCode() == KeyCode.ENTER) {
-            if ((code.getText().contains("6183")) || (code.getText().contains("duck"))) {
-                code.setText("quack quack losers");
-            }
-        }
-    }
-
-    public void orientation(int x1, int x2, int x3, int y1, int y2, int y3) {
-        if (((x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1)) > 0) {
-            leftOrRight.add("Right");
-        } else if (((x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1)) < 0) {
-            leftOrRight.add("Left");
-        } else if ((((x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1)) == 0)) {
-            leftOrRight.add("Middle?");
         }
     }
 
@@ -657,93 +582,6 @@ public class ProjectPane extends Pane {
     public void robotSpecs() {
         wheelDiameter = new Double(wheelDia.getText());
         ticksPerRotation = new Double(ticksPerr.getText());
-    }
-
-    public void generation(ActionEvent DIO) {
-        if (DIO.getSource() == generate) {
-            if (points.size() >= 2) {
-                code.setText(
-                        "package org.firstinspires.ftc.teamcode;\n" +
-                                "import com.qualcomm.hardware.bosch.BNO055IMU;\n" +
-                                "import com.qualcomm.robotcore.eventloop.opmode.Autonomous;\n" +
-                                "import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;\n" +
-                                "import com.qualcomm.robotcore.hardware.DcMotor;\n" +
-                                "\n" +
-                                "import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;\n" +
-                                "import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;\n" +
-                                "import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;\n" +
-                                "import org.firstinspires.ftc.robotcore.external.navigation.Orientation;\n" +
-                                "import org.firstinspires.ftc.robotcore.external.navigation.Position;\n" +
-                                "import org.firstinspires.ftc.robotcore.external.navigation.Velocity;\n" +
-                                "\n" +
-                                "/**\n" +
-                                " * Created with Team 6183's Duckinator 3000\n" +
-                                " */\n" +
-                                "\n" +
-                                "@Autonomous(name = \"DuckinatorAuto\", group = \"DuckSquad\")\n" +
-                                "public class DuckinatorAuto extends LinearOpMode {\n" +
-                                driveMotors +
-                                "    private int globalAngle;\n" +
-                                "    BNO055IMU imu;\n" +
-                                "    Orientation lastAngles = new Orientation();\n" +
-                                "    @Override\n" +
-                                "    public void runOpMode() throws InterruptedException {\n" +
-                                "        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();\n" +
-                                "        parameters.mode = BNO055IMU.SensorMode.IMU;\n" +
-                                "        parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;\n" +
-                                "        parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;\n" +
-                                "        parameters.loggingEnabled = false;\n" +
-                                "        imu = hardwareMap.get(BNO055IMU.class, \"imu\");\n" +
-                                "        imu.initialize(parameters);\n" +
-                                "        // make sure the imu gyro is calibrated before continuing.\n" +
-                                "        while (!isStopRequested() && !imu.isGyroCalibrated())\n" +
-                                "        {\n" +
-                                "            sleep(50);\n" +
-                                "            idle();\n" +
-                                "        }\n" +
-                                driveInit +
-                                "        waitForStart();\n" +
-                                "        if (opModeIsActive()){\n" +
-                                " //Our version \n" +
-                                moveHereTwo(points) +
-                                //" //Original version \n" +
-                                //moveHere() +
-                                "\n" +
-                                "        }\n" +
-                                "    }\n" +
-                                resetBusyForward +
-                                "    private void resetAngle() {\n" +
-                                "        lastAngles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);\n" +
-                                "        globalAngle = 0;\n" +
-                                "    }\n" +
-                                "    private double getAngle() {\n" +
-                                "        Orientation angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);\n" +
-                                "        double deltaAngle = angles.firstAngle - lastAngles.firstAngle;\n" +
-                                "        if (deltaAngle < -180)\n" +
-                                "            deltaAngle += 360;\n" +
-                                "        else if (deltaAngle > 180)\n" +
-                                "            deltaAngle -= 360;\n" +
-                                "        globalAngle += deltaAngle;\n" +
-                                "        lastAngles = angles;\n" +
-                                "        return globalAngle;\n" +
-                                "    }\n" +
-                                rotating +
-                                "        if (degrees < 0) {//right\n" +
-                                "            while (opModeIsActive() && getAngle() == 0) {}\n" +
-                                "            while (opModeIsActive() && getAngle() > degrees) {}\n" +
-                                "        } else {//left\n" +
-                                "            while (opModeIsActive() && getAngle() < degrees) {}\n" +
-                                "        }\n" +
-                                zPower +
-                                "        sleep(1000);\n" +
-                                "        resetAngle();\n" +
-                                "    }\n" +
-                                "}"
-                );
-            } else {
-                code.setText("");
-            }
-        }
     }
 
     private String convertArrayList(ArrayList<String> stringList) {
@@ -908,6 +746,91 @@ public class ProjectPane extends Pane {
         clear();
         for(Point point : points){
             createWayPoint((int) point.getX(),(int) point.getY());
+        }
+    }
+
+    public void generateCode(File codeFile){
+        FileWriter fileWriter = null;
+        try {
+            fileWriter = new FileWriter(codeFile);
+            String code = "package org.firstinspires.ftc.teamcode;\n" +
+                    "import com.qualcomm.hardware.bosch.BNO055IMU;\n" +
+                    "import com.qualcomm.robotcore.eventloop.opmode.Autonomous;\n" +
+                    "import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;\n" +
+                    "import com.qualcomm.robotcore.hardware.DcMotor;\n" +
+                    "\n" +
+                    "import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;\n" +
+                    "import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;\n" +
+                    "import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;\n" +
+                    "import org.firstinspires.ftc.robotcore.external.navigation.Orientation;\n" +
+                    "import org.firstinspires.ftc.robotcore.external.navigation.Position;\n" +
+                    "import org.firstinspires.ftc.robotcore.external.navigation.Velocity;\n" +
+                    "\n" +
+                    "/**\n" +
+                    " * Created with Team 6183's Duckinator 3000\n" +
+                    " */\n" +
+                    "\n" +
+                    "@Autonomous(name = \"DuckinatorAuto\", group = \"DuckSquad\")\n" +
+                    "public class DuckinatorAuto extends LinearOpMode {\n" +
+                    driveMotors +
+                    "    private int globalAngle;\n" +
+                    "    BNO055IMU imu;\n" +
+                    "    Orientation lastAngles = new Orientation();\n" +
+                    "    @Override\n" +
+                    "    public void runOpMode() throws InterruptedException {\n" +
+                    "        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();\n" +
+                    "        parameters.mode = BNO055IMU.SensorMode.IMU;\n" +
+                    "        parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;\n" +
+                    "        parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;\n" +
+                    "        parameters.loggingEnabled = false;\n" +
+                    "        imu = hardwareMap.get(BNO055IMU.class, \"imu\");\n" +
+                    "        imu.initialize(parameters);\n" +
+                    "        // make sure the imu gyro is calibrated before continuing.\n" +
+                    "        while (!isStopRequested() && !imu.isGyroCalibrated())\n" +
+                    "        {\n" +
+                    "            sleep(50);\n" +
+                    "            idle();\n" +
+                    "        }\n" +
+                    driveInit +
+                    "        waitForStart();\n" +
+                    "        if (opModeIsActive()){\n" +
+                    " //Our version \n" +
+                    moveHereTwo(points) +
+                    "\n" +
+                    "        }\n" +
+                    "    }\n" +
+                    resetBusyForward +
+                    "    private void resetAngle() {\n" +
+                    "        lastAngles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);\n" +
+                    "        globalAngle = 0;\n" +
+                    "    }\n" +
+                    "    private double getAngle() {\n" +
+                    "        Orientation angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);\n" +
+                    "        double deltaAngle = angles.firstAngle - lastAngles.firstAngle;\n" +
+                    "        if (deltaAngle < -180)\n" +
+                    "            deltaAngle += 360;\n" +
+                    "        else if (deltaAngle > 180)\n" +
+                    "            deltaAngle -= 360;\n" +
+                    "        globalAngle += deltaAngle;\n" +
+                    "        lastAngles = angles;\n" +
+                    "        return globalAngle;\n" +
+                    "    }\n" +
+                    rotating +
+                    "        if (degrees < 0) {//right\n" +
+                    "            while (opModeIsActive() && getAngle() == 0) {}\n" +
+                    "            while (opModeIsActive() && getAngle() > degrees) {}\n" +
+                    "        } else {//left\n" +
+                    "            while (opModeIsActive() && getAngle() < degrees) {}\n" +
+                    "        }\n" +
+                    zPower +
+                    "        sleep(1000);\n" +
+                    "        resetAngle();\n" +
+                    "    }\n" +
+                    "}";
+            fileWriter.write(code);
+            fileWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

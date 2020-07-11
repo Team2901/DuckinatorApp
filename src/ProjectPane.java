@@ -94,11 +94,6 @@ public class ProjectPane extends Pane {
         duckHolder.setLayoutY(350);
         getChildren().add(duckHolder);
 
-        clear = new Button("Clear");
-        clear.setLayoutX(540);
-        clear.setLayoutY(20);
-        getChildren().add(clear);
-
         github = new Hyperlink("github.com/yup-its-rowan");
         github.setLayoutX(850);
         github.setLayoutY(22);
@@ -255,10 +250,8 @@ public class ProjectPane extends Pane {
         tankDrive.setOnAction(this::processRadioButtons);
         holonomicDrive.setOnAction(this::processRadioButtons);
         mecanumDrive.setOnAction(this::processRadioButtons);
-        clear.setOnAction(this::processButtonPress);
         fieldHolder.setOnMouseClicked(this::processMousePress);
         this.setOnKeyPressed(this::gameAreaKeyPress);
-        //code.setOnKeyPressed(this::processKeyPress);
         github.setOnAction(this::hyperlinky);
         driveMotors = tankDriveMotors;
         driveInit = tankDriveInit;
@@ -473,11 +466,9 @@ public class ProjectPane extends Pane {
         selectedLine = (LineConnector) line;
     }
 
-    public void processButtonPress(ActionEvent ev) {
-        if (ev.getSource() == clear) {
-            clear();
-            addToPointHistory();
-        }
+    public void processClearPress() {
+        clear();
+        addToPointHistory();
     }
 
     public void clear() {

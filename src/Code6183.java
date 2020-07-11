@@ -12,6 +12,7 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
@@ -98,10 +99,30 @@ public class Code6183 extends Application {
         undo.setOnAction(e -> {
             clickerPane.undo();
         });
+        MenuItem clear = new MenuItem(("Clear"));
+        clear.setOnAction(e ->{
+                clickerPane.processClearPress();
+        });
         edit.getItems().add(redo);
         edit.getItems().add(undo);
+        edit.getItems().add(clear);
 
-        MenuBar loadOptions = new MenuBar(loadMenu,edit);
+        Menu help = new Menu("Help", null);
+        MenuItem about = new MenuItem(("About"));
+        about.setOnAction(e ->{
+            WebView webView = new WebView();
+
+            webView.getEngine().load("https://github.com/Team2901/DuckinatorApp/blob/master/README.md");
+
+            VBox vBox = new VBox(webView);
+            Scene scene = new Scene(vBox, 960, 600);
+
+            primaryStage.setScene(scene);
+            primaryStage.show();
+        });
+        help.getItems().add(about);
+
+        MenuBar loadOptions = new MenuBar(loadMenu,edit, help);
         VBox vBox = new VBox(loadOptions, clickerPane);
         Scene scene = new Scene(vBox, 1050, 543, Color.BLANCHEDALMOND);
         scene.setFill(Color.BLANCHEDALMOND);

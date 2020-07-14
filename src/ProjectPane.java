@@ -723,6 +723,8 @@ public class ProjectPane extends Pane {
         FileWriter fileWriter = null;
         try {
             fileWriter = new FileWriter(codeFile);
+            String fileName = codeFile.getName();
+            String[] fileNameArray = fileName.split("\\.");
             String code = "package org.firstinspires.ftc.teamcode;\n" +
                     "import com.qualcomm.hardware.bosch.BNO055IMU;\n" +
                     "import com.qualcomm.robotcore.eventloop.opmode.Autonomous;\n" +
@@ -740,8 +742,8 @@ public class ProjectPane extends Pane {
                     " * Created with Team 6183's Duckinator 3000\n" +
                     " */\n" +
                     "\n" +
-                    "@Autonomous(name = \"DuckinatorAuto\", group = \"DuckSquad\")\n" +
-                    "public class DuckinatorAuto extends LinearOpMode {\n" +
+                    "@Autonomous(name = \""+fileNameArray[0]+"\", group = \"DuckSquad\")\n" +
+                    "public class " + fileNameArray[0] + " extends LinearOpMode {\n" +
                     driveMotors +
                     "    private int globalAngle;\n" +
                     "    BNO055IMU imu;\n" +

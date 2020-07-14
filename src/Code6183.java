@@ -38,6 +38,7 @@ public class Code6183 extends Application {
          * How to create a menu bar for housing the save/load options (http://tutorials.jenkov.com/javafx/menubar.html)
          * How to create a popup to navigate your file system (http://tutorials.jenkov.com/javafx/filechooser.html)
          * Default directory: https://stackoverflow.com/questions/14256588/opening-a-javafx-filechooser-in-the-user-directory
+         * Open Web browser https://blog.ngopal.com.np/2011/02/09/open-default-browser-in-javafx/
          */
 
         FileChooser fileChooser = new FileChooser();

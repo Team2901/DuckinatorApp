@@ -70,6 +70,7 @@ public class Code6183 extends Application {
         });
         MenuItem save = new MenuItem("Save");
         save.setOnAction(e -> {
+            fileChooser.setInitialFileName(clickerPane.getRootName());
             File selectedFile = fileChooser.showSaveDialog(primaryStage);
             clickerPane.savePoints(selectedFile);
         });
@@ -88,6 +89,7 @@ public class Code6183 extends Application {
 
         MenuItem generateTheCode = new MenuItem("Generate Code");
         generateTheCode.setOnAction(e -> {
+            fileChooserForCode.setInitialFileName(clickerPane.getRootName());
             File selectedCodeFile = fileChooserForCode.showSaveDialog(primaryStage);
             clickerPane.generateCode(selectedCodeFile);
         });

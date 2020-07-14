@@ -70,6 +70,8 @@ public class ProjectPane extends Pane {
     private LineConnector selectedLine;
     private List<List<Point>> pointHistory = new ArrayList<>();
     private Integer currentIndex = null;
+    private String rootName;
+    private static final String DEFAULT_ROOT_NAME = "DuckinatorAuto";
 
     public ProjectPane() {
 
@@ -684,7 +686,13 @@ public class ProjectPane extends Pane {
 
     public void savePoints(File file) {
         try {
+            if(file == null){
+                return;
+            }
             savePoints(file, points);
+            String fileName = file.getName();
+            String[] fileNameArray = fileName.split("\\.");
+            setRootName(fileNameArray[0]);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -710,6 +718,10 @@ public class ProjectPane extends Pane {
             line = bufferedReader.readLine();
         }
         addToPointHistory();
+
+        String fileName = filePath.getName();
+        String[] fileNameArray = fileName.split("\\.");
+        setRootName(fileNameArray[0]);
     }
 
     public void loadPoints(List<Point> points) {
@@ -725,6 +737,7 @@ public class ProjectPane extends Pane {
             fileWriter = new FileWriter(codeFile);
             String fileName = codeFile.getName();
             String[] fileNameArray = fileName.split("\\.");
+            setRootName(fileNameArray[0]);
             String code = "package org.firstinspires.ftc.teamcode;\n" +
                     "import com.qualcomm.hardware.bosch.BNO055IMU;\n" +
                     "import com.qualcomm.robotcore.eventloop.opmode.Autonomous;\n" +
@@ -803,6 +816,20 @@ public class ProjectPane extends Pane {
             fileWriter.close();
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    public String getRootName() {
+        return rootName;
+    }
+
+    public void setRootName(String rootName) {
+        if(rootName == null){
+            this.rootName = DEFAULT_ROOT_NAME;
+        }
+        else
+        {
+            this.rootName = rootName;
         }
     }
 }

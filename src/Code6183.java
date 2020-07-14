@@ -10,7 +10,9 @@ import javafx.stage.Stage;
 
 import java.awt.*;
 import java.io.File;
+import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 
 /**
  *
@@ -90,17 +92,25 @@ public class Code6183 extends Application {
             clickerPane.redo();
         });
 
+
+        final MenuItem clear = new MenuItem("Redo");
+        clear.setOnAction(e -> {
+            clickerPane.processCleanButtonOnPressed();
+        });
+
         final MenuItem about = new MenuItem(("About"));
         about.setOnAction(e -> {
-            try {
-                Desktop.getDesktop().browse(new URI(GITHUB_README));
-            } catch (Exception exception) {
-                exception.printStackTrace();
+            if (Desktop.isDesktopSupported()){
+                try {
+                    Desktop.getDesktop().browse(new URI(GITHUB_README));
+                } catch (IOException | URISyntaxException e1) {
+                    e1.printStackTrace();
+                }
             }
         });
 
         final Menu menuFile = new Menu("File", null, open, save, generateCode);
-        final Menu menuEdit = new Menu("Edit", null, undo, redo);
+        final Menu menuEdit = new Menu("Edit", null, undo, redo, clear);
         final Menu menuHelp = new Menu("Help", null, about);
         final MenuBar menuBar = new MenuBar(menuFile, menuEdit, menuHelp);
 

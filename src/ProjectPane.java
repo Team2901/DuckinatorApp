@@ -4,13 +4,10 @@
  * and open the template in the editor.
  */
 
-import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
-import javafx.scene.control.*;
+import javafx.scene.control.RadioButton;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -21,10 +18,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
-import java.awt.*;
 import java.io.*;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -80,8 +74,6 @@ public class ProjectPane extends Pane {
     }
     private final static String DEFAULT_CLASS_NAME = "DuckinatorAuto";
 
-    private final TextArea code;
-    public final TextField classNameTextArea;
     private int togglingKeep = 1;
 
     private final Label wayPointLocationReporter;
@@ -95,6 +87,7 @@ public class ProjectPane extends Pane {
 
     private List<List<WayPointHistory>> wayPointLocationHistory = new ArrayList<>();
     private int currentIndex = -1;
+    private String className = null;
 
     public ProjectPane () {
         Rectangle rect1 = new Rectangle(1200, 600, Color.BLANCHEDALMOND);
@@ -116,42 +109,11 @@ public class ProjectPane extends Pane {
         duckHolder.setLayoutY(350);
         getChildren().add(duckHolder);
 
-        Button clear = new Button("Clear");
-        clear.setLayoutX(540);
-        clear.setLayoutY(20);
-        getChildren().add(clear);
-
-        Hyperlink github = new Hyperlink("github.com/yup-its-rowan");
-        github.setLayoutX(850);
-        github.setLayoutY(22);
-        getChildren().add(github);
-
-        Button generate = new Button("Generate Code");
-        generate.setLayoutX(600);
-        generate.setLayoutY(20);
-        getChildren().add(generate);
-
-        final Label classNameLabel;
-        classNameLabel = new Label("Class Name: ");
-        classNameLabel.setLayoutX(540);
-        classNameLabel.setLayoutY(70);
-        getChildren().add(classNameLabel);
-
-        classNameTextArea = new TextField(DEFAULT_CLASS_NAME);
-        classNameTextArea.setLayoutX(630);
-        classNameTextArea.setLayoutY(67);
-        getChildren().add(classNameTextArea);
-
-        code = new TextArea("Click on the field to make points on a path for your robot to follow. \n\nThen, hit the \"Generate Code\" button to generate copy and paste-able code!");
-        code.setLayoutX(540);
-        code.setLayoutY(100);
-        getChildren().add(code);
-
         ToggleGroup drives = new ToggleGroup();
 
         RadioButton tankDrive = new RadioButton("Tank Drive");
         tankDrive.setLayoutX(545);
-        tankDrive.setLayoutY(300);
+        tankDrive.setLayoutY(10);
         tankDrive.setOnAction((e) -> togglingKeep = 1);
         tankDrive.setToggleGroup(drives);
         tankDrive.setSelected(true);
@@ -159,29 +121,19 @@ public class ProjectPane extends Pane {
 
         RadioButton holonomicDrive = new RadioButton("X-Drive");
         holonomicDrive.setLayoutX(670);
-        holonomicDrive.setLayoutY(300);
+        holonomicDrive.setLayoutY(10);
         holonomicDrive.setOnAction((e) -> togglingKeep = 2);
         holonomicDrive.setToggleGroup(drives);
         getChildren().add(holonomicDrive);
 
         RadioButton mecanumDrive = new RadioButton("Mecanum");
         mecanumDrive.setLayoutX(795);
-        mecanumDrive.setLayoutY(300);
+        mecanumDrive.setLayoutY(10);
         mecanumDrive.setOnAction((e) -> togglingKeep = 3);
         mecanumDrive.setToggleGroup(drives);
         getChildren().add(mecanumDrive);
 
-        clear.setOnAction(this::processCleanButtonOnPressed);
-        generate.setOnAction(this::generation);
         fieldHolder.setOnMouseClicked(this::processFieldHolderOnMousePressed);
-        github.setOnAction((e) -> {
-            if (Desktop.isDesktopSupported()){
-                try {
-                    Desktop.getDesktop().browse(new URI("https://www.github.com/yup-its-rowan"));
-                } catch (IOException | URISyntaxException e1) {
-                    e1.printStackTrace();
-                }
-            }});
 
         this.setOnKeyPressed(this::processFieldHolderOnKeyPressed);
         this.setOnKeyReleased(this::processFieldHolderOnKeyReleased);
@@ -237,7 +189,7 @@ public class ProjectPane extends Pane {
         wayPointLocationReporter.setText(msg);
     }
 
-    public void processCleanButtonOnPressed(final ActionEvent e) {
+    public void processCleanButtonOnPressed() {
         setClassName(null);
         clear();
         addHistory();
@@ -472,45 +424,6 @@ public class ProjectPane extends Pane {
         reportMovingWayPointLocation();
     }
 
-    public void generation(final ActionEvent e) {
-        generation();
-    }
-
-    public void generation(){
-        if (wayPoints.size()>0){
-
-            String className = classNameTextArea.getText();
-
-            if (className == null || className.isBlank()) {
-                className = DEFAULT_CLASS_NAME;
-            }
-
-            className = className.trim();
-
-            code.setText(
-                    "package org.firstinspires.ftc.teamcode.Autonomous;\n" +
-                            "import com.qualcomm.robotcore.eventloop.opmode.Autonomous;\n" +
-                            "\n" +
-                            "/**\n" +
-                            " * Created with Team 6183's Duckinator 3000\n" +
-                            " */\n" +
-                            "\n" +
-                            "@Autonomous(name = \""+className+"\", group = \"DuckSquad\")\n" +
-                            "public class "+ className + " extends " + getBaseClass() + " {\n" +
-                            "    @Override\n" +
-                            "    public void runOpMode() throws InterruptedException {\n" +
-                            "        initRobot();\n" +
-                            "        waitForStart();\n" +
-                            "        if (opModeIsActive()){\n" +
-                            generateMoveHere() +
-                            "\n" +
-                            "        }\n" +
-                            "    }\n" +
-                            "}"
-            );
-        }
-    }
-
     private String getBaseClass() {
 
         switch (togglingKeep) {
@@ -602,8 +515,6 @@ public class ProjectPane extends Pane {
         while (wayPoints.size() > 0) {
             deleteWayPoint(wayPoints.get(0));
         }
-
-        code.clear();
     }
 
     public void savePointsToFile(File file) {
@@ -615,15 +526,6 @@ public class ProjectPane extends Pane {
         }
     }
 
-    public static String getBaseName(String fileName) {
-        int index = fileName.lastIndexOf('.');
-        if (index == -1) {
-            return fileName;
-        } else {
-            return fileName.substring(0, index);
-        }
-    }
-
     public void loadPoints(List<List<Double>> wayPointLocations) {
 
         // Remove all the points from the list of waypoints and from the screen
@@ -632,10 +534,6 @@ public class ProjectPane extends Pane {
         for (List<Double> wayPointLocation : wayPointLocations) {
             this.addWayPoint(wayPointLocation);
         }
-
-        // Regenerate the code
-        this.generation();
-
     }
 
     public void loadHistory(List<WayPointHistory> wayPointLocations) {
@@ -654,10 +552,6 @@ public class ProjectPane extends Pane {
                 setSelectedDrawable(wayPoint);
             }
         }
-
-        // Regenerate the code
-        this.generation();
-
     }
 
     public void readPointsFromFile(File file) {
@@ -669,9 +563,6 @@ public class ProjectPane extends Pane {
         try {
 
             setClassName(file.getName());
-
-            // Set the name to that of the file
-            classNameTextArea.setText(getBaseName(file.getName()));
 
             // Load the points
             List<List<Double>> wayPointLocations = loadPoints(file);
@@ -723,14 +614,9 @@ public class ProjectPane extends Pane {
         return wayPointLocations;
     }
 
-    private String className = null;
 
     public String getClassName() {
-       if (className == null) {
-           return DEFAULT_CLASS_NAME;
-       } else {
-           return className;
-       }
+        return (className == null) ? DEFAULT_CLASS_NAME : className;
     }
 
     public void setClassName(String className) {

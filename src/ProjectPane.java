@@ -66,7 +66,6 @@ public class ProjectPane extends Pane {
     private Label careful;
     private Label mouseLocation;
     private Label selectedDrawableLocation;
-    private Hyperlink github;
     private WayPoint selectedPoint;
     private LineConnector selectedLine;
     private List<List<Point>> pointHistory = new ArrayList<>();
@@ -93,11 +92,6 @@ public class ProjectPane extends Pane {
         duckHolder.setLayoutX(870);
         duckHolder.setLayoutY(350);
         getChildren().add(duckHolder);
-
-        github = new Hyperlink("github.com/yup-its-rowan");
-        github.setLayoutX(850);
-        github.setLayoutY(22);
-        getChildren().add(github);
 
         careful = new Label("Careful: \nAdjusting wheel dia or TPR mid-path affects the resulting code");
         careful.setLayoutX(540);
@@ -252,7 +246,6 @@ public class ProjectPane extends Pane {
         mecanumDrive.setOnAction(this::processRadioButtons);
         fieldHolder.setOnMouseClicked(this::processMousePress);
         this.setOnKeyPressed(this::gameAreaKeyPress);
-        github.setOnAction(this::hyperlinky);
         driveMotors = tankDriveMotors;
         driveInit = tankDriveInit;
         resetBusyForward = resetBusyForwardTank;
@@ -286,20 +279,6 @@ public class ProjectPane extends Pane {
         }
         else{
             selectedDrawableLocation.setText("");
-        }
-    }
-
-    public void hyperlinky(ActionEvent eeeee) {
-        if (eeeee.getSource() == github) {
-            if (Desktop.isDesktopSupported()) {
-                try {
-                    Desktop.getDesktop().browse(new URI("https://www.github.com/yup-its-rowan"));
-                } catch (IOException e1) {
-                    e1.printStackTrace();
-                } catch (URISyntaxException e1) {
-                    e1.printStackTrace();
-                }
-            }
         }
     }
 

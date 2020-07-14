@@ -16,8 +16,11 @@ import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 /**
  * @author akkir
@@ -111,15 +114,15 @@ public class Code6183 extends Application {
         Menu help = new Menu("Help", null);
         MenuItem about = new MenuItem(("About"));
         about.setOnAction(e ->{
-            WebView webView = new WebView();
-
-            webView.getEngine().load("https://github.com/Team2901/DuckinatorApp/blob/master/README.md");
-
-            VBox vBox = new VBox(webView);
-            Scene scene = new Scene(vBox, 960, 600);
-
-            primaryStage.setScene(scene);
-            primaryStage.show();
+            if (Desktop.isDesktopSupported()) {
+                try {
+                    Desktop.getDesktop().browse(new URI("https://github.com/Team2901/DuckinatorApp/blob/master/README.md"));
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                } catch (URISyntaxException e1) {
+                    e1.printStackTrace();
+                }
+            }
         });
         help.getItems().add(about);
 

@@ -238,6 +238,7 @@ public class ProjectPane extends Pane {
     }
 
     public void processCleanButtonOnPressed(final ActionEvent e) {
+        setClassName(null);
         clear();
         addHistory();
     }
@@ -661,7 +662,14 @@ public class ProjectPane extends Pane {
 
     public void readPointsFromFile(File file) {
 
+        if (file == null) {
+            return;
+        }
+
         try {
+
+            setClassName(file.getName());
+
             // Set the name to that of the file
             classNameTextArea.setText(getBaseName(file.getName()));
 
@@ -714,4 +722,66 @@ public class ProjectPane extends Pane {
 
         return wayPointLocations;
     }
+
+    private String className = null;
+
+    public String getClassName() {
+       if (className == null) {
+           return DEFAULT_CLASS_NAME;
+       } else {
+           return className;
+       }
+    }
+
+    public void setClassName(String className) {
+        if (className == null) {
+            this.className = null;
+        } else {
+            final String[] classNameSplit = className.trim().split("\\W+");
+            if (classNameSplit.length > 0) {
+                this.className = classNameSplit[0];
+            } else {
+                this.className = null;
+            }
+        }
+    }
+
+    public void generateCode(File codeFile){
+
+        if (codeFile == null) {
+            return;
+        }
+
+        setClassName(codeFile.getName());
+
+        final String className = getClassName();
+
+        try {
+            FileWriter fileWriter = new FileWriter(codeFile);
+            String code = "package org.firstinspires.ftc.teamcode.Autonomous;\n" +
+                    "import com.qualcomm.robotcore.eventloop.opmode.Autonomous;\n" +
+                    "\n" +
+                    "/**\n" +
+                    " * Created with Team 6183's Duckinator 3000\n" +
+                    " */\n" +
+                    "\n" +
+                    "@Autonomous(name = \""+className+"\", group = \"DuckSquad\")\n" +
+                    "public class "+ className + " extends " + getBaseClass() + " {\n" +
+                    "    @Override\n" +
+                    "    public void runOpMode() throws InterruptedException {\n" +
+                    "        initRobot();\n" +
+                    "        waitForStart();\n" +
+                    "        if (opModeIsActive()){\n" +
+                    generateMoveHere() +
+                    "\n" +
+                    "        }\n" +
+                    "    }\n" +
+                    "}";
+            fileWriter.write(code);
+            fileWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 }

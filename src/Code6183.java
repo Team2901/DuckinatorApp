@@ -28,13 +28,30 @@ public class Code6183 extends Application {
         final FileChooser fileChooser = new FileChooser();
 
         // Set the default directory the file chooser opens
-        final File outputFile = new File("output");
+        final File outputFile = new File("pathways");
+        if(!outputFile.exists()){
+            outputFile.mkdir();
+        }
         fileChooser.setInitialDirectory(outputFile);
 
         // Only allow opening csv files
         FileChooser.ExtensionFilter extFilter =
                 new FileChooser.ExtensionFilter("CSV files (*.csv)", "*.csv");
         fileChooser.getExtensionFilters().add(extFilter);
+
+        final FileChooser javaFileChooser = new FileChooser();
+
+        // Set the default directory the file chooser opens
+        final File javaOutputFile = new File("classes");
+        if(!javaOutputFile.exists()){
+            javaOutputFile.mkdir();
+        }
+        javaFileChooser.setInitialDirectory(javaOutputFile);
+
+        // Only allow opening csv files
+        FileChooser.ExtensionFilter javaExtFilter =
+                new FileChooser.ExtensionFilter("Java files (*.java)", "*.java");
+        javaFileChooser.getExtensionFilters().add(javaExtFilter);
 
         final MenuItem open = new MenuItem("Open");
         open.setOnAction(e -> {
@@ -47,10 +64,19 @@ public class Code6183 extends Application {
 
         final MenuItem save = new MenuItem("Save");
         save.setOnAction(e -> {
-            fileChooser.setInitialFileName(String.format("%s.csv",  clickerPane.classNameTextArea.getText()));
+            fileChooser.setInitialFileName(String.format("%s",  clickerPane.getClassName()));
             final File file = fileChooser.showSaveDialog(primaryStage);
             if (file != null) {
                 clickerPane.savePointsToFile(file);
+            }
+        });
+
+        final MenuItem generateCode = new MenuItem("Generate");
+        generateCode.setOnAction(e -> {
+            javaFileChooser.setInitialFileName(String.format("%s",  clickerPane.getClassName()));
+            final File file = javaFileChooser.showSaveDialog(primaryStage);
+            if (file != null) {
+                clickerPane.generateCode(file);
             }
         });
 
@@ -73,7 +99,7 @@ public class Code6183 extends Application {
             }
         });
 
-        final Menu menuFile = new Menu("File", null, open, save);
+        final Menu menuFile = new Menu("File", null, open, save, generateCode);
         final Menu menuEdit = new Menu("Edit", null, undo, redo);
         final Menu menuHelp = new Menu("Help", null, about);
         final MenuBar menuBar = new MenuBar(menuFile, menuEdit, menuHelp);

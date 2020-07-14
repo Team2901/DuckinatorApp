@@ -8,13 +8,17 @@ import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
+import java.awt.*;
 import java.io.File;
+import java.net.URI;
 
 /**
  *
  * @author akkir
  */
 public class Code6183 extends Application {
+
+    final static String GITHUB_README = "https://github.com/Team2901/DuckinatorApp/blob/master/README.md";
 
     @Override
     public void start(Stage primaryStage) {
@@ -60,9 +64,19 @@ public class Code6183 extends Application {
             clickerPane.redo();
         });
 
+        final MenuItem about = new MenuItem(("About"));
+        about.setOnAction(e -> {
+            try {
+                Desktop.getDesktop().browse(new URI(GITHUB_README));
+            } catch (Exception exception) {
+                exception.printStackTrace();
+            }
+        });
+
         final Menu menuFile = new Menu("File", null, open, save);
         final Menu menuEdit = new Menu("Edit", null, undo, redo);
-        final MenuBar menuBar = new MenuBar(menuFile, menuEdit);
+        final Menu menuHelp = new Menu("Help", null, about);
+        final MenuBar menuBar = new MenuBar(menuFile, menuEdit, menuHelp);
 
         final VBox vBox = new VBox(menuBar, clickerPane);
 

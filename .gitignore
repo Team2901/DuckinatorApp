@@ -82,3 +82,5 @@ nb-configuration.xml
 ##############################
 .DS_Store
 *.csv
+DuckinatorCode/
+DuckinatorPathways/

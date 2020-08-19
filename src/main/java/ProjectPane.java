@@ -6,9 +6,7 @@ package main.java;/*
 
 import javafx.event.ActionEvent;
 import javafx.scene.Node;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -33,15 +31,9 @@ import static java.lang.Integer.parseInt;
 public class ProjectPane extends Pane {
 
     private static final String DEFAULT_ROOT_NAME = "DuckinatorAuto";
-    private final Image field;
-    private final Image duck;
     private final ImageView fieldHolder;
-    private final ImageView duckHolder;
-    private final int lineTicker = 0;
-    private final Rectangle rect;
-    private final int fieldMeasurementPixels = 510;
-    private final int fieldMeasurementInches = 144;
-    private final double conversionFactorPixelInch = ((double) fieldMeasurementInches / (double) fieldMeasurementPixels);
+    private final double fieldMeasurementPixels = 510;
+    private final double fieldMeasurementInches = 144;
     private final String tankDriveMotors;
     private final String holonomicDriveMotors;
     private final String tankDriveInit;
@@ -54,50 +46,30 @@ public class ProjectPane extends Pane {
     private final RadioButton tankDrive;
     private final RadioButton holonomicDrive;
     private final RadioButton mecanumDrive;
-    private final ToggleGroup drives;
-    private final Label wheelDi;
-    private final Label ticksPer;
-    private final TextField wheelDia;
-    private final TextField ticksPerr;
-    private final Label careful;
     private final Label mouseLocation;
     private final Label selectedDrawableLocation;
-    ArrayList<Integer> xPixel = new ArrayList<Integer>();
-    ArrayList<Integer> yPixel = new ArrayList<Integer>();
-    ArrayList<Double> lineLength = new ArrayList<Double>();
-    ArrayList<Double> actualPathLength = new ArrayList<Double>();
-    ArrayList<Double> encoderPathLength = new ArrayList<Double>();
-    ArrayList<Double> angleChanges = new ArrayList<Double>();
-    ArrayList<String> leftOrRight = new ArrayList<String>();
-    ArrayList<String> movements = new ArrayList<String>();
-    ArrayList<WayPoint> points = new ArrayList<WayPoint>();
-    ArrayList<Drawable> drawables = new ArrayList<>();
-    private Button clear;
-    private double wheelDiameter = 4;
-    private double ticksPerRotation = 1120;
+    final ArrayList<WayPoint> points = new ArrayList<>();
     private double multiplier;
     private String driveMotors;
     private String driveInit;
-    private String movementTemp;
-    private String moveHere;
     private String resetBusyForwardHoloMeca;
     private String resetBusyForward;
     private String rotating;
     private String zPower;
-    private int togglingKeep = 1;
     private WayPoint selectedPoint;
     private LineConnector selectedLine;
     private List<List<Point>> pointHistory = new ArrayList<>();
     private Integer currentIndex = null;
     private String rootName;
+    int togglingKeep = 1;
 
     public ProjectPane() {
 
         this.setOnKeyPressed(this::gameAreaKeyPress);
-        rect = new Rectangle(1200, 600, Color.BLANCHEDALMOND);
+        Rectangle rect = new Rectangle(1200, 600, Color.BLANCHEDALMOND);
         getChildren().add(rect);
 
-        field = new Image(this.getClass().getResourceAsStream("/main/resources/field.png"));
+        Image field = new Image(this.getClass().getResourceAsStream("/main/resources/field.png"));
         fieldHolder = new ImageView(field);
         fieldHolder.setFitHeight(fieldMeasurementPixels);
         fieldHolder.setFitWidth(fieldMeasurementPixels);
@@ -105,40 +77,15 @@ public class ProjectPane extends Pane {
         fieldHolder.setLayoutY(0);
         getChildren().add(fieldHolder);
 
-        duck = new Image(this.getClass().getResourceAsStream("/main/resources/duck.png"));
-        duckHolder = new ImageView(duck);
+        Image duck = new Image(this.getClass().getResourceAsStream("/main/resources/duck.png"));
+        ImageView duckHolder = new ImageView(duck);
         duckHolder.setFitHeight(150);
         duckHolder.setFitWidth(163);
         duckHolder.setLayoutX(870);
         duckHolder.setLayoutY(350);
         getChildren().add(duckHolder);
 
-        careful = new Label("Careful: \nAdjusting wheel dia or TPR mid-path affects the resulting code");
-        careful.setLayoutX(540);
-        careful.setLayoutY(450);
-        getChildren().add(careful);
-
-        wheelDi = new Label("Wheel Diameter (Inches): ");
-        wheelDi.setLayoutX(540);
-        wheelDi.setLayoutY(320);
-        getChildren().add(wheelDi);
-
-        wheelDia = new TextField("4");
-        wheelDia.setLayoutX(680);
-        wheelDia.setLayoutY(317);
-        getChildren().add(wheelDia);
-
-        ticksPer = new Label("Ticks Per Rotation: ");
-        ticksPer.setLayoutX(540);
-        ticksPer.setLayoutY(360);
-        getChildren().add(ticksPer);
-
-        ticksPerr = new TextField("1120");
-        ticksPerr.setLayoutX(680);
-        ticksPerr.setLayoutY(357);
-        getChildren().add(ticksPerr);
-
-        drives = new ToggleGroup();
+        ToggleGroup drives = new ToggleGroup();
 
         tankDrive = new RadioButton("Tank Drive");
         tankDrive.setLayoutX(545);
@@ -169,7 +116,7 @@ public class ProjectPane extends Pane {
                         "    private DcMotor fr;\n" +
                         "    private DcMotor bl;\n" +
                         "    private DcMotor br;\n" +
-                        "//holonomic encoder counts are slightly innacurate and need to be tested due to different amounts of force and friction on the wheels depending on what you get\n" +
+                        "//holonomic encoder counts are slightly inaccurate and need to be tested due to different amounts of force and friction on the wheels depending on what you get\n" +
                         "//please adjust personally to each program, we have accounted for slight slippage but just please make sure\n"
         );
 
@@ -200,10 +147,10 @@ public class ProjectPane extends Pane {
                         "        leftWheel.setPower(0);\n" +
                         "        rightWheel.setPower(0);\n" +
                         "    }\n" +
-                        "    public void goForward(int gofront){\n" +
+                        "    public void goForward(int encoderTicks){\n" +
                         "        motorReset();\n" +
-                        "        rightWheel.setTargetPosition(gofront);\n" +
-                        "        leftWheel.setTargetPosition(gofront);\n" +
+                        "        rightWheel.setTargetPosition(encoderTicks);\n" +
+                        "        leftWheel.setTargetPosition(encoderTicks);\n" +
                         "        powerBusy();\n" +
                         "    }\n"
         );
@@ -318,9 +265,7 @@ public class ProjectPane extends Pane {
         }
 
         List<Point> currentValue = pointHistory.isEmpty() ? null : pointHistory.get(currentIndex);
-        if (newValue.equals(currentValue)) {
-            // Don't do add anything
-        } else {
+        if (!newValue.equals(currentValue)) {
             if (currentIndex != null) {
                 pointHistory = pointHistory.subList(0, currentIndex + 1);
             }
@@ -359,7 +304,6 @@ public class ProjectPane extends Pane {
     }
 
     public void createWayPoint(int xPoint, int yPoint) {
-        robotSpecs();
         if (points.isEmpty()) {
             WayPoint startCircle = new WayPoint(xPoint, yPoint);
             startCircle.setOnMousePressed(this::selectPointPress);
@@ -383,7 +327,6 @@ public class ProjectPane extends Pane {
                 nextCircles.setAfter(selectedLine);
             } else {
                 lastWayPoint = points.get(points.size() - 1);
-                nextWayPoint = null;
                 index = points.size();
             }
             LineConnector line = new LineConnector((int) lastWayPoint.getCenterX(), (int) lastWayPoint.getCenterY(), xPoint, yPoint);
@@ -462,7 +405,6 @@ public class ProjectPane extends Pane {
     }
 
     public void clear() {
-        drives.selectToggle(null);
 
         while (points.size() != 0) {
             deleteWayPoint(points.get(0));
@@ -470,6 +412,8 @@ public class ProjectPane extends Pane {
     }
 
     public double convertInchesToEncoderTicks(double c) {
+        double ticksPerRotation = 1120;
+        double wheelDiameter = 4;
         return ((c / (Math.PI * wheelDiameter)) * ticksPerRotation);
     }
 
@@ -521,7 +465,6 @@ public class ProjectPane extends Pane {
             rotating = rotateHolo;
             zPower = holoZPower;
             togglingKeep = 3;
-
         }
     }
 
@@ -548,29 +491,23 @@ public class ProjectPane extends Pane {
                         "        bl.setPower(0);\n" +
                         "        br.setPower(0);\n" +
                         "    }\n" +
-                        "    public void goForward(int gofront){\n" +
+                        "    public void goForward(int encoderTicks){\n" +
                         "        motorReset();\n" +
-                        "        fl.setTargetPosition((int)Math.round(" + multiplier + "*gofront));\n" +
-                        "        fr.setTargetPosition((int)Math.round(-" + multiplier + "*gofront));\n" +
-                        "        bl.setTargetPosition((int)Math.round(" + multiplier + "*gofront));\n" +
-                        "        br.setTargetPosition((int)Math.round(" + multiplier + "*gofront ));\n" +
+                        "        fl.setTargetPosition((int)Math.round(" + multiplier + "*encoderTicks));\n" +
+                        "        fr.setTargetPosition((int)Math.round(-" + multiplier + "*encoderTicks));\n" +
+                        "        bl.setTargetPosition((int)Math.round(" + multiplier + "*encoderTicks));\n" +
+                        "        br.setTargetPosition((int)Math.round(" + multiplier + "*encoderTicks ));\n" +
                         "        powerBusy();\n" +
                         "    }\n"
         );
     }
 
-    public void robotSpecs() {
-        wheelDiameter = new Double(wheelDia.getText());
-        ticksPerRotation = new Double(ticksPerr.getText());
-    }
-
     private String convertArrayList(ArrayList<String> stringList) {
-        String joinedString = String.join("", stringList);
-        return joinedString;
+        return String.join("", stringList);
     }
 
     private String moveHereTwo(ArrayList<WayPoint> points) {
-        ArrayList<String> movements = new ArrayList<String>();
+        ArrayList<String> movements = new ArrayList<>();
 
         for (int ii = 0; ii < points.size(); ii++) {
             // first point.. nothing to do. assume robot was placed here.
@@ -831,10 +768,6 @@ public class ProjectPane extends Pane {
     }
 
     public void setRootName(String rootName) {
-        if (rootName == null) {
-            this.rootName = DEFAULT_ROOT_NAME;
-        } else {
-            this.rootName = rootName;
-        }
+        this.rootName = (rootName == null) ? DEFAULT_ROOT_NAME : rootName;
     }
 }

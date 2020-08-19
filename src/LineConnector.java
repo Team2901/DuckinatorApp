@@ -23,23 +23,23 @@ public class LineConnector extends Line implements Drawable {
     }
 
     @Override
-    public void setBefore(Drawable before) {
-        this.drawBefore = before;
-    }
-
-    @Override
-    public void setAfter(Drawable after) {
-        this.drawAfter = after;
-    }
-
-    @Override
     public Drawable getBefore() {
         return this.drawBefore;
     }
 
     @Override
+    public void setBefore(Drawable before) {
+        this.drawBefore = before;
+    }
+
+    @Override
     public Drawable getAfter() {
         return this.drawAfter;
+    }
+
+    @Override
+    public void setAfter(Drawable after) {
+        this.drawAfter = after;
     }
 
     public void setStartPoint(WayPoint point) {

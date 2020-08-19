@@ -7,12 +7,12 @@ public class HistoryTest {
     List<String> valueHistory = new ArrayList<>();
     Integer currentIndex = null;
 
-    public static void main(String[] args) {
-        new HistoryTest();
-    }
-
     public HistoryTest() {
         run();
+    }
+
+    public static void main(String[] args) {
+        new HistoryTest();
     }
 
     public void run() {
@@ -39,15 +39,11 @@ public class HistoryTest {
 
     public void updateValue(String newValue) {
         String currentValue = valueHistory.isEmpty() ? null : valueHistory.get(currentIndex);
-        if(newValue.equals(currentValue))
-        {
+        if (newValue.equals(currentValue)) {
             // Don't do add anything
-        }
-        else
-        {
-            if(currentIndex != null)
-            {
-                valueHistory = valueHistory.subList(0,currentIndex+1);
+        } else {
+            if (currentIndex != null) {
+                valueHistory = valueHistory.subList(0, currentIndex + 1);
             }
             valueHistory.add(newValue);
             currentIndex = valueHistory.size() - 1;
@@ -61,8 +57,7 @@ public class HistoryTest {
         /*
          * Moves the current value to the previous value in the history
          */
-        if(currentIndex != 0)
-        {
+        if (currentIndex != 0) {
             currentIndex--;
         }
     }
@@ -71,8 +66,7 @@ public class HistoryTest {
         /*
          * Moves the current value to the next value in the history
          */
-        if(currentIndex != valueHistory.size()-1)
-        {
+        if (currentIndex != valueHistory.size() - 1) {
             currentIndex++;
         }
     }
@@ -86,7 +80,7 @@ public class HistoryTest {
     }
 
     private void printHistory() {
-        for(int i = 0; i < valueHistory.size(); i++){
+        for (int i = 0; i < valueHistory.size(); i++) {
             System.out.println(i + " " + valueHistory.get(i) + (i == currentIndex ? "(Current Index)" : ""));
         }
         /*

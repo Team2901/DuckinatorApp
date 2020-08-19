@@ -2,13 +2,13 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 
 public class WayPoint extends Circle implements Drawable {
+    public static int firstPointRadius = 3;
+    public static int subsequentPointsRadius = 4;
+    public static int bufferZone = 8;
     public Drawable drawBefore = null;
     public Drawable drawAfter = null;
     public Color originalColor;
     public Circle subCircle;
-    public static int firstPointRadius = 3;
-    public static int subsequentPointsRadius = 4;
-    public static int bufferZone = 8;
 
     public WayPoint(int xPoint, int yPoint) {
         this(xPoint, yPoint, subsequentPointsRadius, bufferZone, Color.BLACK);
@@ -56,23 +56,23 @@ public class WayPoint extends Circle implements Drawable {
     }
 
     @Override
-    public void setBefore(Drawable before) {
-        this.drawBefore = before;
-    }
-
-    @Override
-    public void setAfter(Drawable after) {
-        this.drawAfter = after;
-    }
-
-    @Override
     public Drawable getBefore() {
         return this.drawBefore;
     }
 
     @Override
+    public void setBefore(Drawable before) {
+        this.drawBefore = before;
+    }
+
+    @Override
     public Drawable getAfter() {
         return this.drawAfter;
+    }
+
+    @Override
+    public void setAfter(Drawable after) {
+        this.drawAfter = after;
     }
 
     public void setSelected(boolean selected) {

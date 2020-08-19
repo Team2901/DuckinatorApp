@@ -1,9 +1,9 @@
 public interface Drawable {
-    public void setBefore(Drawable before);
+    Drawable getBefore();
 
-    public void setAfter(Drawable after);
+    void setBefore(Drawable before);
 
-    public Drawable getBefore();
+    Drawable getAfter();
 
-    public Drawable getAfter();
+    void setAfter(Drawable after);
 }

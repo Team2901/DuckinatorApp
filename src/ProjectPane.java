@@ -8,7 +8,6 @@ import javafx.event.ActionEvent;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
@@ -22,8 +21,6 @@ import javafx.scene.shape.Rectangle;
 
 import java.awt.*;
 import java.io.*;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,6 +32,36 @@ import static java.lang.Integer.parseInt;
 
 public class ProjectPane extends Pane {
 
+    private static final String DEFAULT_ROOT_NAME = "DuckinatorAuto";
+    private final Image field;
+    private final Image duck;
+    private final ImageView fieldHolder;
+    private final ImageView duckHolder;
+    private final int lineTicker = 0;
+    private final Rectangle rect;
+    private final int fieldMeasurementPixels = 510;
+    private final int fieldMeasurementInches = 144;
+    private final double conversionFactorPixelInch = ((double) fieldMeasurementInches / (double) fieldMeasurementPixels);
+    private final String tankDriveMotors;
+    private final String holonomicDriveMotors;
+    private final String tankDriveInit;
+    private final String holonomicDriveInit;
+    private final String resetBusyForwardTank;
+    private final String rotateTank;
+    private final String rotateHolo;
+    private final String tankZPower;
+    private final String holoZPower;
+    private final RadioButton tankDrive;
+    private final RadioButton holonomicDrive;
+    private final RadioButton mecanumDrive;
+    private final ToggleGroup drives;
+    private final Label wheelDi;
+    private final Label ticksPer;
+    private final TextField wheelDia;
+    private final TextField ticksPerr;
+    private final Label careful;
+    private final Label mouseLocation;
+    private final Label selectedDrawableLocation;
     ArrayList<Integer> xPixel = new ArrayList<Integer>();
     ArrayList<Integer> yPixel = new ArrayList<Integer>();
     ArrayList<Double> lineLength = new ArrayList<Double>();
@@ -45,33 +72,24 @@ public class ProjectPane extends Pane {
     ArrayList<String> movements = new ArrayList<String>();
     ArrayList<WayPoint> points = new ArrayList<WayPoint>();
     ArrayList<Drawable> drawables = new ArrayList<>();
-    private Image field, duck;
-    private ImageView fieldHolder, duckHolder;
-    private int lineTicker = 0;
     private Button clear;
-    private Rectangle rect;
-    private int fieldMeasurementPixels = 510;
-    private int fieldMeasurementInches = 144;
-    private double conversionFactorPixelInch = ((double) fieldMeasurementInches / (double) fieldMeasurementPixels);
     private double wheelDiameter = 4;
     private double ticksPerRotation = 1120;
     private double multiplier;
-    private String tankDriveMotors, holonomicDriveMotors, driveMotors, tankDriveInit, holonomicDriveInit, driveInit, movementTemp, moveHere;
-    private String resetBusyForwardTank, resetBusyForwardHoloMeca, resetBusyForward, rotateTank, rotateHolo, rotating, tankZPower, holoZPower, zPower;
-    private RadioButton tankDrive, holonomicDrive, mecanumDrive;
-    private ToggleGroup drives;
+    private String driveMotors;
+    private String driveInit;
+    private String movementTemp;
+    private String moveHere;
+    private String resetBusyForwardHoloMeca;
+    private String resetBusyForward;
+    private String rotating;
+    private String zPower;
     private int togglingKeep = 1;
-    private Label wheelDi, ticksPer;
-    private TextField wheelDia, ticksPerr;
-    private Label careful;
-    private Label mouseLocation;
-    private Label selectedDrawableLocation;
     private WayPoint selectedPoint;
     private LineConnector selectedLine;
     private List<List<Point>> pointHistory = new ArrayList<>();
     private Integer currentIndex = null;
     private String rootName;
-    private static final String DEFAULT_ROOT_NAME = "DuckinatorAuto";
 
     public ProjectPane() {
 
@@ -265,21 +283,20 @@ public class ProjectPane extends Pane {
         this.setOnMouseDragged(this::mouseLocationUpdate);
     }
 
-    public void mouseLocationUpdate(MouseEvent event){
-        double mouseX = (event.getSceneX()-this.getLayoutX())* fieldMeasurementInches / fieldMeasurementPixels;
-        double mouseY = (event.getSceneY()-this.getLayoutY())* fieldMeasurementInches / fieldMeasurementPixels;
-        String mouseString = String.format("%.2f,%.2f",mouseX,mouseY);
+    public void mouseLocationUpdate(MouseEvent event) {
+        double mouseX = (event.getSceneX() - this.getLayoutX()) * fieldMeasurementInches / fieldMeasurementPixels;
+        double mouseY = (event.getSceneY() - this.getLayoutY()) * fieldMeasurementInches / fieldMeasurementPixels;
+        String mouseString = String.format("%.2f,%.2f", mouseX, mouseY);
         mouseLocation.setText(mouseString);
     }
 
-    public void selectedWayPointLocationUpdate(){
-        if(selectedPoint != null){
-            double wayPointX = (selectedPoint.getX())* fieldMeasurementInches / fieldMeasurementPixels;
-            double wayPointY = (selectedPoint.getY())* fieldMeasurementInches / fieldMeasurementPixels;
-            String wayPointString = String.format("%.2f,%.2f",wayPointX,wayPointY);
+    public void selectedWayPointLocationUpdate() {
+        if (selectedPoint != null) {
+            double wayPointX = (selectedPoint.getX()) * fieldMeasurementInches / fieldMeasurementPixels;
+            double wayPointY = (selectedPoint.getY()) * fieldMeasurementInches / fieldMeasurementPixels;
+            String wayPointString = String.format("%.2f,%.2f", wayPointX, wayPointY);
             selectedDrawableLocation.setText(wayPointString);
-        }
-        else{
+        } else {
             selectedDrawableLocation.setText("");
         }
     }
@@ -293,25 +310,19 @@ public class ProjectPane extends Pane {
         }
     }
 
-    public void addToPointHistory()
-    {
+    public void addToPointHistory() {
         List<Point> newValue = new ArrayList<>();
-        for(WayPoint wayPoint : points)
-        {
-            Point point = new Point(wayPoint.getX(),wayPoint.getY());
+        for (WayPoint wayPoint : points) {
+            Point point = new Point(wayPoint.getX(), wayPoint.getY());
             newValue.add(point);
         }
 
         List<Point> currentValue = pointHistory.isEmpty() ? null : pointHistory.get(currentIndex);
-        if(newValue.equals(currentValue))
-        {
+        if (newValue.equals(currentValue)) {
             // Don't do add anything
-        }
-        else
-        {
-            if(currentIndex != null)
-            {
-                pointHistory = pointHistory.subList(0,currentIndex+1);
+        } else {
+            if (currentIndex != null) {
+                pointHistory = pointHistory.subList(0, currentIndex + 1);
             }
             pointHistory.add(newValue);
             currentIndex = pointHistory.size() - 1;
@@ -322,13 +333,12 @@ public class ProjectPane extends Pane {
         /*
          * Moves the current value to the previous value in the history
          */
-        if(currentIndex != 0)
-        {
+        if (currentIndex != 0) {
             currentIndex--;
         }
         List<Point> currentValue = pointHistory.isEmpty() ? null : pointHistory.get(currentIndex);
 
-        if(currentValue != null){
+        if (currentValue != null) {
             loadPoints(currentValue);
         }
     }
@@ -337,14 +347,13 @@ public class ProjectPane extends Pane {
         /*
          * Moves the current value to the next value in the history
          */
-        if(currentIndex != pointHistory.size()-1)
-        {
+        if (currentIndex != pointHistory.size() - 1) {
             currentIndex++;
         }
 
         List<Point> currentValue = pointHistory.isEmpty() ? null : pointHistory.get(currentIndex);
 
-        if(currentValue != null){
+        if (currentValue != null) {
             loadPoints(currentValue);
         }
     }
@@ -390,16 +399,16 @@ public class ProjectPane extends Pane {
         WayPoint circle = (WayPoint) mouseEvent.getTarget();
         double mouseX = mouseEvent.getSceneX() - this.getLayoutX();
         double mouseY = mouseEvent.getSceneY() - this.getLayoutY();
-        if(mouseX < 0){
+        if (mouseX < 0) {
             mouseX = 0;
         }
-        if(mouseY < 0){
+        if (mouseY < 0) {
             mouseY = 0;
         }
-        if(mouseX > fieldMeasurementPixels){
+        if (mouseX > fieldMeasurementPixels) {
             mouseX = fieldMeasurementPixels;
         }
-        if(mouseY > fieldMeasurementPixels){
+        if (mouseY > fieldMeasurementPixels) {
             mouseY = fieldMeasurementPixels;
         }
         circle.setCirclePositionSet(mouseX, mouseY);
@@ -425,7 +434,7 @@ public class ProjectPane extends Pane {
         if (point != null) {
             point.setSelected(true);
         }
-        selectedPoint = (WayPoint) point;
+        selectedPoint = point;
         selectedWayPointLocationUpdate();
     }
 
@@ -444,7 +453,7 @@ public class ProjectPane extends Pane {
         if (line != null) {
             line.setSelected(true);
         }
-        selectedLine = (LineConnector) line;
+        selectedLine = line;
     }
 
     public void processClearPress() {
@@ -455,7 +464,7 @@ public class ProjectPane extends Pane {
     public void clear() {
         drives.selectToggle(null);
 
-        while(points.size() != 0){
+        while (points.size() != 0) {
             deleteWayPoint(points.get(0));
         }
     }
@@ -476,10 +485,9 @@ public class ProjectPane extends Pane {
             selectLine(null);
         }
         if (event.getCode() == KeyCode.Z && event.isControlDown()) {
-            if (event.isShiftDown()){
+            if (event.isShiftDown()) {
                 redo();
-            }
-            else{
+            } else {
                 undo();
             }
         }
@@ -686,7 +694,7 @@ public class ProjectPane extends Pane {
 
     public void savePoints(File file) {
         try {
-            if(file == null){
+            if (file == null) {
                 return;
             }
             savePoints(file, points);
@@ -726,15 +734,14 @@ public class ProjectPane extends Pane {
 
     public void loadPoints(List<Point> points) {
         clear();
-        for(Point point : points){
-            createWayPoint((int) point.getX(),(int) point.getY());
+        for (Point point : points) {
+            createWayPoint((int) point.getX(), (int) point.getY());
         }
     }
 
-    public void generateCode(File codeFile){
-        FileWriter fileWriter = null;
+    public void generateCode(File codeFile) {
         try {
-            fileWriter = new FileWriter(codeFile);
+            FileWriter fileWriter = new FileWriter(codeFile);
             String fileName = codeFile.getName();
             String[] fileNameArray = fileName.split("\\.");
             setRootName(fileNameArray[0]);
@@ -755,7 +762,7 @@ public class ProjectPane extends Pane {
                     " * Created with Team 6183's Duckinator 3000\n" +
                     " */\n" +
                     "\n" +
-                    "@Autonomous(name = \""+fileNameArray[0]+"\", group = \"DuckSquad\")\n" +
+                    "@Autonomous(name = \"" + fileNameArray[0] + "\", group = \"DuckSquad\")\n" +
                     "public class " + fileNameArray[0] + " extends LinearOpMode {\n" +
                     driveMotors +
                     "    private int globalAngle;\n" +
@@ -824,11 +831,9 @@ public class ProjectPane extends Pane {
     }
 
     public void setRootName(String rootName) {
-        if(rootName == null){
+        if (rootName == null) {
             this.rootName = DEFAULT_ROOT_NAME;
-        }
-        else
-        {
+        } else {
             this.rootName = rootName;
         }
     }

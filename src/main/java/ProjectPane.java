@@ -474,7 +474,7 @@ public class ProjectPane extends Pane {
     }
 
     public void gameAreaKeyPress(KeyEvent event) {
-        if (event.getCode() == KeyCode.DELETE) {
+        if (event.getCode() == KeyCode.DELETE || event.getCode() == KeyCode.BACK_SPACE) {
             if (selectedPoint != null) {
                 deleteWayPoint(selectedPoint);
                 addToPointHistory();

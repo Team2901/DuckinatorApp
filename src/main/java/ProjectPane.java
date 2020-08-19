@@ -1,4 +1,4 @@
-/*
+package main.java;/*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
@@ -97,7 +97,7 @@ public class ProjectPane extends Pane {
         rect = new Rectangle(1200, 600, Color.BLANCHEDALMOND);
         getChildren().add(rect);
 
-        field = new Image(this.getClass().getResourceAsStream("/field.png"));
+        field = new Image(this.getClass().getResourceAsStream("/main/resources/field.png"));
         fieldHolder = new ImageView(field);
         fieldHolder.setFitHeight(fieldMeasurementPixels);
         fieldHolder.setFitWidth(fieldMeasurementPixels);
@@ -105,7 +105,7 @@ public class ProjectPane extends Pane {
         fieldHolder.setLayoutY(0);
         getChildren().add(fieldHolder);
 
-        duck = new Image(this.getClass().getResourceAsStream("/duck.png"));
+        duck = new Image(this.getClass().getResourceAsStream("/main/resources/duck.png"));
         duckHolder = new ImageView(duck);
         duckHolder.setFitHeight(150);
         duckHolder.setFitWidth(163);

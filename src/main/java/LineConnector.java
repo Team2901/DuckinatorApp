@@ -8,7 +8,7 @@ public class LineConnector extends Line implements Drawable {
     public Drawable drawAfter = null;
     public Line subLine;
 
-    public LineConnector(Integer x1, Integer y1, Integer x2, Integer y2) {
+    public LineConnector(double x1, double y1, double x2, double y2) {
         super(x1, y1, x2, y2);
         this.setStroke(Color.TRANSPARENT);
         this.setStrokeWidth(5.0);

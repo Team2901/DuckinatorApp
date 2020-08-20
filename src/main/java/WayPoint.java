@@ -3,6 +3,7 @@ package main.java;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 
+import static main.java.ProjectPane.FIELD_MEASUREMENT_INCHES;
 import static main.java.ProjectPane.FIELD_MEASUREMENT_PIXELS;
 
 public class WayPoint extends Circle implements Drawable {
@@ -16,14 +17,19 @@ public class WayPoint extends Circle implements Drawable {
     public Color originalColor;
     public Circle subCircle;
 
-    public WayPoint(int xPoint, int yPoint) {
+    public double xInches;
+    public double yInches;
+
+    public WayPoint(double xPoint, double yPoint) {
         this(xPoint, yPoint, subsequentPointsRadius, bufferZone, Color.BLACK);
     }
 
-    private WayPoint(int xPoint, int yPoint, int i, int bufferZone, Color color) {
-        super(xPoint, yPoint, bufferZone, Color.TRANSPARENT);
+    private WayPoint(double xInches, double yInches, int i, int bufferZone, Color color) {
+        super(0, 0, bufferZone, Color.TRANSPARENT);
         originalColor = color;
-        subCircle = new Circle(xPoint, yPoint, i, originalColor);
+        subCircle = new Circle(0, 0, i, originalColor);
+
+        setCenterInches(xInches, yInches);
     }
 
     public String getName() {
@@ -38,22 +44,41 @@ public class WayPoint extends Circle implements Drawable {
         }
     }
 
-    public void setCirclePositionSet(double x, double y) {
+    public void setCenterInches(double xInches, double yInches) {
 
-        double centerX = Math.max(Math.min(x, FIELD_MEASUREMENT_PIXELS), 0);
-        double centerY = Math.max(Math.min(y, FIELD_MEASUREMENT_PIXELS), 0);
+        this.xInches = Math.max(Math.min(xInches, FIELD_MEASUREMENT_INCHES), 0);
+        this.yInches = Math.max(Math.min(yInches, FIELD_MEASUREMENT_INCHES), 0);
 
-        subCircle.setCenterX(centerX);
-        subCircle.setCenterY(centerY);
-        this.setCenterX(centerX);
-        this.setCenterY(centerY);
+        double xPixels = this.xInches / FIELD_MEASUREMENT_INCHES * FIELD_MEASUREMENT_PIXELS;
+        double yPixels = FIELD_MEASUREMENT_PIXELS - (this.yInches / FIELD_MEASUREMENT_INCHES * FIELD_MEASUREMENT_PIXELS);
+
+        _setCenterPixels(xPixels, yPixels);
+    }
+
+    public void setCenterPixels(double xPixelsRaw, double yPixelsRaw) {
+
+        double xPixels = Math.max(Math.min(xPixelsRaw, FIELD_MEASUREMENT_PIXELS), 0);
+        double yPixels = Math.max(Math.min(yPixelsRaw, FIELD_MEASUREMENT_PIXELS), 0);
+
+        this.xInches = xPixels / FIELD_MEASUREMENT_PIXELS * FIELD_MEASUREMENT_INCHES;
+        this.yInches = (FIELD_MEASUREMENT_PIXELS - yPixels) / FIELD_MEASUREMENT_PIXELS * FIELD_MEASUREMENT_INCHES;
+
+        _setCenterPixels(xPixels, yPixels);
+    }
+
+    private void _setCenterPixels(double xPixels, double yPixels) {
+
+        subCircle.setCenterX(xPixels);
+        subCircle.setCenterY(yPixels);
+        this.setCenterX(xPixels);
+        this.setCenterY(yPixels);
         LineConnector beforeLine = (LineConnector) this.getBefore();
         LineConnector afterLine = (LineConnector) this.getAfter();
         if (beforeLine != null) {
-            beforeLine.setLinePositionSetEnd(centerX, centerY);
+            beforeLine.setLinePositionSetEnd(xPixels, yPixels);
         }
         if (afterLine != null) {
-            afterLine.setLinePositionSetStart(centerX, centerY);
+            afterLine.setLinePositionSetStart(xPixels, yPixels);
         }
     }
 
@@ -110,7 +135,7 @@ public class WayPoint extends Circle implements Drawable {
     }
 
     public void setFirstPoint(boolean b) {
-        if (b == false) {
+        if (!b) {
             subCircle.setFill(Color.BLACK);
             originalColor = Color.BLACK;
             subCircle.setRadius(subsequentPointsRadius);
@@ -121,11 +146,11 @@ public class WayPoint extends Circle implements Drawable {
         }
     }
 
-    public int getX() {
-        return (int) this.getCenterX();
+    public double getXInches() {
+        return xInches;
     }
 
-    public int getY() {
-        return (int) (FIELD_MEASUREMENT_PIXELS - this.getCenterY());
+    public double getYInches() {
+        return yInches;
     }
 }

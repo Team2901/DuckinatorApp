@@ -171,24 +171,22 @@ public class ProjectPane extends Pane {
 
         String name = updateDrawableNameField.getText().trim();
 
-        double xPixels, yPixels;
+        double xInches, yInches;
 
         if (!updateDrawableXField.getText().isBlank()) {
-            double xInches = Double.parseDouble(updateDrawableXField.getText());
-            xPixels = xInches / FIELD_MEASUREMENT_INCHES * FIELD_MEASUREMENT_PIXELS;
+            xInches = Double.parseDouble(updateDrawableXField.getText());
         } else {
-            xPixels = selectedPoint.getX();
+            xInches = selectedPoint.getXInches();
         }
 
         if (!updateDrawableYField.getText().isBlank()) {
-            double yInches = Double.parseDouble(updateDrawableYField.getText());
-            yPixels = FIELD_MEASUREMENT_PIXELS - yInches / FIELD_MEASUREMENT_INCHES * FIELD_MEASUREMENT_PIXELS;
+            yInches = Double.parseDouble(updateDrawableYField.getText());
         } else {
-            yPixels = selectedPoint.getX();
+            yInches = selectedPoint.getYInches();
         }
 
         selectedPoint.setName(name);
-        selectedPoint.setCirclePositionSet(xPixels, yPixels);
+        selectedPoint.setCenterInches(xInches, yInches);
 
         updatePointsListView(selectedPoint);
     }
@@ -206,11 +204,8 @@ public class ProjectPane extends Pane {
                 getChildren().add(updateOptionsLayout);
             }
 
-            double wayPointX = (selectedPoint.getX()) * FIELD_MEASUREMENT_INCHES / FIELD_MEASUREMENT_PIXELS;
-            double wayPointY = (selectedPoint.getY()) * FIELD_MEASUREMENT_INCHES / FIELD_MEASUREMENT_PIXELS;
-
-            updateDrawableXField.setText(String.valueOf(wayPointX));
-            updateDrawableYField.setText(String.valueOf(wayPointY));
+            updateDrawableXField.setText(String.valueOf(selectedPoint.getXInches()));
+            updateDrawableYField.setText(String.valueOf(selectedPoint.getYInches()));
             updateDrawableNameField.setText(selectedPoint.getName());
         }
     }
@@ -249,10 +244,7 @@ public class ProjectPane extends Pane {
 
     private void updatePointsListView(Label label, WayPoint wayPoint) {
 
-        double wayPointX = (wayPoint.getX()) * FIELD_MEASUREMENT_INCHES / FIELD_MEASUREMENT_PIXELS;
-        double wayPointY = (wayPoint.getY()) * FIELD_MEASUREMENT_INCHES / FIELD_MEASUREMENT_PIXELS;
-
-        String wayPointString = String.format("%s %.2f,%.2f", wayPoint.getName(), wayPointX, wayPointY);
+        String wayPointString = String.format("%s %.2f,%.2f", wayPoint.getName(), wayPoint.getXInches(), wayPoint.getYInches());
 
         label.setText(wayPointString);
 
@@ -269,9 +261,7 @@ public class ProjectPane extends Pane {
 
     public void selectedWayPointLocationUpdate() {
         if (selectedPoint != null) {
-            double wayPointX = (selectedPoint.getX()) * FIELD_MEASUREMENT_INCHES / FIELD_MEASUREMENT_PIXELS;
-            double wayPointY = (selectedPoint.getY()) * FIELD_MEASUREMENT_INCHES / FIELD_MEASUREMENT_PIXELS;
-            String wayPointString = String.format("%.2f,%.2f", wayPointX, wayPointY);
+            String wayPointString = String.format("%.2f,%.2f", selectedPoint.getXInches(), selectedPoint.getYInches());
             selectedDrawableLocation.setText(wayPointString);
         } else {
             selectedDrawableLocation.setText("");
@@ -280,9 +270,13 @@ public class ProjectPane extends Pane {
 
     public void processMousePress(MouseEvent e) {
         if (e.getSource() == fieldHolder) {
-            int xPoint = (int) e.getSceneX() - (int) this.getLayoutX();
-            int yPoint = (int) e.getSceneY() - (int) this.getLayoutY();
-            createWayPoint(xPoint, yPoint);
+            double xPixels = e.getSceneX() - this.getLayoutX();
+            double yPixels = e.getSceneY() - this.getLayoutY();
+
+            double xInches = xPixels / FIELD_MEASUREMENT_PIXELS * FIELD_MEASUREMENT_INCHES;
+            double yInches = (FIELD_MEASUREMENT_PIXELS - yPixels) / FIELD_MEASUREMENT_PIXELS * FIELD_MEASUREMENT_INCHES;
+
+            createWayPoint(xInches, yInches);
             addToPointHistory();
         }
     }
@@ -290,7 +284,7 @@ public class ProjectPane extends Pane {
     public void addToPointHistory() {
         List<Point> newValue = new ArrayList<>();
         for (WayPoint wayPoint : points) {
-            Point point = new Point(wayPoint.getX(), wayPoint.getY());
+            Point point = new Point(wayPoint.getXInches(), wayPoint.getYInches());
             newValue.add(point);
         }
 
@@ -333,7 +327,7 @@ public class ProjectPane extends Pane {
         }
     }
 
-    public void createWayPoint(int xPoint, int yPoint) {
+    public void createWayPoint(double xPoint, double yPoint) {
         if (points.isEmpty()) {
             WayPoint startCircle = new WayPoint(xPoint, yPoint);
             startCircle.setOnMousePressed(this::selectPointPress);
@@ -360,7 +354,7 @@ public class ProjectPane extends Pane {
                 lastWayPoint = points.get(points.size() - 1);
                 index = points.size();
             }
-            LineConnector line = new LineConnector((int) lastWayPoint.getCenterX(), (int) lastWayPoint.getCenterY(), xPoint, yPoint);
+            LineConnector line = new LineConnector((int) lastWayPoint.getCenterX(), (int) lastWayPoint.getCenterY(), nextCircles.getCenterX(), nextCircles.getCenterY());
             line.setOnMousePressed(this::selectLinePress);
             addDrawable(line, lastWayPoint);
             addDrawable(nextCircles, line);
@@ -372,10 +366,11 @@ public class ProjectPane extends Pane {
 
     private void dragPoint(MouseEvent mouseEvent) {
         WayPoint circle = (WayPoint) mouseEvent.getTarget();
-        double mouseX = mouseEvent.getSceneX() - this.getLayoutX();
-        double mouseY = mouseEvent.getSceneY() - this.getLayoutY();
 
-        circle.setCirclePositionSet(mouseX, mouseY);
+        double xPixels = mouseEvent.getSceneX() - this.getLayoutX();
+        double yPixels = mouseEvent.getSceneY() - this.getLayoutY();
+
+        circle.setCenterPixels(xPixels, yPixels);
         updatePointsListView(circle);
         selectedWayPointLocationUpdate();
     }
@@ -505,6 +500,7 @@ public class ProjectPane extends Pane {
 
         removeDrawable(point);
 
+        removePointsListView(point);
         points.remove(point);
 
         selectPoint(null);
@@ -550,7 +546,7 @@ public class ProjectPane extends Pane {
     public void savePoints(File filePath, ArrayList<WayPoint> pointsInGivenPathway) throws IOException {
         FileWriter fileWriter = new FileWriter(filePath);
         for (WayPoint point : pointsInGivenPathway) {
-            String pointString = String.format("%s,%s\n", point.getX(), point.getY());
+            String pointString = String.format("%f,%f\n", point.getXInches(), point.getYInches());
             fileWriter.write(pointString);
         }
         fileWriter.close();
@@ -563,7 +559,7 @@ public class ProjectPane extends Pane {
         String line = bufferedReader.readLine();
         while (line != null) {
             String[] lineArray = line.split(",");
-            createWayPoint(parseInt(lineArray[0]), parseInt(lineArray[1]));
+            createWayPoint(Double.parseDouble(lineArray[0]), Double.parseDouble(lineArray[1]));
             line = bufferedReader.readLine();
         }
         addToPointHistory();
@@ -602,13 +598,11 @@ public class ProjectPane extends Pane {
                 WayPoint currentPoint = points.get(ii);
                 WayPoint lastPoint = points.get(ii -1);
 
-                int dx = lastPoint.getX() - currentPoint.getX();
-                int dy = lastPoint.getY() - currentPoint.getY();
+                double dx = lastPoint.getXInches() - currentPoint.getXInches();
+                double dy = lastPoint.getYInches() - currentPoint.getYInches();
 
-                double distanceInPixels = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
+                double distanceInInches = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
                 double targetAngle = Math.atan2(dy, dx) * 180 / Math.PI;
-
-                double distanceInInches = distanceInPixels * FIELD_MEASUREMENT_INCHES / FIELD_MEASUREMENT_PIXELS;
 
                 if (ii == 1) {
                     initAngle = targetAngle;

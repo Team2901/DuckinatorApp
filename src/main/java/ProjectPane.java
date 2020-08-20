@@ -4,10 +4,10 @@ package main.java;/*
  * and open the template in the editor.
  */
 
-import javafx.event.ActionEvent;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
-import javafx.scene.control.*;
+import javafx.scene.control.RadioButton;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -30,38 +30,28 @@ import static java.lang.Integer.parseInt;
 
 public class ProjectPane extends Pane {
 
+    private enum DriveBase {
+        TANK_DRIVE,
+        X_DRIVE,
+        MECHANUM
+    }
+
     private static final String DEFAULT_ROOT_NAME = "DuckinatorAuto";
     private final ImageView fieldHolder;
     private final double fieldMeasurementPixels = 510;
     private final double fieldMeasurementInches = 144;
-    private final String tankDriveMotors;
-    private final String holonomicDriveMotors;
-    private final String tankDriveInit;
-    private final String holonomicDriveInit;
-    private final String resetBusyForwardTank;
-    private final String rotateTank;
-    private final String rotateHolo;
-    private final String tankZPower;
-    private final String holoZPower;
-    private final RadioButton tankDrive;
-    private final RadioButton holonomicDrive;
-    private final RadioButton mecanumDrive;
+
     private final Label mouseLocation;
     private final Label selectedDrawableLocation;
     final ArrayList<WayPoint> points = new ArrayList<>();
-    private double multiplier;
-    private String driveMotors;
-    private String driveInit;
-    private String resetBusyForwardHoloMeca;
-    private String resetBusyForward;
-    private String rotating;
-    private String zPower;
+
     private WayPoint selectedPoint;
     private LineConnector selectedLine;
     private List<List<Point>> pointHistory = new ArrayList<>();
     private Integer currentIndex = null;
     private String rootName;
-    int togglingKeep = 1;
+
+    DriveBase selectedDriveBase = DriveBase.TANK_DRIVE;
 
     public ProjectPane() {
 
@@ -87,137 +77,31 @@ public class ProjectPane extends Pane {
 
         ToggleGroup drives = new ToggleGroup();
 
-        tankDrive = new RadioButton("Tank Drive");
+        RadioButton tankDrive = new RadioButton("Tank Drive");
         tankDrive.setLayoutX(545);
         tankDrive.setLayoutY(270);
         tankDrive.setToggleGroup(drives);
         tankDrive.setSelected(true);
         getChildren().add(tankDrive);
 
-        holonomicDrive = new RadioButton("X-Drive");
+        RadioButton holonomicDrive = new RadioButton("X-Drive");
         holonomicDrive.setLayoutX(670);
         holonomicDrive.setLayoutY(270);
         holonomicDrive.setToggleGroup(drives);
         getChildren().add(holonomicDrive);
 
-        mecanumDrive = new RadioButton("Mecanum");
+        RadioButton mecanumDrive = new RadioButton("Mecanum");
         mecanumDrive.setLayoutX(795);
         mecanumDrive.setLayoutY(270);
         mecanumDrive.setToggleGroup(drives);
         getChildren().add(mecanumDrive);
 
-        tankDriveMotors = (
-                "    private DcMotor leftWheel;\n" +
-                        "    private DcMotor rightWheel;\n"
-        );
-
-        holonomicDriveMotors = (
-                "    private DcMotor fl;\n" +
-                        "    private DcMotor fr;\n" +
-                        "    private DcMotor bl;\n" +
-                        "    private DcMotor br;\n" +
-                        "//holonomic encoder counts are slightly inaccurate and need to be tested due to different amounts of force and friction on the wheels depending on what you get\n" +
-                        "//please adjust personally to each program, we have accounted for slight slippage but just please make sure\n"
-        );
-
-        tankDriveInit = (
-                "        leftWheel = hardwareMap.dcMotor.get(\"leftWheel\");\n" +
-                        "        rightWheel = hardwareMap.dcMotor.get(\"rightWheel\");\n" +
-                        "        rightWheel.setDirection(DcMotor.Direction.REVERSE);\n"
-        );
-
-        holonomicDriveInit = (
-                "        fl = hardwareMap.dcMotor.get(\"fl\");\n" +
-                        "        fr = hardwareMap.dcMotor.get(\"fr\");\n" +
-                        "        bl = hardwareMap.dcMotor.get(\"bl\");\n" +
-                        "        br = hardwareMap.dcMotor.get(\"br\");\n"
-        );
-
-        resetBusyForwardTank = (
-                "    public void motorReset() {\n" +
-                        "        leftWheel.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);\n" +
-                        "        rightWheel.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);\n" +
-                        "        rightWheel.setMode(DcMotor.RunMode.RUN_TO_POSITION);\n" +
-                        "        leftWheel.setMode(DcMotor.RunMode.RUN_TO_POSITION);\n" +
-                        "    }\n" +
-                        "    public void powerBusy() {\n" +
-                        "        leftWheel.setPower(0.5);\n" +
-                        "        rightWheel.setPower(0.5);\n" +
-                        "        while ((rightWheel.isBusy() && leftWheel.isBusy())){}\n" +
-                        "        leftWheel.setPower(0);\n" +
-                        "        rightWheel.setPower(0);\n" +
-                        "    }\n" +
-                        "    public void goForward(int encoderTicks){\n" +
-                        "        motorReset();\n" +
-                        "        rightWheel.setTargetPosition(encoderTicks);\n" +
-                        "        leftWheel.setTargetPosition(encoderTicks);\n" +
-                        "        powerBusy();\n" +
-                        "    }\n"
-        );
-
-
-        rotateTank = (
-                "    private void rotate(int degrees) {\n" +
-                        "        double leftPower, rightPower;\n" +
-                        "        resetAngle();\n" +
-                        "        if (degrees < 0) {   // turn right.\n" +
-                        "            leftPower = 0.5;\n" +
-                        "            rightPower = -0.5;\n" +
-                        "        }\n" +
-                        "        else if (degrees > 0) {   // turn left.\n" +
-                        "            leftPower = -0.5;\n" +
-                        "            rightPower = 0.5;\n" +
-                        "        }\n" +
-                        "        else return;\n" +
-                        "        leftWheel.setPower(leftPower);\n" +
-                        "        rightWheel.setPower(rightPower);\n"
-        );
-
-        rotateHolo = (
-                "    private void rotate(int degrees) {\n" +
-                        "        double flp, frp, blp, brp;\n" +
-                        "        resetAngle();\n" +
-                        "        if (degrees < 0) {   // turn right.\n" +
-                        "            flp = 0.5;\n" +
-                        "            frp = 0.5;\n" +
-                        "            blp = 0.5;\n" +
-                        "            brp = 0.5;\n" +
-                        "        }\n" +
-                        "        else if (degrees > 0) {   // turn left.\n" +
-                        "            flp = -0.5;\n" +
-                        "            frp = -0.5;\n" +
-                        "            blp = -0.5;\n" +
-                        "            brp = -0.5;\n" +
-                        "        }\n" +
-                        "        else return;\n" +
-                        "        fl.setPower(flp);\n" +
-                        "        fr.setPower(frp);\n" +
-                        "        bl.setPower(blp);\n" +
-                        "        br.setPower(brp);\n"
-        );
-
-        tankZPower = (
-                "        rightWheel.setPower(0);\n" +
-                        "        leftWheel.setPower(0);\n"
-        );
-
-        holoZPower = (
-                "        fl.setPower(0);\n" +
-                        "        fr.setPower(0);\n" +
-                        "        bl.setPower(0);\n" +
-                        "        br.setPower(0);\n"
-        );
-
-        tankDrive.setOnAction(this::processRadioButtons);
-        holonomicDrive.setOnAction(this::processRadioButtons);
-        mecanumDrive.setOnAction(this::processRadioButtons);
+        tankDrive.setOnAction(e -> selectedDriveBase = DriveBase.TANK_DRIVE);
+        holonomicDrive.setOnAction(e -> selectedDriveBase = DriveBase.X_DRIVE);
+        mecanumDrive.setOnAction(e -> selectedDriveBase = DriveBase.MECHANUM);
         fieldHolder.setOnMouseClicked(this::processMousePress);
         this.setOnKeyPressed(this::gameAreaKeyPress);
-        driveMotors = tankDriveMotors;
-        driveInit = tankDriveInit;
-        resetBusyForward = resetBusyForwardTank;
-        rotating = rotateTank;
-        zPower = tankZPower;
+
         mouseLocation = new Label();
         selectedDrawableLocation = new Label();
         mouseLocation.setLayoutX(0);
@@ -411,12 +295,6 @@ public class ProjectPane extends Pane {
         }
     }
 
-    public double convertInchesToEncoderTicks(double c) {
-        double ticksPerRotation = 1120;
-        double wheelDiameter = 4;
-        return ((c / (Math.PI * wheelDiameter)) * ticksPerRotation);
-    }
-
     public void gameAreaKeyPress(KeyEvent event) {
         if (event.getCode() == KeyCode.DELETE || event.getCode() == KeyCode.BACK_SPACE) {
             if (selectedPoint != null) {
@@ -437,71 +315,6 @@ public class ProjectPane extends Pane {
         }
     }
 
-    public void processRadioButtons(ActionEvent e) {
-
-        if ((e.getSource() == tankDrive)) {
-            driveMotors = tankDriveMotors;
-            driveInit = tankDriveInit;
-            resetBusyForward = resetBusyForwardTank;
-            rotating = rotateTank;
-            zPower = tankZPower;
-            togglingKeep = 1;
-        } else if (e.getSource() == holonomicDrive) {
-            driveMotors = holonomicDriveMotors;
-            driveInit = holonomicDriveInit;
-            multiplier = 1.2;
-            resety();
-            resetBusyForward = resetBusyForwardHoloMeca;
-            rotating = rotateHolo;
-            zPower = holoZPower;
-            togglingKeep = 2;
-
-        } else if (e.getSource() == mecanumDrive) {
-            driveMotors = holonomicDriveMotors;
-            driveInit = holonomicDriveInit;
-            multiplier = 1;
-            resety();
-            resetBusyForward = resetBusyForwardHoloMeca;
-            rotating = rotateHolo;
-            zPower = holoZPower;
-            togglingKeep = 3;
-        }
-    }
-
-    public void resety() {
-        resetBusyForwardHoloMeca = (
-                "    public void motorReset() {\n" +
-                        "        fl.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);\n" +
-                        "        fr.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);\n" +
-                        "        bl.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);\n" +
-                        "        br.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);\n" +
-                        "        fl.setMode(DcMotor.RunMode.RUN_TO_POSITION);\n" +
-                        "        fr.setMode(DcMotor.RunMode.RUN_TO_POSITION);\n" +
-                        "        bl.setMode(DcMotor.RunMode.RUN_TO_POSITION);\n" +
-                        "        br.setMode(DcMotor.RunMode.RUN_TO_POSITION);\n" +
-                        "    }\n" +
-                        "    public void powerBusy() {\n" +
-                        "        fl.setPower(0.5);\n" +
-                        "        fr.setPower(0.5);\n" +
-                        "        bl.setPower(0.5);\n" +
-                        "        br.setPower(0.5);\n" +
-                        "        while ((fl.isBusy() && fr())&&(bl.isBusy() && br.isBusy())){}\n" +
-                        "        fl.setPower(0);\n" +
-                        "        fr.setPower(0);\n" +
-                        "        bl.setPower(0);\n" +
-                        "        br.setPower(0);\n" +
-                        "    }\n" +
-                        "    public void goForward(int encoderTicks){\n" +
-                        "        motorReset();\n" +
-                        "        fl.setTargetPosition((int)Math.round(" + multiplier + "*encoderTicks));\n" +
-                        "        fr.setTargetPosition((int)Math.round(-" + multiplier + "*encoderTicks));\n" +
-                        "        bl.setTargetPosition((int)Math.round(" + multiplier + "*encoderTicks));\n" +
-                        "        br.setTargetPosition((int)Math.round(" + multiplier + "*encoderTicks ));\n" +
-                        "        powerBusy();\n" +
-                        "    }\n"
-        );
-    }
-
     private String convertArrayList(ArrayList<String> stringList) {
         return String.join("", stringList);
     }
@@ -514,20 +327,21 @@ public class ProjectPane extends Pane {
             if (ii == 0) continue;
             // 2 or more points present.
             // calculate the distance to travel between last point and this point
-            Double encoderCounts = distanceBetweenTwoPointsInEncoderCounts(points.get(ii), points.get(ii - 1));
+            double inches = distanceBetweenTwoPointsInInches(points.get(ii), points.get(ii - 1));
+
             // Three or more points present
             // calculate change in direction.
             if (ii > 1) {
                 double angleChange = changeInOrientation(points.get(ii - 2), points.get(ii - 1), points.get(ii));
-                movements.add(" rotate(" + (int) Math.round(angleChange) + ");\n");
+                movements.add("\t\t\trotateByAngle(" + (int) Math.round(angleChange) + ");\n");
             }
-            movements.add(" goForward(" + (int) Math.round(encoderCounts) + ");\n");
+            movements.add("\t\t\tgoStraightInches(" + inches + ");\n");
         }
 
         return convertArrayList(movements);
     }
 
-    private Double distanceBetweenTwoPointsInEncoderCounts(WayPoint firstPoint, WayPoint secondPoint) {
+    private Double distanceBetweenTwoPointsInInches(WayPoint firstPoint, WayPoint secondPoint) {
         int dx = secondPoint.getX() - firstPoint.getX();
         int dy = secondPoint.getY() - firstPoint.getY();
 
@@ -536,9 +350,7 @@ public class ProjectPane extends Pane {
 
         double distanceInPixels = Math.sqrt(dxSquared + dySquared);
 
-        double distanceInInches = distanceInPixels * fieldMeasurementInches / fieldMeasurementPixels;
-
-        return convertInchesToEncoderTicks(distanceInInches);
+        return  distanceInPixels * fieldMeasurementInches / fieldMeasurementPixels;
     }
 
     private double changeInOrientation(WayPoint firstPoint, WayPoint secondPoint, WayPoint thirdPoint) {
@@ -678,84 +490,34 @@ public class ProjectPane extends Pane {
 
     public void generateCode(File codeFile) {
         try {
+
             FileWriter fileWriter = new FileWriter(codeFile);
-            String fileName = codeFile.getName();
-            String[] fileNameArray = fileName.split("\\.");
-            setRootName(fileNameArray[0]);
-            String code = "package org.firstinspires.ftc.teamcode;\n" +
-                    "import com.qualcomm.hardware.bosch.BNO055IMU;\n" +
+            String javaClassName = codeFile.getName().split("\\.")[0];
+
+            setRootName(javaClassName);
+
+            String code = "package org.firstinspires.ftc.teamcode.PurplePathFinder;\n" +
+                    "\n" +
                     "import com.qualcomm.robotcore.eventloop.opmode.Autonomous;\n" +
-                    "import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;\n" +
-                    "import com.qualcomm.robotcore.hardware.DcMotor;\n" +
                     "\n" +
-                    "import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;\n" +
-                    "import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;\n" +
-                    "import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;\n" +
-                    "import org.firstinspires.ftc.robotcore.external.navigation.Orientation;\n" +
-                    "import org.firstinspires.ftc.robotcore.external.navigation.Position;\n" +
-                    "import org.firstinspires.ftc.robotcore.external.navigation.Velocity;\n" +
-                    "\n" +
-                    "/**\n" +
-                    " * Created with Team 6183's Duckinator 3000\n" +
-                    " */\n" +
-                    "\n" +
-                    "@Autonomous(name = \"" + fileNameArray[0] + "\", group = \"DuckSquad\")\n" +
-                    "public class " + fileNameArray[0] + " extends LinearOpMode {\n" +
-                    driveMotors +
-                    "    private int globalAngle;\n" +
-                    "    BNO055IMU imu;\n" +
-                    "    Orientation lastAngles = new Orientation();\n" +
+                    "@Autonomous(name = \"" + javaClassName + "\", group = \"PurplePathFinder\")\n" +
+                    "public class " + javaClassName + " extends " + getBaseDriveClassName() + " {\n" +
                     "    @Override\n" +
                     "    public void runOpMode() throws InterruptedException {\n" +
-                    "        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();\n" +
-                    "        parameters.mode = BNO055IMU.SensorMode.IMU;\n" +
-                    "        parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;\n" +
-                    "        parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;\n" +
-                    "        parameters.loggingEnabled = false;\n" +
-                    "        imu = hardwareMap.get(BNO055IMU.class, \"imu\");\n" +
-                    "        imu.initialize(parameters);\n" +
-                    "        // make sure the imu gyro is calibrated before continuing.\n" +
-                    "        while (!isStopRequested() && !imu.isGyroCalibrated())\n" +
-                    "        {\n" +
-                    "            sleep(50);\n" +
-                    "            idle();\n" +
-                    "        }\n" +
-                    driveInit +
+                    "        initRobot();\n" +
                     "        waitForStart();\n" +
-                    "        if (opModeIsActive()){\n" +
-                    " //Our version \n" +
-                    moveHereTwo(points) +
+                    "        if (opModeIsActive()) {\n" +
                     "\n" +
+                    // TODO init angle
+                    "            final double initAngle = 0;\n" +
+                    "\n" +
+                    "            setRobotAngleOffset(getRobotAngle() - initAngle);\n" +
+                    "\n" +
+                    moveHereTwo(points) +
                     "        }\n" +
-                    "    }\n" +
-                    resetBusyForward +
-                    "    private void resetAngle() {\n" +
-                    "        lastAngles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);\n" +
-                    "        globalAngle = 0;\n" +
-                    "    }\n" +
-                    "    private double getAngle() {\n" +
-                    "        Orientation angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);\n" +
-                    "        double deltaAngle = angles.firstAngle - lastAngles.firstAngle;\n" +
-                    "        if (deltaAngle < -180)\n" +
-                    "            deltaAngle += 360;\n" +
-                    "        else if (deltaAngle > 180)\n" +
-                    "            deltaAngle -= 360;\n" +
-                    "        globalAngle += deltaAngle;\n" +
-                    "        lastAngles = angles;\n" +
-                    "        return globalAngle;\n" +
-                    "    }\n" +
-                    rotating +
-                    "        if (degrees < 0) {//right\n" +
-                    "            while (opModeIsActive() && getAngle() == 0) {}\n" +
-                    "            while (opModeIsActive() && getAngle() > degrees) {}\n" +
-                    "        } else {//left\n" +
-                    "            while (opModeIsActive() && getAngle() < degrees) {}\n" +
-                    "        }\n" +
-                    zPower +
-                    "        sleep(1000);\n" +
-                    "        resetAngle();\n" +
                     "    }\n" +
                     "}";
+
             fileWriter.write(code);
             fileWriter.close();
         } catch (IOException e) {
@@ -769,5 +531,17 @@ public class ProjectPane extends Pane {
 
     public void setRootName(String rootName) {
         this.rootName = (rootName == null) ? DEFAULT_ROOT_NAME : rootName;
+    }
+
+    private String getBaseDriveClassName() {
+        switch (selectedDriveBase) {
+            case MECHANUM:
+                return "BasePurplePathFinderMechanum";
+            case X_DRIVE:
+                return "BasePurplePathFinderXDrive";
+            case TANK_DRIVE:
+            default:
+                return "BasePurplePathFinderTankDrive";
+        }
     }
 }

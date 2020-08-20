@@ -4,9 +4,14 @@ package main.java;/*
  * and open the template in the editor.
  */
 
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
 import javafx.scene.control.RadioButton;
+import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -14,6 +19,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
@@ -45,11 +51,17 @@ public class ProjectPane extends Pane {
     private final Label selectedDrawableLocation;
     final ArrayList<WayPoint> points = new ArrayList<>();
 
+    private final ListView<Label> pointsListView = new ListView<Label>();
     private WayPoint selectedPoint;
     private LineConnector selectedLine;
     private List<List<Point>> pointHistory = new ArrayList<>();
     private Integer currentIndex = null;
     private String rootName;
+
+    private final VBox updateOptionsLayout;
+    private final TextField updateDrawableNameField;
+    private final TextField updateDrawableXField;
+    private final TextField updateDrawableYField;
 
     DriveBase selectedDriveBase = DriveBase.TANK_DRIVE;
 
@@ -99,6 +111,47 @@ public class ProjectPane extends Pane {
         tankDrive.setOnAction(e -> selectedDriveBase = DriveBase.TANK_DRIVE);
         holonomicDrive.setOnAction(e -> selectedDriveBase = DriveBase.X_DRIVE);
         mecanumDrive.setOnAction(e -> selectedDriveBase = DriveBase.MECHANUM);
+
+        pointsListView.setLayoutX(800);
+        pointsListView.setLayoutY(0);
+        getChildren().add(pointsListView);
+
+        updateOptionsLayout = new VBox();
+        updateOptionsLayout.setLayoutX(545);
+        updateOptionsLayout.setLayoutY(0);
+        updateOptionsLayout.setSpacing(8);
+
+        updateDrawableNameField = new TextField();
+        updateDrawableXField = new TextField();
+        updateDrawableYField = new TextField();
+
+        updateDrawableXField.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue,
+                                String newValue) {
+                if (!newValue.matches("[0-9\\.]+")) {
+                    updateDrawableXField.setText(newValue.replaceAll("[^0-9\\.]", ""));
+                }
+            }
+        });
+
+        updateDrawableYField.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue,
+                                String newValue) {
+                if (!newValue.matches("\\d*\\.")) {
+                    updateDrawableYField.setText(newValue.replaceAll("[^0-9\\.]", ""));
+                }
+            }
+        });
+
+        Button updateDrawableButton = new Button("Update WayPoint");
+        updateDrawableButton.setOnMouseClicked(e -> onUpdateOptionsClicked());
+        updateOptionsLayout.getChildren().add(updateDrawableNameField);
+        updateOptionsLayout.getChildren().add(updateDrawableXField);
+        updateOptionsLayout.getChildren().add(updateDrawableYField);
+        updateOptionsLayout.getChildren().add(updateDrawableButton);
+
         fieldHolder.setOnMouseClicked(this::processMousePress);
         this.setOnKeyPressed(this::gameAreaKeyPress);
 
@@ -112,6 +165,99 @@ public class ProjectPane extends Pane {
         getChildren().add(selectedDrawableLocation);
         this.setOnMouseMoved(this::mouseLocationUpdate);
         this.setOnMouseDragged(this::mouseLocationUpdate);
+    }
+
+    public void onUpdateOptionsClicked() {
+
+        String name = updateDrawableNameField.getText().trim();
+
+        double xPixels, yPixels;
+
+        if (!updateDrawableXField.getText().isBlank()) {
+            double xInches = Double.parseDouble(updateDrawableXField.getText());
+            xPixels = xInches / FIELD_MEASUREMENT_INCHES * FIELD_MEASUREMENT_PIXELS;
+        } else {
+            xPixels = selectedPoint.getX();
+        }
+
+        if (!updateDrawableYField.getText().isBlank()) {
+            double yInches = Double.parseDouble(updateDrawableYField.getText());
+            yPixels = FIELD_MEASUREMENT_PIXELS - yInches / FIELD_MEASUREMENT_INCHES * FIELD_MEASUREMENT_PIXELS;
+        } else {
+            yPixels = selectedPoint.getX();
+        }
+
+        selectedPoint.setName(name);
+        selectedPoint.setCirclePositionSet(xPixels, yPixels);
+
+        updatePointsListView(selectedPoint);
+    }
+
+    public void setSelectedPointOptions() {
+
+        int index = getChildren().indexOf(updateOptionsLayout);
+
+        if (selectedPoint == null) {
+            if (index >=0) {
+                getChildren().remove(updateOptionsLayout);
+            }
+        } else {
+            if (index < 0) {
+                getChildren().add(updateOptionsLayout);
+            }
+
+            double wayPointX = (selectedPoint.getX()) * FIELD_MEASUREMENT_INCHES / FIELD_MEASUREMENT_PIXELS;
+            double wayPointY = (selectedPoint.getY()) * FIELD_MEASUREMENT_INCHES / FIELD_MEASUREMENT_PIXELS;
+
+            updateDrawableXField.setText(String.valueOf(wayPointX));
+            updateDrawableYField.setText(String.valueOf(wayPointY));
+            updateDrawableNameField.setText(selectedPoint.getName());
+        }
+    }
+
+    private void removePointsListView(WayPoint wayPoint) {
+        int index = points.indexOf(wayPoint);
+        pointsListView.getItems().remove(index);
+    }
+
+    private void addPointsListView(WayPoint wayPoint) {
+
+        int index = points.indexOf(wayPoint);
+
+        Label label = new Label();
+
+        label.setOnMouseClicked(e -> {
+            selectPoint(wayPoint);
+        });
+
+        pointsListView.getItems().add(index, label);
+
+        updatePointsListView(label, wayPoint);
+    }
+
+    private void updatePointsListView(WayPoint wayPoint) {
+
+        setSelectedPointOptions();
+
+        int index = wayPoint != null ? points.indexOf(wayPoint) : -1;
+
+        if (index >= 0) {
+            Label label = pointsListView.getItems().get(index);
+            updatePointsListView(label, wayPoint);
+        }
+    }
+
+    private void updatePointsListView(Label label, WayPoint wayPoint) {
+
+        double wayPointX = (wayPoint.getX()) * FIELD_MEASUREMENT_INCHES / FIELD_MEASUREMENT_PIXELS;
+        double wayPointY = (wayPoint.getY()) * FIELD_MEASUREMENT_INCHES / FIELD_MEASUREMENT_PIXELS;
+
+        String wayPointString = String.format("%s %.2f,%.2f", wayPoint.getName(), wayPointX, wayPointY);
+
+        label.setText(wayPointString);
+
+        pointsListView.scrollTo(label);
+        pointsListView.getSelectionModel().select(label);
     }
 
     public void mouseLocationUpdate(MouseEvent event) {
@@ -195,6 +341,7 @@ public class ProjectPane extends Pane {
             startCircle.setOnMouseReleased(this::releasePoint);
             addDrawable(startCircle, null);
             points.add(startCircle);
+            addPointsListView(startCircle);
         } else {
             WayPoint nextCircles = new WayPoint(xPoint, yPoint);
             nextCircles.setOnMousePressed(this::selectPointPress);
@@ -218,6 +365,7 @@ public class ProjectPane extends Pane {
             addDrawable(line, lastWayPoint);
             addDrawable(nextCircles, line);
             points.add(index, nextCircles);
+            addPointsListView(nextCircles);
         }
         selectLine(null);
     }
@@ -226,19 +374,9 @@ public class ProjectPane extends Pane {
         WayPoint circle = (WayPoint) mouseEvent.getTarget();
         double mouseX = mouseEvent.getSceneX() - this.getLayoutX();
         double mouseY = mouseEvent.getSceneY() - this.getLayoutY();
-        if (mouseX < 0) {
-            mouseX = 0;
-        }
-        if (mouseY < 0) {
-            mouseY = 0;
-        }
-        if (mouseX > FIELD_MEASUREMENT_PIXELS) {
-            mouseX = FIELD_MEASUREMENT_PIXELS;
-        }
-        if (mouseY > FIELD_MEASUREMENT_PIXELS) {
-            mouseY = FIELD_MEASUREMENT_PIXELS;
-        }
+
         circle.setCirclePositionSet(mouseX, mouseY);
+        updatePointsListView(circle);
         selectedWayPointLocationUpdate();
     }
 
@@ -253,6 +391,7 @@ public class ProjectPane extends Pane {
     private void selectPoint(WayPoint point) {
         if (selectedPoint != null) {
             selectedPoint.setSelected(false);
+            updatePointsListView(selectedPoint);
         }
         if (selectedLine != null) {
             selectedLine.setSelected(false);
@@ -261,7 +400,10 @@ public class ProjectPane extends Pane {
         if (point != null) {
             point.setSelected(true);
         }
+
         selectedPoint = point;
+        updatePointsListView(selectedPoint);
+
         selectedWayPointLocationUpdate();
     }
 
@@ -273,6 +415,7 @@ public class ProjectPane extends Pane {
         if (selectedPoint != null) {
             selectedPoint.setSelected(false);
             selectedPoint = null;
+            updatePointsListView(null);
         }
         if (selectedLine != null) {
             selectedLine.setSelected(false);
@@ -361,12 +504,15 @@ public class ProjectPane extends Pane {
         }
 
         removeDrawable(point);
+
         points.remove(point);
+
         selectPoint(null);
     }
 
     public void removeDrawable(Drawable remove) {
         getChildren().remove(remove);
+
         if (remove instanceof WayPoint) {
             WayPoint point = (WayPoint) remove;
             getChildren().remove(point.subCircle);

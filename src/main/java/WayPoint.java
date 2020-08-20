@@ -6,6 +6,8 @@ import javafx.scene.shape.Circle;
 import static main.java.ProjectPane.FIELD_MEASUREMENT_PIXELS;
 
 public class WayPoint extends Circle implements Drawable {
+
+    public String name = "WayPoint";
     public static int firstPointRadius = 3;
     public static int subsequentPointsRadius = 4;
     public static int bufferZone = 8;
@@ -24,18 +26,34 @@ public class WayPoint extends Circle implements Drawable {
         subCircle = new Circle(xPoint, yPoint, i, originalColor);
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        if (name.isBlank()) {
+            this.name = "WayPoint";
+        } else {
+            this.name = name;
+        }
+    }
+
     public void setCirclePositionSet(double x, double y) {
-        subCircle.setCenterX(x);
-        subCircle.setCenterY(y);
-        this.setCenterX(x);
-        this.setCenterY(y);
+
+        double centerX = Math.max(Math.min(x, FIELD_MEASUREMENT_PIXELS), 0);
+        double centerY = Math.max(Math.min(y, FIELD_MEASUREMENT_PIXELS), 0);
+
+        subCircle.setCenterX(centerX);
+        subCircle.setCenterY(centerY);
+        this.setCenterX(centerX);
+        this.setCenterY(centerY);
         LineConnector beforeLine = (LineConnector) this.getBefore();
         LineConnector afterLine = (LineConnector) this.getAfter();
         if (beforeLine != null) {
-            beforeLine.setLinePositionSetEnd(x, y);
+            beforeLine.setLinePositionSetEnd(centerX, centerY);
         }
         if (afterLine != null) {
-            afterLine.setLinePositionSetStart(x, y);
+            afterLine.setLinePositionSetStart(centerX, centerY);
         }
     }
 

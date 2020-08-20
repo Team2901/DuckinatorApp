@@ -2,28 +2,26 @@ package main.java;
 
 public class Point {
 
-    public double x;
-    public double y;
+    private final double x;
+    private final double y;
+    private final String name;
 
-    public Point() {
-        this(0, 0);
-    }
-
-    public Point(Point p) {
-        this(p.x, p.y);
-    }
-
-    public Point(double x, double y) {
-        this.x = x;
-        this.y = y;
+    public Point(WayPoint wayPoint){
+        this.name = wayPoint.getName();
+        this.x = wayPoint.getXInches();
+        this.y = wayPoint.getYInches();
     }
 
     public double getX() {
-        return (double)this.x;
+        return this.x;
     }
 
     public double getY() {
-        return (double)this.y;
+        return this.y;
     }
 
+
+    public String getName() {
+        return name;
+    }
 }

@@ -276,7 +276,7 @@ public class ProjectPane extends Pane {
             double xInches = xPixels / FIELD_MEASUREMENT_PIXELS * FIELD_MEASUREMENT_INCHES;
             double yInches = (FIELD_MEASUREMENT_PIXELS - yPixels) / FIELD_MEASUREMENT_PIXELS * FIELD_MEASUREMENT_INCHES;
 
-            createWayPoint(xInches, yInches);
+            createWayPoint("WayPoint",xInches, yInches);
             addToPointHistory();
         }
     }
@@ -284,7 +284,7 @@ public class ProjectPane extends Pane {
     public void addToPointHistory() {
         List<Point> newValue = new ArrayList<>();
         for (WayPoint wayPoint : points) {
-            Point point = new Point(wayPoint.getXInches(), wayPoint.getYInches());
+            Point point = new Point(wayPoint);
             newValue.add(point);
         }
 
@@ -327,9 +327,9 @@ public class ProjectPane extends Pane {
         }
     }
 
-    public void createWayPoint(double xPoint, double yPoint) {
+    public void createWayPoint(String name, double xPoint, double yPoint) {
         if (points.isEmpty()) {
-            WayPoint startCircle = new WayPoint(xPoint, yPoint);
+            WayPoint startCircle = new WayPoint(name, xPoint, yPoint);
             startCircle.setOnMousePressed(this::selectPointPress);
             startCircle.setOnMouseDragged(this::dragPoint);
             startCircle.setOnMouseReleased(this::releasePoint);
@@ -337,7 +337,7 @@ public class ProjectPane extends Pane {
             points.add(startCircle);
             addPointsListView(startCircle);
         } else {
-            WayPoint nextCircles = new WayPoint(xPoint, yPoint);
+            WayPoint nextCircles = new WayPoint(name, xPoint, yPoint);
             nextCircles.setOnMousePressed(this::selectPointPress);
             nextCircles.setOnMouseDragged(this::dragPoint);
             nextCircles.setOnMouseReleased(this::releasePoint);
@@ -354,7 +354,7 @@ public class ProjectPane extends Pane {
                 lastWayPoint = points.get(points.size() - 1);
                 index = points.size();
             }
-            LineConnector line = new LineConnector((int) lastWayPoint.getCenterX(), (int) lastWayPoint.getCenterY(), nextCircles.getCenterX(), nextCircles.getCenterY());
+            LineConnector line = new LineConnector(lastWayPoint.getCenterX(),  lastWayPoint.getCenterY(), nextCircles.getCenterX(), nextCircles.getCenterY());
             line.setOnMousePressed(this::selectLinePress);
             addDrawable(line, lastWayPoint);
             addDrawable(nextCircles, line);
@@ -546,7 +546,7 @@ public class ProjectPane extends Pane {
     public void savePoints(File filePath, ArrayList<WayPoint> pointsInGivenPathway) throws IOException {
         FileWriter fileWriter = new FileWriter(filePath);
         for (WayPoint point : pointsInGivenPathway) {
-            String pointString = String.format("%f,%f\n", point.getXInches(), point.getYInches());
+            String pointString = String.format("%s,%f,%f\n", point.getName(), point.getXInches(), point.getYInches());
             fileWriter.write(pointString);
         }
         fileWriter.close();
@@ -559,7 +559,7 @@ public class ProjectPane extends Pane {
         String line = bufferedReader.readLine();
         while (line != null) {
             String[] lineArray = line.split(",");
-            createWayPoint(Double.parseDouble(lineArray[0]), Double.parseDouble(lineArray[1]));
+            createWayPoint(lineArray[0], Double.parseDouble(lineArray[1]), Double.parseDouble(lineArray[2]));
             line = bufferedReader.readLine();
         }
         addToPointHistory();
@@ -572,7 +572,7 @@ public class ProjectPane extends Pane {
     public void loadPoints(List<Point> points) {
         clear();
         for (Point point : points) {
-            createWayPoint((int) point.getX(), (int) point.getY());
+            createWayPoint(point.getName(), point.getX(), point.getY());
         }
     }
 

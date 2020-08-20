@@ -8,7 +8,7 @@ import static main.java.ProjectPane.FIELD_MEASUREMENT_PIXELS;
 
 public class WayPoint extends Circle implements Drawable {
 
-    public String name = "WayPoint";
+    public String name;
     public static int firstPointRadius = 3;
     public static int subsequentPointsRadius = 4;
     public static int bufferZone = 8;
@@ -20,14 +20,12 @@ public class WayPoint extends Circle implements Drawable {
     public double xInches;
     public double yInches;
 
-    public WayPoint(double xPoint, double yPoint) {
-        this(xPoint, yPoint, subsequentPointsRadius, bufferZone, Color.BLACK);
-    }
-
-    private WayPoint(double xInches, double yInches, int i, int bufferZone, Color color) {
+    public WayPoint(String name, double xInches, double yInches) {
         super(0, 0, bufferZone, Color.TRANSPARENT);
-        originalColor = color;
-        subCircle = new Circle(0, 0, i, originalColor);
+
+        setName(name);
+        originalColor = Color.BLACK;
+        subCircle = new Circle(0, 0, subsequentPointsRadius, originalColor);
 
         setCenterInches(xInches, yInches);
     }

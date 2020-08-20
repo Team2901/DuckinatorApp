@@ -38,8 +38,8 @@ public class ProjectPane extends Pane {
 
     private static final String DEFAULT_ROOT_NAME = "DuckinatorAuto";
     private final ImageView fieldHolder;
-    private final double fieldMeasurementPixels = 510;
-    private final double fieldMeasurementInches = 144;
+    public static final double FIELD_MEASUREMENT_PIXELS = 510;
+    public static final double FIELD_MEASUREMENT_INCHES = 144;
 
     private final Label mouseLocation;
     private final Label selectedDrawableLocation;
@@ -61,8 +61,8 @@ public class ProjectPane extends Pane {
 
         Image field = new Image(this.getClass().getResourceAsStream("/main/resources/field.png"));
         fieldHolder = new ImageView(field);
-        fieldHolder.setFitHeight(fieldMeasurementPixels);
-        fieldHolder.setFitWidth(fieldMeasurementPixels);
+        fieldHolder.setFitHeight(FIELD_MEASUREMENT_PIXELS);
+        fieldHolder.setFitWidth(FIELD_MEASUREMENT_PIXELS);
         fieldHolder.setLayoutX(0);
         fieldHolder.setLayoutY(0);
         getChildren().add(fieldHolder);
@@ -115,16 +115,16 @@ public class ProjectPane extends Pane {
     }
 
     public void mouseLocationUpdate(MouseEvent event) {
-        double mouseX = (event.getSceneX() - this.getLayoutX()) * fieldMeasurementInches / fieldMeasurementPixels;
-        double mouseY = (event.getSceneY() - this.getLayoutY()) * fieldMeasurementInches / fieldMeasurementPixels;
+        double mouseX = (event.getSceneX() - this.getLayoutX()) * FIELD_MEASUREMENT_INCHES / FIELD_MEASUREMENT_PIXELS;
+        double mouseY = (FIELD_MEASUREMENT_PIXELS - (event.getSceneY() - this.getLayoutY())) * FIELD_MEASUREMENT_INCHES / FIELD_MEASUREMENT_PIXELS;
         String mouseString = String.format("%.2f,%.2f", mouseX, mouseY);
         mouseLocation.setText(mouseString);
     }
 
     public void selectedWayPointLocationUpdate() {
         if (selectedPoint != null) {
-            double wayPointX = (selectedPoint.getX()) * fieldMeasurementInches / fieldMeasurementPixels;
-            double wayPointY = (selectedPoint.getY()) * fieldMeasurementInches / fieldMeasurementPixels;
+            double wayPointX = (selectedPoint.getX()) * FIELD_MEASUREMENT_INCHES / FIELD_MEASUREMENT_PIXELS;
+            double wayPointY = (selectedPoint.getY()) * FIELD_MEASUREMENT_INCHES / FIELD_MEASUREMENT_PIXELS;
             String wayPointString = String.format("%.2f,%.2f", wayPointX, wayPointY);
             selectedDrawableLocation.setText(wayPointString);
         } else {
@@ -232,11 +232,11 @@ public class ProjectPane extends Pane {
         if (mouseY < 0) {
             mouseY = 0;
         }
-        if (mouseX > fieldMeasurementPixels) {
-            mouseX = fieldMeasurementPixels;
+        if (mouseX > FIELD_MEASUREMENT_PIXELS) {
+            mouseX = FIELD_MEASUREMENT_PIXELS;
         }
-        if (mouseY > fieldMeasurementPixels) {
-            mouseY = fieldMeasurementPixels;
+        if (mouseY > FIELD_MEASUREMENT_PIXELS) {
+            mouseY = FIELD_MEASUREMENT_PIXELS;
         }
         circle.setCirclePositionSet(mouseX, mouseY);
         selectedWayPointLocationUpdate();
@@ -350,7 +350,7 @@ public class ProjectPane extends Pane {
 
         double distanceInPixels = Math.sqrt(dxSquared + dySquared);
 
-        return  distanceInPixels * fieldMeasurementInches / fieldMeasurementPixels;
+        return  distanceInPixels * FIELD_MEASUREMENT_INCHES / FIELD_MEASUREMENT_PIXELS;
     }
 
     private double changeInOrientation(WayPoint firstPoint, WayPoint secondPoint, WayPoint thirdPoint) {

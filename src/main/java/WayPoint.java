@@ -3,6 +3,8 @@ package main.java;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 
+import static main.java.ProjectPane.FIELD_MEASUREMENT_PIXELS;
+
 public class WayPoint extends Circle implements Drawable {
     public static int firstPointRadius = 3;
     public static int subsequentPointsRadius = 4;
@@ -106,6 +108,6 @@ public class WayPoint extends Circle implements Drawable {
     }
 
     public int getY() {
-        return (int) this.getCenterY();
+        return (int) (FIELD_MEASUREMENT_PIXELS - this.getCenterY());
     }
 }

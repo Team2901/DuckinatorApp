@@ -46,8 +46,8 @@ public class WayPoint extends Circle implements Drawable {
 
     public void setCenterInches(double xInches, double yInches) {
 
-        this.xInches = Math.max(Math.min(xInches, FIELD_MEASUREMENT_INCHES), 0);
-        this.yInches = Math.max(Math.min(yInches, FIELD_MEASUREMENT_INCHES), 0);
+        this.xInches = Math.max(Math.min(Math.round(xInches * 100.0) / 100.0, FIELD_MEASUREMENT_INCHES), 0);
+        this.yInches = Math.max(Math.min(Math.round(yInches * 100.0) / 100.0, FIELD_MEASUREMENT_INCHES), 0);
 
         double xPixels = this.xInches / FIELD_MEASUREMENT_INCHES * FIELD_MEASUREMENT_PIXELS;
         double yPixels = FIELD_MEASUREMENT_PIXELS - (this.yInches / FIELD_MEASUREMENT_INCHES * FIELD_MEASUREMENT_PIXELS);
@@ -60,8 +60,8 @@ public class WayPoint extends Circle implements Drawable {
         double xPixels = Math.max(Math.min(xPixelsRaw, FIELD_MEASUREMENT_PIXELS), 0);
         double yPixels = Math.max(Math.min(yPixelsRaw, FIELD_MEASUREMENT_PIXELS), 0);
 
-        this.xInches = xPixels / FIELD_MEASUREMENT_PIXELS * FIELD_MEASUREMENT_INCHES;
-        this.yInches = (FIELD_MEASUREMENT_PIXELS - yPixels) / FIELD_MEASUREMENT_PIXELS * FIELD_MEASUREMENT_INCHES;
+        this.xInches = Math.round(xPixels / FIELD_MEASUREMENT_PIXELS * FIELD_MEASUREMENT_INCHES * 100.0) / 100.0;
+        this.yInches = Math.round((FIELD_MEASUREMENT_PIXELS - yPixels) / FIELD_MEASUREMENT_PIXELS * FIELD_MEASUREMENT_INCHES * 100.0) / 100.0;
 
         _setCenterPixels(xPixels, yPixels);
     }

@@ -315,60 +315,6 @@ public class ProjectPane extends Pane {
         }
     }
 
-    private String convertArrayList(ArrayList<String> stringList) {
-        return String.join("", stringList);
-    }
-
-    private String moveHereTwo(ArrayList<WayPoint> points) {
-        ArrayList<String> movements = new ArrayList<>();
-
-        for (int ii = 0; ii < points.size(); ii++) {
-            // first point.. nothing to do. assume robot was placed here.
-            if (ii == 0) continue;
-            // 2 or more points present.
-            // calculate the distance to travel between last point and this point
-            double inches = distanceBetweenTwoPointsInInches(points.get(ii), points.get(ii - 1));
-
-            // Three or more points present
-            // calculate change in direction.
-            if (ii > 1) {
-                double angleChange = changeInOrientation(points.get(ii - 2), points.get(ii - 1), points.get(ii));
-                movements.add("\t\t\trotateByAngle(" + (int) Math.round(angleChange) + ");\n");
-            }
-            movements.add("\t\t\tgoStraightInches(" + inches + ");\n");
-        }
-
-        return convertArrayList(movements);
-    }
-
-    private Double distanceBetweenTwoPointsInInches(WayPoint firstPoint, WayPoint secondPoint) {
-        int dx = secondPoint.getX() - firstPoint.getX();
-        int dy = secondPoint.getY() - firstPoint.getY();
-
-        double dxSquared = Math.pow(dx, 2);
-        double dySquared = Math.pow(dy, 2);
-
-        double distanceInPixels = Math.sqrt(dxSquared + dySquared);
-
-        return  distanceInPixels * FIELD_MEASUREMENT_INCHES / FIELD_MEASUREMENT_PIXELS;
-    }
-
-    private double changeInOrientation(WayPoint firstPoint, WayPoint secondPoint, WayPoint thirdPoint) {
-        double dx1 = secondPoint.getX() - firstPoint.getX();
-        double dx2 = thirdPoint.getX() - secondPoint.getX();
-        double dy1 = secondPoint.getY() - firstPoint.getY();
-        double dy2 = thirdPoint.getY() - secondPoint.getY();
-        double length1 = Math.sqrt(Math.pow(dx1, 2) + Math.pow(dy1, 2));
-        double length2 = Math.sqrt(Math.pow(dx2, 2) + Math.pow(dy2, 2));
-        double angleTemp = Math.acos(((dx1 * dx2) + (dy1 * dy2)) / (length1 * length2));
-
-        if (((secondPoint.getX() - firstPoint.getX()) * (thirdPoint.getY() - firstPoint.getY()) - (secondPoint.getY() - firstPoint.getY()) * (thirdPoint.getX() - firstPoint.getX())) > 0) {
-            angleTemp *= -1;
-        }
-
-        return ((angleTemp * 180) / Math.PI);
-    }
-
     public void addDrawable(Drawable drawable, Drawable lastDrawable) {
         drawable.setBefore(lastDrawable);
         if (lastDrawable != null) {
@@ -496,6 +442,36 @@ public class ProjectPane extends Pane {
 
             setRootName(javaClassName);
 
+            ArrayList<String> movements = new ArrayList<>();
+
+            double initAngle = 0;
+
+            for (int ii = 0; ii < points.size(); ii++) {
+
+                // first point.. nothing to do. assume robot was placed here.
+                if (ii == 0) {
+                    continue;
+                }
+
+                WayPoint currentPoint = points.get(ii);
+                WayPoint lastPoint = points.get(ii -1);
+
+                int dx = lastPoint.getX() - currentPoint.getX();
+                int dy = lastPoint.getY() - currentPoint.getY();
+
+                double distanceInPixels = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
+                double targetAngle = Math.atan2(dy, dx) * 180 / Math.PI;
+
+                double distanceInInches = distanceInPixels * FIELD_MEASUREMENT_INCHES / FIELD_MEASUREMENT_PIXELS;
+
+                if (ii == 1) {
+                    initAngle = targetAngle;
+                } else {
+                    movements.add("            rotateToAngle(" + targetAngle + ");\n");
+                }
+                movements.add("            goStraightInches(" + distanceInInches + ");\n");
+            }
+
             String code = "package org.firstinspires.ftc.teamcode.PurplePathFinder;\n" +
                     "\n" +
                     "import com.qualcomm.robotcore.eventloop.opmode.Autonomous;\n" +
@@ -508,12 +484,11 @@ public class ProjectPane extends Pane {
                     "        waitForStart();\n" +
                     "        if (opModeIsActive()) {\n" +
                     "\n" +
-                    // TODO init angle
-                    "            final double initAngle = 0;\n" +
+                    "            final double initAngle = "+initAngle+";\n" +
                     "\n" +
                     "            setRobotAngleOffset(getRobotAngle() - initAngle);\n" +
                     "\n" +
-                    moveHereTwo(points) +
+                    String.join("", movements) +
                     "        }\n" +
                     "    }\n" +
                     "}";

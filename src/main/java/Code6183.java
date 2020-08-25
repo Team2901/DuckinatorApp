@@ -1,7 +1,10 @@
 package main.java;
 
 import javafx.application.Application;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.scene.Scene;
+import javafx.scene.control.*;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
@@ -114,7 +117,32 @@ public class Code6183 extends Application {
         });
         help.getItems().add(about);
 
-        MenuBar loadOptions = new MenuBar(loadMenu, edit, help);
+        Menu options = new Menu("Options");
+
+        Menu subMenu = new Menu("Drive Base");
+        options.getItems().add(subMenu);
+
+        // https://docs.oracle.com/javase/8/javafx/api/javafx/scene/control/RadioMenuItem.html
+        ToggleGroup toggleGroup = new ToggleGroup();
+        RadioMenuItem tankDriveItem = new RadioMenuItem("Tank Drive");
+        tankDriveItem.setToggleGroup(toggleGroup);
+        tankDriveItem.setSelected(clickerPane.getSelectedDriveBase()== ProjectPane.DriveBase.TANK_DRIVE);
+        tankDriveItem.setOnAction(e -> clickerPane.setSelectedDriveBase(ProjectPane.DriveBase.TANK_DRIVE));
+        subMenu.getItems().add(tankDriveItem);
+
+        RadioMenuItem holonomicDriveItem = new RadioMenuItem("X-Drive");
+        holonomicDriveItem.setToggleGroup(toggleGroup);
+        holonomicDriveItem.setSelected(clickerPane.getSelectedDriveBase()== ProjectPane.DriveBase.X_DRIVE);
+        holonomicDriveItem.setOnAction(e -> clickerPane.setSelectedDriveBase(ProjectPane.DriveBase.X_DRIVE));
+        subMenu.getItems().add(holonomicDriveItem);
+
+        RadioMenuItem mecanumDriveItem = new RadioMenuItem("Mecanum");
+        mecanumDriveItem.setToggleGroup(toggleGroup);
+        mecanumDriveItem.setSelected(clickerPane.getSelectedDriveBase()== ProjectPane.DriveBase.MECHANUM);
+        mecanumDriveItem.setOnAction(e -> clickerPane.setSelectedDriveBase(ProjectPane.DriveBase.MECHANUM));
+        subMenu.getItems().add(mecanumDriveItem);
+
+        MenuBar loadOptions = new MenuBar(loadMenu, edit, help, options);
         VBox vBox = new VBox(loadOptions, clickerPane);
         Scene scene = new Scene(vBox, 1050, 543, Color.BLANCHEDALMOND);
         scene.setFill(Color.BLANCHEDALMOND);

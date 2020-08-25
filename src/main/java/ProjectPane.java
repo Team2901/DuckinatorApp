@@ -27,7 +27,7 @@ import java.util.Objects;
 
 public class ProjectPane extends Pane {
 
-    private enum DriveBase {
+    public enum DriveBase {
         TANK_DRIVE,
         X_DRIVE,
         MECHANUM
@@ -77,31 +77,6 @@ public class ProjectPane extends Pane {
         duckHolder.setLayoutY(350);
         getChildren().add(duckHolder);
 
-        ToggleGroup drives = new ToggleGroup();
-
-        RadioButton tankDrive = new RadioButton("Tank Drive");
-        tankDrive.setLayoutX(545);
-        tankDrive.setLayoutY(270);
-        tankDrive.setToggleGroup(drives);
-        tankDrive.setSelected(true);
-        getChildren().add(tankDrive);
-
-        RadioButton holonomicDrive = new RadioButton("X-Drive");
-        holonomicDrive.setLayoutX(670);
-        holonomicDrive.setLayoutY(270);
-        holonomicDrive.setToggleGroup(drives);
-        getChildren().add(holonomicDrive);
-
-        RadioButton mecanumDrive = new RadioButton("Mecanum");
-        mecanumDrive.setLayoutX(795);
-        mecanumDrive.setLayoutY(270);
-        mecanumDrive.setToggleGroup(drives);
-        getChildren().add(mecanumDrive);
-
-        tankDrive.setOnAction(e -> selectedDriveBase = DriveBase.TANK_DRIVE);
-        holonomicDrive.setOnAction(e -> selectedDriveBase = DriveBase.X_DRIVE);
-        mecanumDrive.setOnAction(e -> selectedDriveBase = DriveBase.MECHANUM);
-
         pointsListView.setLayoutX(800);
         pointsListView.setLayoutY(0);
         getChildren().add(pointsListView);
@@ -148,6 +123,14 @@ public class ProjectPane extends Pane {
         mouseLocation.setLayoutY(0);
         this.setOnMouseMoved(this::mouseLocationUpdate);
         this.setOnMouseDragged(this::mouseLocationUpdate);
+    }
+
+    public DriveBase getSelectedDriveBase() {
+        return selectedDriveBase;
+    }
+
+    public void setSelectedDriveBase(DriveBase driveBase) {
+        this.selectedDriveBase = driveBase;
     }
 
     public void onUpdateOptionsClicked() {

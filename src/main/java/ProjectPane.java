@@ -81,7 +81,7 @@ public class ProjectPane extends Pane {
         pointsListView.setLayoutY(10);
 
         pointsListView.setPrefWidth(240);
-        pointsListView.setPrefHeight(490);
+        pointsListView.setPrefHeight(495);
         getChildren().add(pointsListView);
 
         pointsListView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
@@ -92,7 +92,7 @@ public class ProjectPane extends Pane {
 
         updateOptionsLayout = new VBox();
         updateOptionsLayout.setLayoutX(545);
-        updateOptionsLayout.setLayoutY(0);
+        updateOptionsLayout.setLayoutY(10);
         updateOptionsLayout.setSpacing(8);
 
         updateDrawableNameField = new TextField();

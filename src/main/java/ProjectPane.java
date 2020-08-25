@@ -4,15 +4,8 @@ package main.java;/*
  * and open the template in the editor.
  */
 
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.scene.Node;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
-import javafx.scene.control.RadioButton;
-import javafx.scene.control.TextField;
-import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -23,12 +16,10 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
-import java.awt.*;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
-
-import static java.lang.Integer.parseInt;
+import java.util.Objects;
 
 /**
  * @author akkir
@@ -48,10 +39,9 @@ public class ProjectPane extends Pane {
     public static final double FIELD_MEASUREMENT_INCHES = 144;
 
     private final Label mouseLocation;
-    private final Label selectedDrawableLocation;
     final ArrayList<WayPoint> points = new ArrayList<>();
 
-    private final ListView<Label> pointsListView = new ListView<Label>();
+    private final ListView<Label> pointsListView = new ListView<>();
     private WayPoint selectedPoint;
     private LineConnector selectedLine;
     private List<List<Point>> pointHistory = new ArrayList<>();
@@ -116,6 +106,12 @@ public class ProjectPane extends Pane {
         pointsListView.setLayoutY(0);
         getChildren().add(pointsListView);
 
+        pointsListView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            final int newIndex = pointsListView.getItems().indexOf(newValue);
+            final WayPoint wayPoint = newIndex < 0 ? null : points.get(newIndex);
+            selectPoint(wayPoint);
+        });
+
         updateOptionsLayout = new VBox();
         updateOptionsLayout.setLayoutX(545);
         updateOptionsLayout.setLayoutY(0);
@@ -125,23 +121,15 @@ public class ProjectPane extends Pane {
         updateDrawableXField = new TextField();
         updateDrawableYField = new TextField();
 
-        updateDrawableXField.textProperty().addListener(new ChangeListener<String>() {
-            @Override
-            public void changed(ObservableValue<? extends String> observable, String oldValue,
-                                String newValue) {
-                if (!newValue.matches("[0-9\\.]+")) {
-                    updateDrawableXField.setText(newValue.replaceAll("[^0-9\\.]", ""));
-                }
+        updateDrawableXField.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (!newValue.matches("[0-9.]+")) {
+                updateDrawableXField.setText(newValue.replaceAll("[^0-9.]", ""));
             }
         });
 
-        updateDrawableYField.textProperty().addListener(new ChangeListener<String>() {
-            @Override
-            public void changed(ObservableValue<? extends String> observable, String oldValue,
-                                String newValue) {
-                if (!newValue.matches("\\d*\\.")) {
-                    updateDrawableYField.setText(newValue.replaceAll("[^0-9\\.]", ""));
-                }
+        updateDrawableYField.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (!newValue.matches("\\d*\\.")) {
+                updateDrawableYField.setText(newValue.replaceAll("[^0-9.]", ""));
             }
         });
 
@@ -156,13 +144,8 @@ public class ProjectPane extends Pane {
         this.setOnKeyPressed(this::gameAreaKeyPress);
 
         mouseLocation = new Label();
-        selectedDrawableLocation = new Label();
         mouseLocation.setLayoutX(0);
         mouseLocation.setLayoutY(0);
-        selectedDrawableLocation.setLayoutX(0);
-        selectedDrawableLocation.setLayoutY(20);
-        getChildren().add(mouseLocation);
-        getChildren().add(selectedDrawableLocation);
         this.setOnMouseMoved(this::mouseLocationUpdate);
         this.setOnMouseDragged(this::mouseLocationUpdate);
     }
@@ -212,6 +195,9 @@ public class ProjectPane extends Pane {
 
     private void removePointsListView(WayPoint wayPoint) {
         int index = points.indexOf(wayPoint);
+
+        pointsListView.getSelectionModel().select(null);
+
         pointsListView.getItems().remove(index);
     }
 
@@ -221,13 +207,11 @@ public class ProjectPane extends Pane {
 
         Label label = new Label();
 
-        label.setOnMouseClicked(e -> {
-            selectPoint(wayPoint);
-        });
-
         pointsListView.getItems().add(index, label);
 
-        updatePointsListView(label, wayPoint);
+        String wayPointString = String.format("%s %.2f,%.2f", wayPoint.getName(), wayPoint.getXInches(), wayPoint.getYInches());
+
+        label.setText(wayPointString);
     }
 
     private void updatePointsListView(WayPoint wayPoint) {
@@ -238,18 +222,15 @@ public class ProjectPane extends Pane {
 
         if (index >= 0) {
             Label label = pointsListView.getItems().get(index);
-            updatePointsListView(label, wayPoint);
+            String wayPointString = String.format("%s %.2f,%.2f", wayPoint.getName(), wayPoint.getXInches(), wayPoint.getYInches());
+
+            label.setText(wayPointString);
+
+            pointsListView.scrollTo(label);
+            pointsListView.getSelectionModel().select(label);
+        } else {
+            pointsListView.getSelectionModel().select(null);
         }
-    }
-
-    private void updatePointsListView(Label label, WayPoint wayPoint) {
-
-        String wayPointString = String.format("%s %.2f,%.2f", wayPoint.getName(), wayPoint.getXInches(), wayPoint.getYInches());
-
-        label.setText(wayPointString);
-
-        pointsListView.scrollTo(label);
-        pointsListView.getSelectionModel().select(label);
     }
 
     public void mouseLocationUpdate(MouseEvent event) {
@@ -257,15 +238,6 @@ public class ProjectPane extends Pane {
         double mouseY = (FIELD_MEASUREMENT_PIXELS - (event.getSceneY() - this.getLayoutY())) * FIELD_MEASUREMENT_INCHES / FIELD_MEASUREMENT_PIXELS;
         String mouseString = String.format("%.2f,%.2f", mouseX, mouseY);
         mouseLocation.setText(mouseString);
-    }
-
-    public void selectedWayPointLocationUpdate() {
-        if (selectedPoint != null) {
-            String wayPointString = String.format("%.2f,%.2f", selectedPoint.getXInches(), selectedPoint.getYInches());
-            selectedDrawableLocation.setText(wayPointString);
-        } else {
-            selectedDrawableLocation.setText("");
-        }
     }
 
     public void processMousePress(MouseEvent e) {
@@ -328,40 +300,48 @@ public class ProjectPane extends Pane {
     }
 
     public void createWayPoint(String name, double xPoint, double yPoint) {
+
+        WayPoint newWayPoint = new WayPoint(name, xPoint, yPoint);
+        newWayPoint.setOnMousePressed(this::selectPointPress);
+        newWayPoint.setOnMouseDragged(this::dragPoint);
+        newWayPoint.setOnMouseReleased(this::releasePoint);
+
+        final LineConnector line;
+        final Integer index;
+
         if (points.isEmpty()) {
-            WayPoint startCircle = new WayPoint(name, xPoint, yPoint);
-            startCircle.setOnMousePressed(this::selectPointPress);
-            startCircle.setOnMouseDragged(this::dragPoint);
-            startCircle.setOnMouseReleased(this::releasePoint);
-            addDrawable(startCircle, null);
-            points.add(startCircle);
-            addPointsListView(startCircle);
+            line = null;
+            index = null;
         } else {
-            WayPoint nextCircles = new WayPoint(name, xPoint, yPoint);
-            nextCircles.setOnMousePressed(this::selectPointPress);
-            nextCircles.setOnMouseDragged(this::dragPoint);
-            nextCircles.setOnMouseReleased(this::releasePoint);
+
             WayPoint lastWayPoint;
             WayPoint nextWayPoint;
-            int index;
             if (selectedLine != null) {
                 lastWayPoint = (WayPoint) selectedLine.getBefore();
                 nextWayPoint = (WayPoint) selectedLine.getAfter();
                 index = points.indexOf(nextWayPoint);
-                selectedLine.setStartPoint(nextCircles);
-                nextCircles.setAfter(selectedLine);
+                selectedLine.setStartPoint(newWayPoint);
+                newWayPoint.setAfter(selectedLine);
             } else {
                 lastWayPoint = points.get(points.size() - 1);
                 index = points.size();
             }
-            LineConnector line = new LineConnector(lastWayPoint.getCenterX(),  lastWayPoint.getCenterY(), nextCircles.getCenterX(), nextCircles.getCenterY());
+            line = new LineConnector(lastWayPoint.getCenterX(),  lastWayPoint.getCenterY(), newWayPoint.getCenterX(), newWayPoint.getCenterY());
             line.setOnMousePressed(this::selectLinePress);
             addDrawable(line, lastWayPoint);
-            addDrawable(nextCircles, line);
-            points.add(index, nextCircles);
-            addPointsListView(nextCircles);
         }
-        selectLine(null);
+
+        addDrawable(newWayPoint, line);
+
+        if (index != null) {
+            points.add(index, newWayPoint);
+        } else {
+            points.add(newWayPoint);
+        }
+
+        addPointsListView(newWayPoint);
+
+        selectPoint(newWayPoint);
     }
 
     private void dragPoint(MouseEvent mouseEvent) {
@@ -372,7 +352,6 @@ public class ProjectPane extends Pane {
 
         circle.setCenterPixels(xPixels, yPixels);
         updatePointsListView(circle);
-        selectedWayPointLocationUpdate();
     }
 
     private void releasePoint(MouseEvent mouseEvent) {
@@ -383,42 +362,53 @@ public class ProjectPane extends Pane {
         selectPoint((WayPoint) mouseEvent.getTarget());
     }
 
-    private void selectPoint(WayPoint point) {
-        if (selectedPoint != null) {
-            selectedPoint.setSelected(false);
-            updatePointsListView(selectedPoint);
-        }
-        if (selectedLine != null) {
-            selectedLine.setSelected(false);
-            selectedLine = null;
-        }
-        if (point != null) {
-            point.setSelected(true);
-        }
-
-        selectedPoint = point;
-        updatePointsListView(selectedPoint);
-
-        selectedWayPointLocationUpdate();
-    }
-
     private void selectLinePress(MouseEvent mouseEvent) {
         selectLine((LineConnector) mouseEvent.getTarget());
     }
 
+    private void selectPoint(WayPoint point) {
+
+        if (Objects.equals(point, selectedPoint)) {
+            return;
+        }
+
+        selectDrawable(point);
+    }
+
     private void selectLine(LineConnector line) {
+
+
+        if (Objects.equals(line, selectedLine)) {
+            return;
+        }
+
+        selectDrawable(line);
+    }
+
+    private void selectDrawable(Drawable drawable) {
+
         if (selectedPoint != null) {
             selectedPoint.setSelected(false);
             selectedPoint = null;
-            updatePointsListView(null);
         }
+
         if (selectedLine != null) {
             selectedLine.setSelected(false);
+            selectedLine = null;
         }
-        if (line != null) {
-            line.setSelected(true);
+
+        if (drawable != null) {
+            if (drawable instanceof WayPoint) {
+                selectedPoint = (WayPoint) drawable;
+                selectedPoint.setSelected(true);
+
+            } else {
+                selectedLine = (LineConnector) drawable;
+                selectedLine.setSelected(true);
+            }
         }
-        selectedLine = line;
+
+        updatePointsListView(selectedPoint);
     }
 
     public void processClearPress() {

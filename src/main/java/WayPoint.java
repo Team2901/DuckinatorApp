@@ -1,5 +1,6 @@
 package main.java;
 
+import javafx.scene.control.Label;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 
@@ -20,6 +21,17 @@ public class WayPoint extends Circle implements Drawable {
     public double xInches;
     public double yInches;
 
+    public Label label;
+
+    public Label getLabel() {
+        return label;
+    }
+
+    public void updateLabel() {
+        String wayPointString = String.format("%s %.2f,%.2f", getName(), getXInches(), getYInches());
+        label.setText(wayPointString);
+    }
+
     public WayPoint(String name, double xInches, double yInches) {
         super(0, 0, bufferZone, Color.TRANSPARENT);
 
@@ -27,7 +39,11 @@ public class WayPoint extends Circle implements Drawable {
         originalColor = Color.BLACK;
         subCircle = new Circle(0, 0, subsequentPointsRadius, originalColor);
 
+        label = new Label();
+
         setCenterInches(xInches, yInches);
+
+
     }
 
     public String getName() {
@@ -70,6 +86,7 @@ public class WayPoint extends Circle implements Drawable {
         subCircle.setCenterY(yPixels);
         this.setCenterX(xPixels);
         this.setCenterY(yPixels);
+
         LineConnector beforeLine = (LineConnector) this.getBefore();
         LineConnector afterLine = (LineConnector) this.getAfter();
         if (beforeLine != null) {
@@ -78,6 +95,8 @@ public class WayPoint extends Circle implements Drawable {
         if (afterLine != null) {
             afterLine.setLinePositionSetStart(xPixels, yPixels);
         }
+
+        updateLabel();
     }
 
     public WayPoint getPriorPoint() {

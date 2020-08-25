@@ -170,8 +170,6 @@ public class ProjectPane extends Pane {
 
         selectedPoint.setName(name);
         selectedPoint.setCenterInches(xInches, yInches);
-
-        updatePointsListView(selectedPoint);
     }
 
     public void setSelectedPointOptions() {
@@ -190,46 +188,6 @@ public class ProjectPane extends Pane {
             updateDrawableXField.setText(String.valueOf(selectedPoint.getXInches()));
             updateDrawableYField.setText(String.valueOf(selectedPoint.getYInches()));
             updateDrawableNameField.setText(selectedPoint.getName());
-        }
-    }
-
-    private void removePointsListView(WayPoint wayPoint) {
-        int index = points.indexOf(wayPoint);
-
-        pointsListView.getSelectionModel().select(null);
-
-        pointsListView.getItems().remove(index);
-    }
-
-    private void addPointsListView(WayPoint wayPoint) {
-
-        int index = points.indexOf(wayPoint);
-
-        Label label = new Label();
-
-        pointsListView.getItems().add(index, label);
-
-        String wayPointString = String.format("%s %.2f,%.2f", wayPoint.getName(), wayPoint.getXInches(), wayPoint.getYInches());
-
-        label.setText(wayPointString);
-    }
-
-    private void updatePointsListView(WayPoint wayPoint) {
-
-        setSelectedPointOptions();
-
-        int index = wayPoint != null ? points.indexOf(wayPoint) : -1;
-
-        if (index >= 0) {
-            Label label = pointsListView.getItems().get(index);
-            String wayPointString = String.format("%s %.2f,%.2f", wayPoint.getName(), wayPoint.getXInches(), wayPoint.getYInches());
-
-            label.setText(wayPointString);
-
-            pointsListView.scrollTo(label);
-            pointsListView.getSelectionModel().select(label);
-        } else {
-            pointsListView.getSelectionModel().select(null);
         }
     }
 
@@ -335,23 +293,22 @@ public class ProjectPane extends Pane {
 
         if (index != null) {
             points.add(index, newWayPoint);
+            pointsListView.getItems().add(index, newWayPoint.getLabel());
         } else {
             points.add(newWayPoint);
+            pointsListView.getItems().add(newWayPoint.getLabel());
         }
-
-        addPointsListView(newWayPoint);
 
         selectPoint(newWayPoint);
     }
 
     private void dragPoint(MouseEvent mouseEvent) {
-        WayPoint circle = (WayPoint) mouseEvent.getTarget();
+        WayPoint wayPoint = (WayPoint) mouseEvent.getTarget();
 
         double xPixels = mouseEvent.getSceneX() - this.getLayoutX();
         double yPixels = mouseEvent.getSceneY() - this.getLayoutY();
 
-        circle.setCenterPixels(xPixels, yPixels);
-        updatePointsListView(circle);
+        wayPoint.setCenterPixels(xPixels, yPixels);
     }
 
     private void releasePoint(MouseEvent mouseEvent) {
@@ -408,7 +365,15 @@ public class ProjectPane extends Pane {
             }
         }
 
-        updatePointsListView(selectedPoint);
+        if (selectedPoint != null) {
+            final Label label = selectedPoint.getLabel();
+            pointsListView.scrollTo(label);
+            pointsListView.getSelectionModel().select(label);
+        } else {
+            pointsListView.getSelectionModel().select(null);
+        }
+
+        setSelectedPointOptions();
     }
 
     public void processClearPress() {
@@ -490,10 +455,10 @@ public class ProjectPane extends Pane {
 
         removeDrawable(point);
 
-        removePointsListView(point);
-        points.remove(point);
-
         selectPoint(null);
+
+        points.remove(point);
+        pointsListView.getItems().remove(point.getLabel());
     }
 
     public void removeDrawable(Drawable remove) {

@@ -78,7 +78,10 @@ public class ProjectPane extends Pane {
         getChildren().add(duckHolder);
 
         pointsListView.setLayoutX(800);
-        pointsListView.setLayoutY(0);
+        pointsListView.setLayoutY(10);
+
+        pointsListView.setPrefWidth(240);
+        pointsListView.setPrefHeight(490);
         getChildren().add(pointsListView);
 
         pointsListView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
@@ -153,6 +156,7 @@ public class ProjectPane extends Pane {
 
         selectedPoint.setName(name);
         selectedPoint.setCenterInches(xInches, yInches);
+        setSelectedPointOptions();
     }
 
     public void setSelectedPointOptions() {
@@ -292,6 +296,7 @@ public class ProjectPane extends Pane {
         double yPixels = mouseEvent.getSceneY() - this.getLayoutY();
 
         wayPoint.setCenterPixels(xPixels, yPixels);
+        setSelectedPointOptions();
     }
 
     private void releasePoint(MouseEvent mouseEvent) {

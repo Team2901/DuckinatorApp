@@ -35,7 +35,7 @@ public class ProjectPane extends Pane {
 
     private static final String DEFAULT_ROOT_NAME = "DuckinatorAuto";
     private final ImageView fieldHolder;
-    public static final double FIELD_MEASUREMENT_PIXELS = 510;
+    public static final double FIELD_MEASUREMENT_PIXELS = 725;
     public static final double FIELD_MEASUREMENT_INCHES = 144;
 
     private final Label mouseLocation;
@@ -58,10 +58,10 @@ public class ProjectPane extends Pane {
     public ProjectPane() {
 
         this.setOnKeyPressed(this::gameAreaKeyPress);
-        Rectangle rect = new Rectangle(1200, 600, Color.BLANCHEDALMOND);
+        Rectangle rect = new Rectangle(1200, 725, Color.BLANCHEDALMOND);
         getChildren().add(rect);
 
-        Image field = new Image(this.getClass().getResourceAsStream("/main/resources/field.png"));
+        Image field = new Image(this.getClass().getResourceAsStream("/main/resources/Field Images/SkyStone.png"));
         fieldHolder = new ImageView(field);
         fieldHolder.setFitHeight(FIELD_MEASUREMENT_PIXELS);
         fieldHolder.setFitWidth(FIELD_MEASUREMENT_PIXELS);
@@ -69,29 +69,8 @@ public class ProjectPane extends Pane {
         fieldHolder.setLayoutY(0);
         getChildren().add(fieldHolder);
 
-        Image duck = new Image(this.getClass().getResourceAsStream("/main/resources/duck.png"));
-        ImageView duckHolder = new ImageView(duck);
-        duckHolder.setFitHeight(150);
-        duckHolder.setFitWidth(163);
-        duckHolder.setLayoutX(870);
-        duckHolder.setLayoutY(350);
-        getChildren().add(duckHolder);
-
-        pointsListView.setLayoutX(800);
-        pointsListView.setLayoutY(10);
-
-        pointsListView.setPrefWidth(240);
-        pointsListView.setPrefHeight(495);
-        getChildren().add(pointsListView);
-
-        pointsListView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-            final int newIndex = pointsListView.getItems().indexOf(newValue);
-            final WayPoint wayPoint = newIndex < 0 ? null : points.get(newIndex);
-            selectPoint(wayPoint);
-        });
-
         updateOptionsLayout = new VBox();
-        updateOptionsLayout.setLayoutX(545);
+        updateOptionsLayout.setLayoutX(FIELD_MEASUREMENT_PIXELS + 10);
         updateOptionsLayout.setLayoutY(10);
         updateOptionsLayout.setSpacing(8);
 
@@ -118,12 +97,26 @@ public class ProjectPane extends Pane {
         updateOptionsLayout.getChildren().add(updateDrawableYField);
         updateOptionsLayout.getChildren().add(updateDrawableButton);
 
+        pointsListView.setLayoutX(FIELD_MEASUREMENT_PIXELS + 250);
+        pointsListView.setLayoutY(10);
+
+        pointsListView.setPrefWidth(200);
+        pointsListView.setPrefHeight(FIELD_MEASUREMENT_PIXELS/2);
+        getChildren().add(pointsListView);
+
+        pointsListView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            final int newIndex = pointsListView.getItems().indexOf(newValue);
+            final WayPoint wayPoint = newIndex < 0 ? null : points.get(newIndex);
+            selectPoint(wayPoint);
+        });
+
         fieldHolder.setOnMouseClicked(this::processMousePress);
         this.setOnKeyPressed(this::gameAreaKeyPress);
 
         mouseLocation = new Label();
-        mouseLocation.setLayoutX(0);
-        mouseLocation.setLayoutY(0);
+        mouseLocation.setLayoutX(10);
+        mouseLocation.setLayoutY(10);
+        this.getChildren().add(mouseLocation);
         this.setOnMouseMoved(this::mouseLocationUpdate);
         this.setOnMouseDragged(this::mouseLocationUpdate);
     }

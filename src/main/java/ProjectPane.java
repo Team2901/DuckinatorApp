@@ -4,8 +4,10 @@ package main.java;/*
  * and open the template in the editor.
  */
 
-import javafx.scene.Node;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -35,13 +37,17 @@ public class ProjectPane extends Pane {
 
     private static final String DEFAULT_ROOT_NAME = "DuckinatorAuto";
     private final ImageView fieldHolder;
+    private final Pane fieldPane;
     public static final double FIELD_MEASUREMENT_PIXELS = 720;
     public static final double FIELD_MEASUREMENT_INCHES = 144;
 
+    public static final double PANE_PADDING_PIXELS = 5;
+    public static final double PANE_WIDTH_PIXELS = 1200;
+    public static final double PANE_HEIGHT_PIXELS = FIELD_MEASUREMENT_PIXELS + 2*PANE_PADDING_PIXELS;
     private final Label mouseLocation;
     final ArrayList<WayPoint> points = new ArrayList<>();
 
-    private final ListView<Label> pointsListView = new ListView<>();
+    private final ListView<Label> pointsListView;
     private WayPoint selectedPoint;
     private LineConnector selectedLine;
     private List<List<Point>> pointHistory = new ArrayList<>();
@@ -58,40 +64,36 @@ public class ProjectPane extends Pane {
     public ProjectPane() {
 
         this.setOnKeyPressed(this::gameAreaKeyPress);
-        Rectangle rect = new Rectangle(1200, 720, Color.BLANCHEDALMOND);
+        Rectangle rect = new Rectangle(PANE_WIDTH_PIXELS, PANE_HEIGHT_PIXELS, Color.BLANCHEDALMOND);
         getChildren().add(rect);
+
+        fieldPane = new Pane();
+        fieldPane.setLayoutX(PANE_PADDING_PIXELS);
+        fieldPane.setLayoutY(PANE_PADDING_PIXELS);
 
         Image field = new Image(this.getClass().getResourceAsStream("/main/resources/Field Images/SkyStone_720.png"));
         fieldHolder = new ImageView(field);
         fieldHolder.setFitHeight(FIELD_MEASUREMENT_PIXELS);
         fieldHolder.setFitWidth(FIELD_MEASUREMENT_PIXELS);
-        fieldHolder.setLayoutX(0);
-        fieldHolder.setLayoutY(0);
-        getChildren().add(fieldHolder);
+        fieldPane.getChildren().add(fieldHolder);
 
-        Image duck = new Image(this.getClass().getResourceAsStream("/main/resources/duck.png"));
-        ImageView duckHolder = new ImageView(duck);
-        duckHolder.setFitHeight(150);
-        duckHolder.setFitWidth(163);
-        duckHolder.setLayoutX(870);
-        duckHolder.setLayoutY(350);
-        getChildren().add(duckHolder);
+        getChildren().add(fieldPane);
 
         updateOptionsLayout = new VBox();
         updateOptionsLayout.setLayoutX(FIELD_MEASUREMENT_PIXELS + 10);
-        updateOptionsLayout.setLayoutY(10);
+        updateOptionsLayout.setLayoutY(PANE_PADDING_PIXELS);
         updateOptionsLayout.setSpacing(8);
 
         updateDrawableNameField = new TextField();
-        updateDrawableXField = new TextField();
-        updateDrawableYField = new TextField();
 
+        updateDrawableXField = new TextField();
         updateDrawableXField.textProperty().addListener((observable, oldValue, newValue) -> {
             if (!newValue.matches("[0-9.]+")) {
                 updateDrawableXField.setText(newValue.replaceAll("[^0-9.]", ""));
             }
         });
 
+        updateDrawableYField = new TextField();
         updateDrawableYField.textProperty().addListener((observable, oldValue, newValue) -> {
             if (!newValue.matches("\\d*\\.")) {
                 updateDrawableYField.setText(newValue.replaceAll("[^0-9.]", ""));
@@ -105,11 +107,11 @@ public class ProjectPane extends Pane {
         updateOptionsLayout.getChildren().add(updateDrawableYField);
         updateOptionsLayout.getChildren().add(updateDrawableButton);
 
-        pointsListView.setLayoutX(FIELD_MEASUREMENT_PIXELS + 250);
-        pointsListView.setLayoutY(10);
-
+        pointsListView = new ListView<>();
         pointsListView.setPrefWidth(200);
-        pointsListView.setPrefHeight(FIELD_MEASUREMENT_PIXELS/2);
+        pointsListView.setPrefHeight(PANE_HEIGHT_PIXELS - 2*PANE_PADDING_PIXELS);
+        pointsListView.setLayoutX(PANE_WIDTH_PIXELS - PANE_PADDING_PIXELS - 200);
+        pointsListView.setLayoutY(PANE_PADDING_PIXELS);
         getChildren().add(pointsListView);
 
         pointsListView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
@@ -119,14 +121,15 @@ public class ProjectPane extends Pane {
         });
 
         fieldHolder.setOnMouseClicked(this::processMousePress);
+        this.setOnMouseMoved(this::mouseLocationUpdate);
+        this.setOnMouseDragged(this::mouseLocationUpdate);
         this.setOnKeyPressed(this::gameAreaKeyPress);
 
         mouseLocation = new Label();
-        this.getChildren().add(mouseLocation);
-        mouseLocation.setLayoutX(0);
-        mouseLocation.setLayoutY(0);
-        this.setOnMouseMoved(this::mouseLocationUpdate);
-        this.setOnMouseDragged(this::mouseLocationUpdate);
+        mouseLocation.setLayoutX(FIELD_MEASUREMENT_PIXELS + PANE_PADDING_PIXELS);
+        mouseLocation.setLayoutY(PANE_HEIGHT_PIXELS/2);
+
+        fieldPane.getChildren().add(mouseLocation);
     }
 
     public DriveBase getSelectedDriveBase() {
@@ -180,23 +183,27 @@ public class ProjectPane extends Pane {
     }
 
     public void mouseLocationUpdate(MouseEvent event) {
-        double mouseX = (event.getSceneX() - this.getLayoutX()) * FIELD_MEASUREMENT_INCHES / FIELD_MEASUREMENT_PIXELS;
-        double mouseY = (FIELD_MEASUREMENT_PIXELS - (event.getSceneY() - this.getLayoutY())) * FIELD_MEASUREMENT_INCHES / FIELD_MEASUREMENT_PIXELS;
-        String mouseString = String.format("%.2f,%.2f", mouseX, mouseY);
+
+        double xPixels = event.getX() - fieldPane.getLayoutX();
+        double yPixels = event.getY() - fieldPane.getLayoutY();
+
+        double xInches = xPixels / FIELD_MEASUREMENT_PIXELS * FIELD_MEASUREMENT_INCHES;
+        double yInches = (FIELD_MEASUREMENT_PIXELS - yPixels) / FIELD_MEASUREMENT_PIXELS * FIELD_MEASUREMENT_INCHES;
+
+        String mouseString = String.format("%.2f,%.2f", xInches, yInches);
         mouseLocation.setText(mouseString);
     }
 
     public void processMousePress(MouseEvent e) {
-        if (e.getSource() == fieldHolder) {
-            double xPixels = e.getSceneX() - this.getLayoutX();
-            double yPixels = e.getSceneY() - this.getLayoutY();
 
-            double xInches = xPixels / FIELD_MEASUREMENT_PIXELS * FIELD_MEASUREMENT_INCHES;
-            double yInches = (FIELD_MEASUREMENT_PIXELS - yPixels) / FIELD_MEASUREMENT_PIXELS * FIELD_MEASUREMENT_INCHES;
+        double xPixels = e.getX();
+        double yPixels = e.getY();
 
-            createWayPoint("WayPoint",xInches, yInches);
-            addToPointHistory();
-        }
+        double xInches = xPixels / FIELD_MEASUREMENT_PIXELS * FIELD_MEASUREMENT_INCHES;
+        double yInches = (FIELD_MEASUREMENT_PIXELS - yPixels) / FIELD_MEASUREMENT_PIXELS * FIELD_MEASUREMENT_INCHES;
+
+        createWayPoint("WayPoint",xInches, yInches);
+        addToPointHistory();
     }
 
     public void addToPointHistory() {
@@ -293,11 +300,12 @@ public class ProjectPane extends Pane {
     private void dragPoint(MouseEvent mouseEvent) {
         WayPoint wayPoint = (WayPoint) mouseEvent.getTarget();
 
-        double xPixels = mouseEvent.getSceneX() - this.getLayoutX();
-        double yPixels = mouseEvent.getSceneY() - this.getLayoutY();
+        double xPixels = mouseEvent.getX();
+        double yPixels = mouseEvent.getY();
 
         wayPoint.setCenterPixels(xPixels, yPixels);
         setSelectedPointOptions();
+
     }
 
     private void releasePoint(MouseEvent mouseEvent) {
@@ -407,13 +415,13 @@ public class ProjectPane extends Pane {
             if (lastDrawable == null) {
                 point.setFirstPoint(true);
             }
-            getChildren().add(point.subCircle);
-            getChildren().add((Node) drawable);
+            fieldPane.getChildren().add(point.subCircle);
+            fieldPane.getChildren().add(point);
         } else if (drawable instanceof LineConnector) {
             LineConnector line = (LineConnector) drawable;
-            int index = this.getChildren().indexOf(lastDrawable);
-            getChildren().add(index, line.subLine);
-            getChildren().add(index, (Node) drawable);
+            int index = fieldPane.getChildren().indexOf(lastDrawable);
+            fieldPane.getChildren().add(index, line.subLine);
+            fieldPane.getChildren().add(index, line);
         }
     }
 
@@ -451,14 +459,14 @@ public class ProjectPane extends Pane {
     }
 
     public void removeDrawable(Drawable remove) {
-        getChildren().remove(remove);
+        fieldPane.getChildren().remove(remove);
 
         if (remove instanceof WayPoint) {
             WayPoint point = (WayPoint) remove;
-            getChildren().remove(point.subCircle);
+            fieldPane.getChildren().remove(point.subCircle);
         } else if (remove instanceof LineConnector) {
             LineConnector line = (LineConnector) remove;
-            getChildren().remove(line.subLine);
+            fieldPane.getChildren().remove(line.subLine);
         }
 
         Drawable before = remove.getBefore();

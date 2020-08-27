@@ -35,7 +35,7 @@ public class ProjectPane extends Pane {
 
     private static final String DEFAULT_ROOT_NAME = "DuckinatorAuto";
     private final ImageView fieldHolder;
-    public static final double FIELD_MEASUREMENT_PIXELS = 510;
+    public static final double FIELD_MEASUREMENT_PIXELS = 720;
     public static final double FIELD_MEASUREMENT_INCHES = 144;
 
     private final Label mouseLocation;
@@ -58,10 +58,10 @@ public class ProjectPane extends Pane {
     public ProjectPane() {
 
         this.setOnKeyPressed(this::gameAreaKeyPress);
-        Rectangle rect = new Rectangle(1200, 600, Color.BLANCHEDALMOND);
+        Rectangle rect = new Rectangle(1200, 720, Color.BLANCHEDALMOND);
         getChildren().add(rect);
 
-        Image field = new Image(this.getClass().getResourceAsStream("/main/resources/Field Images/SkyStone.png"));
+        Image field = new Image(this.getClass().getResourceAsStream("/main/resources/Field Images/SkyStone_720.png"));
         fieldHolder = new ImageView(field);
         fieldHolder.setFitHeight(FIELD_MEASUREMENT_PIXELS);
         fieldHolder.setFitWidth(FIELD_MEASUREMENT_PIXELS);

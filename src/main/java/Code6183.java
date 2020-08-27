@@ -144,7 +144,7 @@ public class Code6183 extends Application {
 
         MenuBar loadOptions = new MenuBar(loadMenu, edit, help, options);
         VBox vBox = new VBox(loadOptions, clickerPane);
-        Scene scene = new Scene(vBox, 1050, 543, Color.BLANCHEDALMOND);
+        Scene scene = new Scene(vBox, 1200, 749, Color.BLANCHEDALMOND);
         scene.setFill(Color.BLANCHEDALMOND);
         primaryStage.setTitle("Duckinator 3000");
         primaryStage.setScene(scene);

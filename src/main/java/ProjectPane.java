@@ -35,7 +35,7 @@ public class ProjectPane extends Pane {
 
     private static final String DEFAULT_ROOT_NAME = "DuckinatorAuto";
     private final ImageView fieldHolder;
-    public static final double FIELD_MEASUREMENT_PIXELS = 725;
+    public static final double FIELD_MEASUREMENT_PIXELS = 510;
     public static final double FIELD_MEASUREMENT_INCHES = 144;
 
     private final Label mouseLocation;
@@ -58,7 +58,7 @@ public class ProjectPane extends Pane {
     public ProjectPane() {
 
         this.setOnKeyPressed(this::gameAreaKeyPress);
-        Rectangle rect = new Rectangle(1200, 725, Color.BLANCHEDALMOND);
+        Rectangle rect = new Rectangle(1200, 600, Color.BLANCHEDALMOND);
         getChildren().add(rect);
 
         Image field = new Image(this.getClass().getResourceAsStream("/main/resources/Field Images/SkyStone.png"));
@@ -68,6 +68,14 @@ public class ProjectPane extends Pane {
         fieldHolder.setLayoutX(0);
         fieldHolder.setLayoutY(0);
         getChildren().add(fieldHolder);
+
+        Image duck = new Image(this.getClass().getResourceAsStream("/main/resources/duck.png"));
+        ImageView duckHolder = new ImageView(duck);
+        duckHolder.setFitHeight(150);
+        duckHolder.setFitWidth(163);
+        duckHolder.setLayoutX(870);
+        duckHolder.setLayoutY(350);
+        getChildren().add(duckHolder);
 
         updateOptionsLayout = new VBox();
         updateOptionsLayout.setLayoutX(FIELD_MEASUREMENT_PIXELS + 10);
@@ -114,9 +122,9 @@ public class ProjectPane extends Pane {
         this.setOnKeyPressed(this::gameAreaKeyPress);
 
         mouseLocation = new Label();
-        mouseLocation.setLayoutX(10);
-        mouseLocation.setLayoutY(10);
         this.getChildren().add(mouseLocation);
+        mouseLocation.setLayoutX(0);
+        mouseLocation.setLayoutY(0);
         this.setOnMouseMoved(this::mouseLocationUpdate);
         this.setOnMouseDragged(this::mouseLocationUpdate);
     }

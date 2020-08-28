@@ -21,6 +21,8 @@ public class WayPoint extends Circle implements Drawable {
     public double xInches;
     public double yInches;
 
+    public double zAngle;
+
     public Label label;
 
     public Label getLabel() {
@@ -169,5 +171,13 @@ public class WayPoint extends Circle implements Drawable {
 
     public double getYInches() {
         return yInches;
+    }
+
+    public double getZAngle() {
+        return zAngle;
+    }
+
+    public void setZAngle(double zAngle) {
+        this.zAngle = zAngle;
     }
 }

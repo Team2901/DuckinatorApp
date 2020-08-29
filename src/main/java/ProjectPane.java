@@ -194,6 +194,7 @@ public class ProjectPane extends Pane {
         selectedPoint.setName(name);
         selectedPoint.setCenterInches(xInches, yInches);
         selectedPoint.setZAngle(zAngle);
+        addToPointHistory();
         setSelectedPointOptions();
     }
 
@@ -430,6 +431,9 @@ public class ProjectPane extends Pane {
         if (event.getCode() == KeyCode.ESCAPE) {
             selectPoint(null);
             selectLine(null);
+        }
+        if (event.getCode() == KeyCode.ENTER) {
+            this.onUpdateOptionsClicked();
         }
         if (event.getCode() == KeyCode.Z && event.isControlDown()) {
             if (event.isShiftDown()) {

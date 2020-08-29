@@ -171,7 +171,8 @@ public class ProjectPane extends Pane {
 
         String name = updateDrawableNameField.getText().trim();
 
-        double xInches, yInches, zAngle;
+        double xInches, yInches;
+        Double zAngle;
 
         if (!updateDrawableXField.getText().isBlank()) {
             xInches = Double.parseDouble(updateDrawableXField.getText());
@@ -188,12 +189,12 @@ public class ProjectPane extends Pane {
         if (!updateDrawableZAngleField.getText().isBlank()) {
             zAngle = Double.parseDouble(updateDrawableZAngleField.getText());
         } else {
-            zAngle = selectedPoint.getZAngle();
+            zAngle = selectedPoint.getOverrideAngle();
         }
 
         selectedPoint.setName(name);
         selectedPoint.setCenterInches(xInches, yInches);
-        selectedPoint.setZAngle(zAngle);
+        selectedPoint.setOverrideAngle(zAngle);
         addToPointHistory();
         setSelectedPointOptions();
     }
@@ -213,7 +214,7 @@ public class ProjectPane extends Pane {
 
             updateDrawableXField.setText(String.valueOf(selectedPoint.getXInches()));
             updateDrawableYField.setText(String.valueOf(selectedPoint.getYInches()));
-            updateDrawableZAngleField.setText(String.valueOf(selectedPoint.getZAngle()));
+            updateDrawableZAngleField.setText(String.valueOf(selectedPoint.getOverrideAngle()));
             updateDrawableNameField.setText(selectedPoint.getName());
         }
     }
@@ -238,7 +239,7 @@ public class ProjectPane extends Pane {
         double xInches = xPixels / FIELD_MEASUREMENT_PIXELS * FIELD_MEASUREMENT_INCHES;
         double yInches = (FIELD_MEASUREMENT_PIXELS - yPixels) / FIELD_MEASUREMENT_PIXELS * FIELD_MEASUREMENT_INCHES;
 
-        createWayPoint("WayPoint",xInches, yInches, 0);
+        createWayPoint("WayPoint",xInches, yInches, null);
         addToPointHistory();
     }
 
@@ -288,9 +289,9 @@ public class ProjectPane extends Pane {
         }
     }
 
-    public void createWayPoint(String name, double xPoint, double yPoint, double zAngle) {
+    public void createWayPoint(String name, double xPoint, double yPoint, Double overrideAngle) {
 
-        WayPoint newWayPoint = new WayPoint(name, xPoint, yPoint, zAngle);
+        WayPoint newWayPoint = new WayPoint(name, xPoint, yPoint, overrideAngle);
         newWayPoint.setOnMousePressed(this::selectPointPress);
         newWayPoint.setOnMouseDragged(this::dragPoint);
         newWayPoint.setOnMouseReleased(this::releasePoint);
@@ -309,7 +310,7 @@ public class ProjectPane extends Pane {
                 lastWayPoint = (WayPoint) selectedLine.getBefore();
                 nextWayPoint = (WayPoint) selectedLine.getAfter();
                 index = points.indexOf(nextWayPoint);
-                selectedLine.setStartPoint(newWayPoint);
+                selectedLine.setBefore(newWayPoint);
                 newWayPoint.setAfter(selectedLine);
             } else {
                 lastWayPoint = points.get(points.size() - 1);
@@ -462,6 +463,7 @@ public class ProjectPane extends Pane {
             int index = fieldPane.getChildren().indexOf(lastDrawable);
             fieldPane.getChildren().add(index, line.subLine);
             fieldPane.getChildren().add(index, line);
+            //((WayPoint) lastDrawable).updateArrow();
         }
     }
 
@@ -484,7 +486,7 @@ public class ProjectPane extends Pane {
 
         if (lineAfter != null) {
             if (pointBefore != null) {
-                lineAfter.setStartPoint(pointBefore);
+                lineAfter.setBefore(pointBefore);
             } else {
                 removeDrawable(lineAfter);
             }
@@ -539,7 +541,7 @@ public class ProjectPane extends Pane {
     public void savePoints(File filePath, ArrayList<WayPoint> pointsInGivenPathway) throws IOException {
         FileWriter fileWriter = new FileWriter(filePath);
         for (WayPoint point : pointsInGivenPathway) {
-            String pointString = String.format("%s,%f,%f,%f\n", point.getName(), point.getXInches(), point.getYInches(), point.getZAngle());
+            String pointString = String.format("%s,%f,%f,%f\n", point.getName(), point.getXInches(), point.getYInches(), point.getOverrideAngle());
             fileWriter.write(pointString);
         }
         fileWriter.close();
@@ -552,7 +554,14 @@ public class ProjectPane extends Pane {
         String line = bufferedReader.readLine();
         while (line != null) {
             String[] lineArray = line.split(",");
-            createWayPoint(lineArray[0], Double.parseDouble(lineArray[1]), Double.parseDouble(lineArray[2]), Double.parseDouble(lineArray[3]));
+
+            Double overrideAngle;
+            try {
+                overrideAngle = Double.parseDouble(lineArray[3]);
+            } catch (Exception e) {
+                overrideAngle = null;
+            }
+            createWayPoint(lineArray[0], Double.parseDouble(lineArray[1]), Double.parseDouble(lineArray[2]), overrideAngle);
             line = bufferedReader.readLine();
         }
         addToPointHistory();
@@ -565,7 +574,7 @@ public class ProjectPane extends Pane {
     public void loadPoints(List<Point> points) {
         clear();
         for (Point point : points) {
-            createWayPoint(point.getName(), point.getX(), point.getY(), point.getAngle());
+            createWayPoint(point.getName(), point.getX(), point.getY(), point.getOverrideAngle());
         }
     }
 

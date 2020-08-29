@@ -32,6 +32,7 @@ public class LineConnector extends Line implements Drawable {
     @Override
     public void setBefore(Drawable before) {
         this.drawBefore = before;
+        updateLine();
     }
 
     @Override
@@ -42,11 +43,7 @@ public class LineConnector extends Line implements Drawable {
     @Override
     public void setAfter(Drawable after) {
         this.drawAfter = after;
-    }
-
-    public void setStartPoint(WayPoint point) {
-        drawBefore = point;
-        setLinePositionSetStart(point.getCenterX(), point.getCenterY());
+        updateLine();
     }
 
     public void setLinePositionSetStart(double x, double y) {
@@ -62,4 +59,27 @@ public class LineConnector extends Line implements Drawable {
         this.setEndX(x);
         this.setEndY(y);
     }
+
+    public double getAngle() {
+        double dx = this.getEndX() - this.getStartX();
+        double dy = -(this.getEndY() - this.getStartY());
+        double thetaRad = Math.atan2(dy, dx);
+        return Math.toDegrees(thetaRad);
+    }
+
+    public void updateLine() {
+
+        if (drawBefore instanceof WayPoint) {
+            WayPoint point = (WayPoint) drawBefore;
+            setLinePositionSetStart(point.getCenterX(), point.getCenterY());
+            point.updateArrow();
+        }
+
+        if (drawAfter instanceof WayPoint) {
+            WayPoint point = (WayPoint) drawAfter;
+            setLinePositionSetEnd(point.getCenterX(), point.getCenterY());
+            point.updateArrow();
+        }
+    }
+
 }

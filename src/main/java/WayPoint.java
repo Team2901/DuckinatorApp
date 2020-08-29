@@ -21,7 +21,7 @@ public class WayPoint extends Circle implements Drawable {
     public double xInches = 0;
     public double yInches = 0;
 
-    public double zAngle = 0;
+    public Double overrideAngle = null;
 
     public Label label;
 
@@ -32,11 +32,11 @@ public class WayPoint extends Circle implements Drawable {
     }
 
     private void updateLabel() {
-        String wayPointString = String.format("%s (%.2f,%.2f)  %.2f°", getName(), getXInches(), getYInches(), getZAngle());
+        String wayPointString = String.format("%s (%.2f,%.2f)  %.2f°", getName(), getXInches(), getYInches(), getAngle());
         label.setText(wayPointString);
     }
 
-    public WayPoint(String name, double xInches, double yInches, double zAngle) {
+    public WayPoint(String name, double xInches, double yInches, Double overrideAngle) {
         super(0, 0, bufferZone, Color.TRANSPARENT);
 
         originalColor = Color.BLACK;
@@ -47,7 +47,7 @@ public class WayPoint extends Circle implements Drawable {
 
         setName(name);
         setCenterInches(xInches, yInches);
-        setZAngle(zAngle);
+        setOverrideAngle(overrideAngle);
     }
 
     public String getName() {
@@ -96,13 +96,12 @@ public class WayPoint extends Circle implements Drawable {
         LineConnector beforeLine = (LineConnector) this.getBefore();
         LineConnector afterLine = (LineConnector) this.getAfter();
         if (beforeLine != null) {
-            beforeLine.setLinePositionSetEnd(xPixels, yPixels);
+            beforeLine.updateLine();
         }
         if (afterLine != null) {
-            afterLine.setLinePositionSetStart(xPixels, yPixels);
+            afterLine.updateLine();
         }
 
-        arrow.setStart(xPixels, yPixels);
         updateLabel();
     }
 
@@ -158,8 +157,8 @@ public class WayPoint extends Circle implements Drawable {
         return originalColor.equals(Color.RED);
     }
 
-    public void setFirstPoint(boolean b) {
-        if (!b) {
+    public void setFirstPoint(boolean isFirst) {
+        if (!isFirst) {
             subCircle.setFill(Color.BLACK);
             originalColor = Color.BLACK;
             subCircle.setRadius(subsequentPointsRadius);
@@ -178,13 +177,44 @@ public class WayPoint extends Circle implements Drawable {
         return yInches;
     }
 
-    public double getZAngle() {
-        return zAngle;
+    public double getAngle() {
+
+        if (overrideAngle != null) {
+            return overrideAngle;
+        } else {
+            return getDefaultAngle();
+        }
     }
 
-    public void setZAngle(double zAngle) {
-        this.zAngle = zAngle;
-        arrow.setAngle(zAngle);
+    public Double getOverrideAngle() {
+        return overrideAngle;
+    }
+
+    public void setOverrideAngle(Double overrideAngle) {
+        this.overrideAngle = overrideAngle;
+        updateArrow();
+    }
+
+    public double getDefaultAngle() {
+
+        double angle;
+
+        if (drawBefore != null && drawBefore instanceof LineConnector) {
+            angle = ((LineConnector) drawBefore).getAngle();
+
+        } else  if (drawAfter != null && drawAfter instanceof LineConnector) {
+            angle = ((LineConnector) drawAfter).getAngle();
+
+        } else {
+            angle = 0;
+        }
+
+        return angle;
+    }
+
+    public void updateArrow() {
+        arrow.setStart(getCenterX(), getCenterY());
+        arrow.setAngle(getAngle());
         updateLabel();
     }
 }

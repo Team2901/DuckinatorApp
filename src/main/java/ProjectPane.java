@@ -58,6 +58,7 @@ public class ProjectPane extends Pane {
     private final TextField updateDrawableNameField;
     private final TextField updateDrawableXField;
     private final TextField updateDrawableYField;
+    private final TextField updateDrawableZAngleField;
 
     DriveBase selectedDriveBase = DriveBase.TANK_DRIVE;
 
@@ -71,7 +72,7 @@ public class ProjectPane extends Pane {
         fieldPane.setLayoutX(PANE_PADDING_PIXELS);
         fieldPane.setLayoutY(PANE_PADDING_PIXELS);
 
-        Image field = new Image(this.getClass().getResourceAsStream("/main/resources/Field Images/SkyStone_720.png"));
+        Image field = new Image(this.getClass().getResourceAsStream("/main/resources/Field Images/SkyStone.png"));
         fieldHolder = new ImageView(field);
         fieldHolder.setFitHeight(FIELD_MEASUREMENT_PIXELS);
         fieldHolder.setFitWidth(FIELD_MEASUREMENT_PIXELS);
@@ -87,24 +88,20 @@ public class ProjectPane extends Pane {
         updateDrawableNameField = new TextField();
 
         updateDrawableXField = new TextField();
-        updateDrawableXField.textProperty().addListener((observable, oldValue, newValue) -> {
-            if (!newValue.matches("[0-9.]+")) {
-                updateDrawableXField.setText(newValue.replaceAll("[^0-9.]", ""));
-            }
-        });
+        setupTextOptionListeners(updateDrawableXField, 0, FIELD_MEASUREMENT_INCHES);
 
         updateDrawableYField = new TextField();
-        updateDrawableYField.textProperty().addListener((observable, oldValue, newValue) -> {
-            if (!newValue.matches("\\d*\\.")) {
-                updateDrawableYField.setText(newValue.replaceAll("[^0-9.]", ""));
-            }
-        });
+        setupTextOptionListeners(updateDrawableYField, 0, FIELD_MEASUREMENT_INCHES);
+
+        updateDrawableZAngleField = new TextField();
+        setupTextOptionListeners(updateDrawableZAngleField, -180, 360);
 
         Button updateDrawableButton = new Button("Update WayPoint");
         updateDrawableButton.setOnMouseClicked(e -> onUpdateOptionsClicked());
         updateOptionsLayout.getChildren().add(updateDrawableNameField);
         updateOptionsLayout.getChildren().add(updateDrawableXField);
         updateOptionsLayout.getChildren().add(updateDrawableYField);
+        updateOptionsLayout.getChildren().add(updateDrawableZAngleField);
         updateOptionsLayout.getChildren().add(updateDrawableButton);
 
         pointsListView = new ListView<>();
@@ -132,6 +129,36 @@ public class ProjectPane extends Pane {
         fieldPane.getChildren().add(mouseLocation);
     }
 
+    private void setupTextOptionListeners(TextField textField, double min, double max) {
+
+        textField.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (!newValue.matches("[0-9.-]*")) {
+                textField.setText(newValue.replaceAll("[^0-9.-]", ""));
+            }
+        });
+
+        textField.focusedProperty().addListener((observable, oldValue, newValue) -> {
+            if (!newValue) { // focus lost
+                final String text = formatTextValue(textField.getText(), min, max);
+                textField.setText(text);
+            }
+        });
+    }
+
+    public String formatTextValue(String inputString, double min, double max) {
+
+        String[] split = inputString.split("\\.");
+
+        String value = split[0] + "." + (split.length > 1 ? split[1] : "00");
+        try {
+            double parsedInput = Double.parseDouble(value);
+            double boundInput = Math.min(Math.max(parsedInput, min), max);
+            return String.format("%.2f", boundInput);
+        } catch (Exception e) {
+            return value;
+        }
+    }
+
     public DriveBase getSelectedDriveBase() {
         return selectedDriveBase;
     }
@@ -144,7 +171,7 @@ public class ProjectPane extends Pane {
 
         String name = updateDrawableNameField.getText().trim();
 
-        double xInches, yInches;
+        double xInches, yInches, zAngle;
 
         if (!updateDrawableXField.getText().isBlank()) {
             xInches = Double.parseDouble(updateDrawableXField.getText());
@@ -158,8 +185,15 @@ public class ProjectPane extends Pane {
             yInches = selectedPoint.getYInches();
         }
 
+        if (!updateDrawableZAngleField.getText().isBlank()) {
+            zAngle = Double.parseDouble(updateDrawableZAngleField.getText());
+        } else {
+            zAngle = selectedPoint.getZAngle();
+        }
+
         selectedPoint.setName(name);
         selectedPoint.setCenterInches(xInches, yInches);
+        selectedPoint.setZAngle(zAngle);
         setSelectedPointOptions();
     }
 
@@ -178,6 +212,7 @@ public class ProjectPane extends Pane {
 
             updateDrawableXField.setText(String.valueOf(selectedPoint.getXInches()));
             updateDrawableYField.setText(String.valueOf(selectedPoint.getYInches()));
+            updateDrawableZAngleField.setText(String.valueOf(selectedPoint.getZAngle()));
             updateDrawableNameField.setText(selectedPoint.getName());
         }
     }

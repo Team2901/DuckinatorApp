@@ -18,10 +18,10 @@ public class WayPoint extends Circle implements Drawable {
     public Color originalColor;
     public Circle subCircle;
 
-    public double xInches;
-    public double yInches;
+    public double xInches = 0;
+    public double yInches = 0;
 
-    public double zAngle;
+    public double zAngle = 0;
 
     public Label label;
 
@@ -30,7 +30,7 @@ public class WayPoint extends Circle implements Drawable {
     }
 
     public void updateLabel() {
-        String wayPointString = String.format("%s %.2f,%.2f", getName(), getXInches(), getYInches());
+        String wayPointString = String.format("%s (%.2f,%.2f)  %.2f°", getName(), getXInches(), getYInches(), getZAngle());
         label.setText(wayPointString);
     }
 

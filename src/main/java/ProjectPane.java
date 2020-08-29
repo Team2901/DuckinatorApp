@@ -455,6 +455,7 @@ public class ProjectPane extends Pane {
                 point.setFirstPoint(true);
             }
             fieldPane.getChildren().add(point.subCircle);
+            fieldPane.getChildren().add(point.arrow);
             fieldPane.getChildren().add(point);
         } else if (drawable instanceof LineConnector) {
             LineConnector line = (LineConnector) drawable;
@@ -503,6 +504,7 @@ public class ProjectPane extends Pane {
         if (remove instanceof WayPoint) {
             WayPoint point = (WayPoint) remove;
             fieldPane.getChildren().remove(point.subCircle);
+            fieldPane.getChildren().remove(point.arrow);
         } else if (remove instanceof LineConnector) {
             LineConnector line = (LineConnector) remove;
             fieldPane.getChildren().remove(line.subLine);

@@ -25,6 +25,8 @@ public class WayPoint extends Circle implements Drawable {
 
     public Label label;
 
+    public Arrow arrow;
+
     public Label getLabel() {
         return label;
     }
@@ -41,6 +43,7 @@ public class WayPoint extends Circle implements Drawable {
         subCircle = new Circle(0, 0, subsequentPointsRadius, originalColor);
 
         label = new Label();
+        arrow = new Arrow();
 
         setName(name);
         setCenterInches(xInches, yInches);
@@ -99,6 +102,7 @@ public class WayPoint extends Circle implements Drawable {
             afterLine.setLinePositionSetStart(xPixels, yPixels);
         }
 
+        arrow.setStart(xPixels, yPixels);
         updateLabel();
     }
 
@@ -180,6 +184,7 @@ public class WayPoint extends Circle implements Drawable {
 
     public void setZAngle(double zAngle) {
         this.zAngle = zAngle;
+        arrow.setAngle(zAngle);
         updateLabel();
     }
 }

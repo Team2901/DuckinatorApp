@@ -238,7 +238,7 @@ public class ProjectPane extends Pane {
         double xInches = xPixels / FIELD_MEASUREMENT_PIXELS * FIELD_MEASUREMENT_INCHES;
         double yInches = (FIELD_MEASUREMENT_PIXELS - yPixels) / FIELD_MEASUREMENT_PIXELS * FIELD_MEASUREMENT_INCHES;
 
-        createWayPoint("WayPoint",xInches, yInches);
+        createWayPoint("WayPoint",xInches, yInches, 0);
         addToPointHistory();
     }
 
@@ -288,9 +288,9 @@ public class ProjectPane extends Pane {
         }
     }
 
-    public void createWayPoint(String name, double xPoint, double yPoint) {
+    public void createWayPoint(String name, double xPoint, double yPoint, double zAngle) {
 
-        WayPoint newWayPoint = new WayPoint(name, xPoint, yPoint);
+        WayPoint newWayPoint = new WayPoint(name, xPoint, yPoint, zAngle);
         newWayPoint.setOnMousePressed(this::selectPointPress);
         newWayPoint.setOnMouseDragged(this::dragPoint);
         newWayPoint.setOnMouseReleased(this::releasePoint);
@@ -537,7 +537,7 @@ public class ProjectPane extends Pane {
     public void savePoints(File filePath, ArrayList<WayPoint> pointsInGivenPathway) throws IOException {
         FileWriter fileWriter = new FileWriter(filePath);
         for (WayPoint point : pointsInGivenPathway) {
-            String pointString = String.format("%s,%f,%f\n", point.getName(), point.getXInches(), point.getYInches());
+            String pointString = String.format("%s,%f,%f,%f\n", point.getName(), point.getXInches(), point.getYInches(), point.getZAngle());
             fileWriter.write(pointString);
         }
         fileWriter.close();
@@ -550,7 +550,7 @@ public class ProjectPane extends Pane {
         String line = bufferedReader.readLine();
         while (line != null) {
             String[] lineArray = line.split(",");
-            createWayPoint(lineArray[0], Double.parseDouble(lineArray[1]), Double.parseDouble(lineArray[2]));
+            createWayPoint(lineArray[0], Double.parseDouble(lineArray[1]), Double.parseDouble(lineArray[2]), Double.parseDouble(lineArray[3]));
             line = bufferedReader.readLine();
         }
         addToPointHistory();
@@ -563,7 +563,7 @@ public class ProjectPane extends Pane {
     public void loadPoints(List<Point> points) {
         clear();
         for (Point point : points) {
-            createWayPoint(point.getName(), point.getX(), point.getY());
+            createWayPoint(point.getName(), point.getX(), point.getY(), point.getAngle());
         }
     }
 

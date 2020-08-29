@@ -29,23 +29,22 @@ public class WayPoint extends Circle implements Drawable {
         return label;
     }
 
-    public void updateLabel() {
+    private void updateLabel() {
         String wayPointString = String.format("%s (%.2f,%.2f)  %.2f°", getName(), getXInches(), getYInches(), getZAngle());
         label.setText(wayPointString);
     }
 
-    public WayPoint(String name, double xInches, double yInches) {
+    public WayPoint(String name, double xInches, double yInches, double zAngle) {
         super(0, 0, bufferZone, Color.TRANSPARENT);
 
-        setName(name);
         originalColor = Color.BLACK;
         subCircle = new Circle(0, 0, subsequentPointsRadius, originalColor);
 
         label = new Label();
 
+        setName(name);
         setCenterInches(xInches, yInches);
-
-
+        setZAngle(zAngle);
     }
 
     public String getName() {
@@ -58,6 +57,8 @@ public class WayPoint extends Circle implements Drawable {
         } else {
             this.name = name;
         }
+
+        updateLabel();
     }
 
     public void setCenterInches(double xInches, double yInches) {
@@ -179,5 +180,6 @@ public class WayPoint extends Circle implements Drawable {
 
     public void setZAngle(double zAngle) {
         this.zAngle = zAngle;
+        updateLabel();
     }
 }

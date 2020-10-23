@@ -192,20 +192,21 @@ public class ProjectPane extends Pane {
                         "        rightWheel.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);\n" +
                         "        rightWheel.setMode(DcMotor.RunMode.RUN_TO_POSITION);\n" +
                         "        leftWheel.setMode(DcMotor.RunMode.RUN_TO_POSITION);\n" +
-                        "    }\n" +
+                        "    }\n\n" +
                         "    public void powerBusy() {\n" +
                         "        leftWheel.setPower(0.5);\n" +
                         "        rightWheel.setPower(0.5);\n" +
-                        "        while ((rightWheel.isBusy() && leftWheel.isBusy())){}\n" +
+                        "        while ((rightWheel.isBusy() && leftWheel.isBusy())) {\n" +
+                        "        }\n" +
                         "        leftWheel.setPower(0);\n" +
                         "        rightWheel.setPower(0);\n" +
-                        "    }\n" +
-                        "    public void goForward(int gofront){\n" +
+                        "    }\n\n" +
+                        "    public void goForward(int gofront) {\n" +
                         "        motorReset();\n" +
                         "        rightWheel.setTargetPosition(gofront);\n" +
                         "        leftWheel.setTargetPosition(gofront);\n" +
                         "        powerBusy();\n" +
-                        "    }\n"
+                        "    }\n\n"
         );
 
 
@@ -216,12 +217,12 @@ public class ProjectPane extends Pane {
                         "        if (degrees < 0) {   // turn right.\n" +
                         "            leftPower = 0.5;\n" +
                         "            rightPower = -0.5;\n" +
-                        "        }\n" +
-                        "        else if (degrees > 0) {   // turn left.\n" +
+                        "        } else if (degrees > 0) {   // turn left.\n" +
                         "            leftPower = -0.5;\n" +
                         "            rightPower = 0.5;\n" +
+                        "        } else {\n" +
+                        "            return;\n" +
                         "        }\n" +
-                        "        else return;\n" +
                         "        leftWheel.setPower(leftPower);\n" +
                         "        rightWheel.setPower(rightPower);\n"
         );
@@ -235,14 +236,14 @@ public class ProjectPane extends Pane {
                         "            frp = 0.5;\n" +
                         "            blp = 0.5;\n" +
                         "            brp = 0.5;\n" +
-                        "        }\n" +
-                        "        else if (degrees > 0) {   // turn left.\n" +
+                        "        } else if (degrees > 0) {   // turn left.\n" +
                         "            flp = -0.5;\n" +
                         "            frp = -0.5;\n" +
                         "            blp = -0.5;\n" +
                         "            brp = -0.5;\n" +
+                        "        } else {\n" +
+                        "            return;\n" +
                         "        }\n" +
-                        "        else return;\n" +
                         "        fl.setPower(flp);\n" +
                         "        fr.setPower(frp);\n" +
                         "        bl.setPower(blp);\n" +
@@ -536,26 +537,27 @@ public class ProjectPane extends Pane {
                         "        fr.setMode(DcMotor.RunMode.RUN_TO_POSITION);\n" +
                         "        bl.setMode(DcMotor.RunMode.RUN_TO_POSITION);\n" +
                         "        br.setMode(DcMotor.RunMode.RUN_TO_POSITION);\n" +
-                        "    }\n" +
+                        "    }\n\n" +
                         "    public void powerBusy() {\n" +
                         "        fl.setPower(0.5);\n" +
                         "        fr.setPower(0.5);\n" +
                         "        bl.setPower(0.5);\n" +
                         "        br.setPower(0.5);\n" +
-                        "        while ((fl.isBusy() && fr())&&(bl.isBusy() && br.isBusy())){}\n" +
+                        "        while ((fl.isBusy() && fr()) && (bl.isBusy() && br.isBusy())) {\n" +
+                        "        }\n" +
                         "        fl.setPower(0);\n" +
                         "        fr.setPower(0);\n" +
                         "        bl.setPower(0);\n" +
                         "        br.setPower(0);\n" +
-                        "    }\n" +
-                        "    public void goForward(int gofront){\n" +
+                        "    }\n\n" +
+                        "    public void goForward(int gofront) {\n" +
                         "        motorReset();\n" +
-                        "        fl.setTargetPosition((int)Math.round(" + multiplier + "*gofront));\n" +
-                        "        fr.setTargetPosition((int)Math.round(-" + multiplier + "*gofront));\n" +
-                        "        bl.setTargetPosition((int)Math.round(" + multiplier + "*gofront));\n" +
-                        "        br.setTargetPosition((int)Math.round(" + multiplier + "*gofront ));\n" +
+                        "        fl.setTargetPosition((int) Math.round(" + multiplier + " * gofront));\n" +
+                        "        fr.setTargetPosition((int) Math.round(-" + multiplier + " * gofront));\n" +
+                        "        bl.setTargetPosition((int) Math.round(" + multiplier + " * gofront));\n" +
+                        "        br.setTargetPosition((int) Math.round(" + multiplier + " * gofront));\n" +
                         "        powerBusy();\n" +
-                        "    }\n"
+                        "    }\n\n"
         );
     }
 
@@ -582,9 +584,9 @@ public class ProjectPane extends Pane {
             // calculate change in direction.
             if (ii > 1) {
                 double angleChange = changeInOrientation(points.get(ii - 2), points.get(ii - 1), points.get(ii));
-                movements.add(" rotate(" + (int) Math.round(angleChange) + ");\n");
+                movements.add("            rotate(" + (int) Math.round(angleChange) + ");\n");
             }
-            movements.add(" goForward(" + (int) Math.round(encoderCounts) + ");\n");
+            movements.add("            goForward(" + (int) Math.round(encoderCounts) + ");\n");
         }
 
         return convertArrayList(movements);
@@ -745,7 +747,7 @@ public class ProjectPane extends Pane {
             String fileName = codeFile.getName();
             String[] fileNameArray = fileName.split("\\.");
             setRootName(fileNameArray[0]);
-            String code = "package org.firstinspires.ftc.teamcode;\n" +
+            String code = "package org.firstinspires.ftc.teamcode;\n\n" +
                     "import com.qualcomm.hardware.bosch.BNO055IMU;\n" +
                     "import com.qualcomm.robotcore.eventloop.opmode.Autonomous;\n" +
                     "import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;\n" +
@@ -755,8 +757,6 @@ public class ProjectPane extends Pane {
                     "import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;\n" +
                     "import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;\n" +
                     "import org.firstinspires.ftc.robotcore.external.navigation.Orientation;\n" +
-                    "import org.firstinspires.ftc.robotcore.external.navigation.Position;\n" +
-                    "import org.firstinspires.ftc.robotcore.external.navigation.Velocity;\n" +
                     "\n" +
                     "/**\n" +
                     " * Created with Team 6183's Duckinator 3000\n" +
@@ -766,8 +766,8 @@ public class ProjectPane extends Pane {
                     "public class " + fileNameArray[0] + " extends LinearOpMode {\n" +
                     driveMotors +
                     "    private int globalAngle;\n" +
-                    "    BNO055IMU imu;\n" +
-                    "    Orientation lastAngles = new Orientation();\n" +
+                    "    private BNO055IMU imu;\n" +
+                    "    private Orientation lastAngles = new Orientation();\n\n" +
                     "    @Override\n" +
                     "    public void runOpMode() throws InterruptedException {\n" +
                     "        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();\n" +
@@ -778,24 +778,23 @@ public class ProjectPane extends Pane {
                     "        imu = hardwareMap.get(BNO055IMU.class, \"imu\");\n" +
                     "        imu.initialize(parameters);\n" +
                     "        // make sure the imu gyro is calibrated before continuing.\n" +
-                    "        while (!isStopRequested() && !imu.isGyroCalibrated())\n" +
-                    "        {\n" +
+                    "        while (!isStopRequested() && !imu.isGyroCalibrated()) {\n" +
                     "            sleep(50);\n" +
                     "            idle();\n" +
                     "        }\n" +
                     driveInit +
                     "        waitForStart();\n" +
-                    "        if (opModeIsActive()){\n" +
-                    " //Our version \n" +
+                    "        if (opModeIsActive()) {\n" +
+                    "            //Our version \n" +
                     moveHereTwo(points) +
                     "\n" +
                     "        }\n" +
-                    "    }\n" +
+                    "    }\n\n" +
                     resetBusyForward +
                     "    private void resetAngle() {\n" +
                     "        lastAngles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);\n" +
                     "        globalAngle = 0;\n" +
-                    "    }\n" +
+                    "    }\n\n" +
                     "    private double getAngle() {\n" +
                     "        Orientation angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);\n" +
                     "        double deltaAngle = angles.firstAngle - lastAngles.firstAngle;\n" +
@@ -806,18 +805,21 @@ public class ProjectPane extends Pane {
                     "        globalAngle += deltaAngle;\n" +
                     "        lastAngles = angles;\n" +
                     "        return globalAngle;\n" +
-                    "    }\n" +
+                    "    }\n\n" +
                     rotating +
-                    "        if (degrees < 0) {//right\n" +
-                    "            while (opModeIsActive() && getAngle() == 0) {}\n" +
-                    "            while (opModeIsActive() && getAngle() > degrees) {}\n" +
-                    "        } else {//left\n" +
-                    "            while (opModeIsActive() && getAngle() < degrees) {}\n" +
+                    "        if (degrees < 0) { //right\n" +
+                    "            while (opModeIsActive() && getAngle() == 0) {\n" +
+                    "            }\n" +
+                    "            while (opModeIsActive() && getAngle() > degrees) {\n" +
+                    "            }\n" +
+                    "        } else { //left\n" +
+                    "            while (opModeIsActive() && getAngle() < degrees) {\n" +
+                    "            }\n" +
                     "        }\n" +
                     zPower +
                     "        sleep(1000);\n" +
                     "        resetAngle();\n" +
-                    "    }\n" +
+                    "    }\n\n" +
                     "}";
             fileWriter.write(code);
             fileWriter.close();

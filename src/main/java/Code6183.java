@@ -106,7 +106,7 @@ public class Code6183 extends Application {
         about.setOnAction(e -> {
             if (Desktop.isDesktopSupported()) {
                 try {
-                    Desktop.getDesktop().browse(new URI("https://github.com/Team2901/DuckinatorApp/blob/master/README.md"));
+                    Desktop.getDesktop().browse(new URI("https://github.com/Team2901/PurpleGearsPathfinder/blob/master/README.md"));
                 } catch (IOException | URISyntaxException e1) {
                     e1.printStackTrace();
                 }
